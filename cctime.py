@@ -1,5 +1,6 @@
 """Time-handling functions that work in both Python and CircuitPython."""
 
+import time
 try:
     import datetime
 except:
@@ -33,6 +34,18 @@ def set_fake_time(t):
     """Sets the time for testing.  To use the real time, set_fake_time(None)."""
     global fake_time
     fake_time = t
+
+
+def wait_until(t):
+    """Advances the time to the given time or later, sleeping if necessary."""
+    if fake_time:
+        set_fake_time(t)
+        return t
+    else:
+        now = get_time()
+        if t > now:
+            time.sleep(t - now)
+        return now
 
 
 def isoformat_to_datetime(s):
