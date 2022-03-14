@@ -1,20 +1,31 @@
-"""Time-handling functions, including a clock that can be faked for testing.
+"""Time-handling functions that work in both Python and CircuitPython."""
 
-Times are represented as float seconds since 1970-01-01 00:00:00 UTC.
-"""
-
-import datetime
+try:
+    import datetime
+except:
+    import adafruit_datetime as datetime
 
 EPOCH = datetime.datetime(1970, 1, 1)
 fake_time = None
 
 
+def enable_rtc():
+    """Activates use of an on-board RTC as the time source."""
+    try:
+        import board
+        import rtc
+        from adafruit_ds3231 import DS3231
+        ds3231 = DS3231(board.I2C())
+        rtc.set_time_source(ds3231)
+    except Exception as e:
+        print(f'Could not find an attached DS3231 RTC: {e}')
+
+
 def get_time():
-    """Returns the current time in seconds since 1970-01-01 00:00:00 UTc."""
+    """Returns the current time in seconds since 1970-01-01 00:00:00 UTC."""
     if fake_time:
         return fake_time
     import time
-
     return time.time()
 
 
@@ -25,12 +36,15 @@ def set_fake_time(t):
 
 
 def isoformat_to_datetime(s):
-    return datetime.datetime.strptime(s[:19], "%Y-%m-%dT%H:%M:%S")
+    """Parses a string in the form yyyy-mm-ddThh:mm:ss into a datetime."""
+    return datetime.datetime.fromisoformat(s[:19])  # ignore time zone offset
 
 
 def isoformat_to_date(s):
+    """Parses a string in the form yyyy-mm-ddThh:mm:ss into a date."""
     return isoformat_to_datetime(s).date()
 
 
 def isoformat_to_time(s):
+    """Parses a string in the form yyyy-mm-ddThh:mm:ss into a Unix timestamp."""
     return (isoformat_to_datetime(s) - EPOCH).total_seconds()
