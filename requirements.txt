@@ -1,2 +1,4 @@
+black=22.1.0
+requests==2.27.1
 pysdl2==0.9.9
 pysdl2-dll==2.0.18
