@@ -1,23 +1,23 @@
+"""Client for the Climate Clock API.  Main entry points: load_file(), fetch().
+
+See: https://docs.climateclock.world/climate-clock-docs/climate-clock-api
+"""
+
 import cctime
-import requests
-
-
-def log(message, *args):
-    print(message % args)
 
 
 def try_isoformat_to_time(data, key):
     try:
         return cctime.isoformat_to_time(data.get(key))
     except Exception as e:
-        log("Field %r contains an invalid timestamp: %r", key, data)
+        print("Field %r contains an invalid timestamp: %r" % (key, data))
 
 
 class SlotRepr:
     def __repr__(self):
         return "%s(%s)" % (
             self.__class__.__name__,
-            ", ".join(f"{key}={getattr(self, key)!r}" for key in self.__slots__),
+            ", ".join(f"{key}={repr(getattr(self, key))}" for key in self.__slots__),
         )
 
 
@@ -45,8 +45,8 @@ class Palette(SlotRepr):
     __slots__ = "primary", "secondary"
 
     def load(self, data):
-        self.primary = data.get("color_primary") or None
-        self.secondary = data.get("color_secondary") or None
+        self.primary = parse_css_color(data.get("color_primary") or None)
+        self.secondary = parse_css_color(data.get("color_secondary") or None)
         return self
 
 
@@ -61,7 +61,8 @@ class Module(SlotRepr):
             "update_time", cctime.get_time() + data.get("update_interval_seconds", 3600)
         )
         # Sort labels in order from longest to shortest
-        self.labels = sorted(data.get("labels") or [], key=lambda label: -len(label))
+        self.labels = data.get("labels") or []
+        self.labels.sort(key=lambda label: -len(label))
         self.lang = data.get("lang") or "en"
         return self
 
@@ -94,8 +95,8 @@ class NewsfeedItem(SlotRepr):
         self.pub_time = try_isoformat_to_time(data, "date")
         self.headline = data.get("headline") or ""
         self.headline_original = data.get("headline_original") or ""
-        self.source = data.get("source")
-        self.link = data.get("link")
+        self.source = data.get("source") or ""
+        self.link = data.get("link") or ""
         self.summary = data.get("summary") or ""
         return self
 
@@ -123,7 +124,7 @@ class Media(Module):
     pass  # TBD
 
 
-class Clock(SlotRepr):
+class ClockDefinition(SlotRepr):
     __slots__ = "config", "module_dict", "modules"
 
     MODULE_CLASSES = {
@@ -146,6 +147,27 @@ class Clock(SlotRepr):
         return self
 
 
+def parse_css_color(color):
+    if color:
+        color = color.replace("#", "")
+        if len(color) == 6:
+            return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
+        if len(color) == 3:
+            r, g, b = color
+            return int(r + r, 16), int(g + g, 16), int(b + b, 16)
+
+
+def load_file(filename):
+    import json
+
+    return ClockDefinition().load(json.load(open(filename))["data"])
+
+
+def load_url(url):
+    import requests
+
+    return ClockDefinition().load(requests.get(url).json()["data"])
+
+
 def fetch():
-    response = requests.get("https://api.climateclock.world/v1/clock")
-    return Clock().load(response.json()["data"])
+    return load_url("https://api.climateclock.world/v1/clock")
