@@ -1,58 +1,74 @@
-"""Defines the Frame interface for drawing to a display."""
+"""Defines the Frame interface for drawing to a display.
 
-from abc import ABC, abstractmethod
+Each implementation of Frame is free to use its own internal formats and depths
+for pixel data and colour values.  Clients should treat each colour value (cv)
+as an opaque object; call pack() to convert an (r, g, b) triple into a colour
+value and unpack() to extract the (r, g, b) components from a colour value.
 
-class Frame(ABC):  # Frame is an abstract interface
-    def __init__(self, w, h, fps):
+Implementing send() is optional.  A Frame that cannot send() is useful as a
+buffer that can efficiently paste() from and to Frames of the same subtype.
+"""
+
+class Frame:  # Frame is an abstract interface
+    def __init__(self, w, h):
         """Creates a Frame with a given width and height.  Coordinates of the
         top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
         self.w = w
         self.h = h
-        self.interval = 1/fps
 
-    @abstractmethod
     def pack(self, r, g, b):
-        """Packs three colour cmponents (each 0-255) into a colour value."""
+        """Packs R, G, B components (each 0 to 255) into a colour value."""
+        raise NotImplementedError
 
-    @abstractmethod
-    def unpack(self, rgb):
-        """Unpacks a colour value into its R, G, B components (each 0-255)."""
+    def unpack(self, cv):
+        """Unpacks a colour value into R, G, B components (each 0 to 255)."""
+        raise NotImplementedError
 
-    @abstractmethod
     def send(self):
         """Causes the contents of the frame to appear on the display device
         one frame interval after the preceding frame appeared.  The
         implementation of this method is responsible for blocking as
         necessary to ensure that frames do not queue up indefinitely."""
+        raise NotImplementedError
 
-    @abstractmethod
     def get(self, x, y):
         """Gets the colour of the single pixel at (x, y).  If the given
         coordinates are out of range, returns black."""
+        raise NotImplementedError
 
-    @abstractmethod
-    def set(self, x, y, rgb):
-        """Sets the colour of the single pixel at (x, y) to rgb.  If the
+    def set(self, x, y, cv):
+        """Sets the colour of the single pixel at (x, y) to cv.  If the
         given coordinates are out of range, no exception is raised."""
+        raise NotImplementedError
 
-    @abstractmethod
-    def fill(self, x, y, w, h, rgb):
+    def fill(self, x, y, w, h, cv):
         """Sets the colour of all pixels in the rectangle from (x, y) to
-        (x + w - 1), (y + h - 1), inclusive, to rgb.  Both w and h must be
+        (x + w - 1), (y + h - 1), inclusive, to cv.  Both w and h must be
         positive.  No exception is raised when any part of the rectangle is
         out of range; pixels in range are filled and the rest are ignored."""
+        raise NotImplementedError
 
-    @abstractmethod
-    def paste(self, x, y, source, sx, sy, sw, sh):
+    def paste(self, x, y, source, sx=None, sy=None, sw=None, sh=None):
         """Copies a rectangle of pixels from a source frame into this frame,
         placing the top-left corner of the rectangle at (x, y).  No exception
         is raised when some pixels are out of range; pixels in range are
         pasted over and the rest are ignored."""
+        raise NotImplementedError
 
-    @abstractmethod
-    def print(self, font, text, horiz=-1, vert=-1):
-        """Prints text into the frame using the given font.  Alignment within
-        this frame is given by horiz (-1 for left, 0 for center, +1 for right)
-        and vert (-1 for top, 0 for baseline, +1 for bottom).  No exception is
-        raised when any part of the text is out of range; pixels in range are
-        painted over and the rest are ignored."""
+    def new_label(self, text, font_id, cv):
+        """Returns a new Frame, acceptable as a source argument to the paste()
+        method, containing the given text rendered with the specified font and
+        colour value.  The resulting frame is sized to the total width of the
+        text and the height of a character cell in the specified font."""
+        raise NotImplementedError
+
+
+def clamp(v, lo, hi):
+    return max(lo, min(v, hi))
+
+def clamp_rect(x, y, w, h, fw, fh):
+    xl = clamp(x, 0, fw)
+    xr = clamp(x + w, xl, fw)
+    yt = clamp(y, 0, fh)
+    yb = clamp(y + h, yt, fh)
+    return xl, yt, xr - xl, yb - yt
