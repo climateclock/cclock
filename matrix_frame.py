@@ -51,6 +51,7 @@ class MatrixFrame(frame.Frame):
             self.display.show(self.group)
 
     def pack(self, r, g, b):
+        # TODO handle real colour values; update the palette shader
         return ((r << 16) | (g << 8) | b) % self.depth
 
     def unpack(self, cv):

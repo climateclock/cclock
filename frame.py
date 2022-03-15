@@ -7,6 +7,8 @@ value and unpack() to extract the (r, g, b) components from a colour value.
 
 Implementing send() is optional.  A Frame that cannot send() is useful as a
 buffer that can efficiently paste() from and to Frames of the same subtype.
+The Frame returned by new_label() need not implement any methods; it only
+needs to have self.w and self.h attributes and be accepted by self.paste().
 """
 
 class Frame:  # Frame is an abstract interface
