@@ -1,12 +1,12 @@
-from frame import Frame
+import frame
 import subprocess
 import time
 
-class MpvFrame(Frame):
+class MpvFrame(frame.Frame):
     """A Frame implementation that uses the mpv video player for display."""
 
     def __init__(self, w, h, fps):
-        Frame.__init__(self, w, h, fps)
+        frame.Frame.__init__(self, w, h, fps)
         self.pixels = bytearray(b'\x00\x00\x00' * w * h)
         self.process = subprocess.Popen([
             'mpv',
@@ -37,8 +37,8 @@ class MpvFrame(Frame):
         """For MpvFrame, the pixel data type is a 3-element bytearray."""
         return bytearray([r, g, b])
 
-    def unpack(self, rgb):
-        r, g, b = rgb  # unpack bytearray
+    def unpack(self, cv):
+        r, g, b = cv  # unpack bytearray
         return r, g, b  # return tuple
 
     def send(self):
@@ -58,14 +58,14 @@ class MpvFrame(Frame):
         offset = (x + y * self.w) * 3
         return self.pixels[offset:offset + 3]
 
-    def set(self, x, y, rgb):
+    def set(self, x, y, cv):
         offset = (x + y * self.w) * 3
-        self.pixels[offset:offset + 3] = rgb
+        self.pixels[offset:offset + 3] = cv
 
-    def fill(self, x, y, w, h, rgb):
-        x, y, w, h = clamp_rect(x, y, w, h, self.w, self.h)
+    def fill(self, x, y, w, h, cv):
+        x, y, w, h = frame.clamp_rect(x, y, w, h, self.w, self.h)
         if w > 0 and h > 0:
-            row = rgb * w
+            row = cv * w
             for y in range(y, y + h):
                 start = (x + y * self.w) * 3
                 self.pixels[start:start + w * 3] = row
@@ -75,13 +75,3 @@ class MpvFrame(Frame):
 
     def print(self, font, text, horiz=-1, vert=-1):
         raise NotImplemented
-
-def clamp(v, lo, hi):
-    return max(lo, min(v, hi))
-
-def clamp_rect(x, y, w, h, fw, fh):
-    xl = clamp(x, 0, fw)
-    xr = clamp(x + w, xl, fw)
-    yt = clamp(y, 0, fh)
-    yb = clamp(y + h, yt, fh)
-    return xl, yt, xr - xl, yb - yt

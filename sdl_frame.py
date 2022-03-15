@@ -1,5 +1,5 @@
 from ctypes import byref, c_char, c_void_p
-from frame import Frame
+import frame
 from sdl2 import *
 import time
 
@@ -10,9 +10,9 @@ def flush_events():
             raise SystemExit()
 
 
-class SdlFrame(Frame):
+class SdlFrame(frame.Frame):
     def __init__(self, w, h, fps, title='Frame', scale=8):
-        Frame.__init__(self, w, h, fps)
+        frame.Frame.__init__(self, w, h, fps)
         self.pixels = bytearray(b'\x00\x00\x00' * w * h)
         self.pixels_cptr = (c_char * len(self.pixels)).from_buffer(self.pixels)
         self.next = 0
@@ -33,8 +33,8 @@ class SdlFrame(Frame):
         return bytearray([r, g, b])
         return bytearray([r & 0xc0, g & 0xc0, b & 0xc0])
 
-    def unpack(self, rgb):
-        r, g, b = rgb  # unpack bytearray
+    def unpack(self, cv):
+        r, g, b = cv  # unpack bytearray
         return r, g, b  # return tuple
 
     def send(self):
@@ -53,15 +53,15 @@ class SdlFrame(Frame):
         offset = (x + y * self.w) * 3
         return self.pixels[offset:offset + 3]
 
-    def set(self, x, y, rgb):
+    def set(self, x, y, cv):
         offset = (x + y * self.w) * 3
-        rgb = self.pack(*self.unpack(rgb))
-        self.pixels[offset:offset + 3] = rgb
+        cv = self.pack(*self.unpack(cv))
+        self.pixels[offset:offset + 3] = cv
 
-    def fill(self, x, y, w, h, rgb):
-        x, y, w, h = clamp_rect(x, y, w, h, self.w, self.h)
+    def fill(self, x, y, w, h, cv):
+        x, y, w, h = frame.clamp_rect(x, y, w, h, self.w, self.h)
         if w > 0 and h > 0:
-            row = rgb * w
+            row = cv * w
             for y in range(y, y + h):
                 start = (x + y * self.w) * 3
                 self.pixels[start:start + w * 3] = row
@@ -69,15 +69,5 @@ class SdlFrame(Frame):
     def paste(self, x, y, source, sx, sy, sw, sh):
         raise NotImplemented
 
-    def print(self, font, text, horiz=-1, vert=-1):
+    def new_text_frame(self, text, font_id, cv):
         raise NotImplemented
-
-def clamp(v, lo, hi):
-    return max(lo, min(v, hi))
-
-def clamp_rect(x, y, w, h, fw, fh):
-    xl = clamp(x, 0, fw)
-    xr = clamp(x + w, xl, fw)
-    yt = clamp(y, 0, fh)
-    yb = clamp(y + h, yt, fh)
-    return xl, yt, xr - xl, yb - yt
