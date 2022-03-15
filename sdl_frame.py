@@ -1,3 +1,4 @@
+import cctime
 from ctypes import byref, c_char, c_void_p
 import frame
 from sdl2 import *
@@ -12,10 +13,10 @@ def flush_events():
 
 class SdlFrame(frame.Frame):
     def __init__(self, w, h, fps, title='Frame', scale=8):
-        frame.Frame.__init__(self, w, h, fps)
+        frame.Frame.__init__(self, w, h)
+        self.timer = cctime.FrameTimer(fps)
         self.pixels = bytearray(b'\x00\x00\x00' * w * h)
         self.pixels_cptr = (c_char * len(self.pixels)).from_buffer(self.pixels)
-        self.next = 0
 
         SDL_Init(SDL_INIT_VIDEO)
         self.window = SDL_CreateWindow(
@@ -41,12 +42,8 @@ class SdlFrame(frame.Frame):
         SDL_memcpy(c_void_p(self.canvas.contents.pixels),
             self.pixels_cptr, len(self.pixels))
         SDL_BlitScaled(self.canvas, None, self.surface, None)
+        self.timer.wait()
         SDL_UpdateWindowSurface(self.window)
-
-        now = time.time()
-        if self.next > now:
-            time.sleep(self.next - now)
-        self.next = now + self.interval
         flush_events()
 
     def get(self, x, y):

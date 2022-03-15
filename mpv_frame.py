@@ -1,3 +1,4 @@
+import cctime
 import frame
 import subprocess
 import time
@@ -6,7 +7,8 @@ class MpvFrame(frame.Frame):
     """A Frame implementation that uses the mpv video player for display."""
 
     def __init__(self, w, h, fps):
-        frame.Frame.__init__(self, w, h, fps)
+        frame.Frame.__init__(self, w, h)
+        self.timer = cctime.FrameTimer(fps)
         self.pixels = bytearray(b'\x00\x00\x00' * w * h)
         self.process = subprocess.Popen([
             'mpv',
@@ -31,7 +33,6 @@ class MpvFrame(frame.Frame):
             # Read video data from stdin!
             '-'
         ], stdin=subprocess.PIPE)
-        self.next = 0
 
     def pack(self, r, g, b):
         """For MpvFrame, the pixel data type is a 3-element bytearray."""
@@ -44,15 +45,12 @@ class MpvFrame(frame.Frame):
     def send(self):
         """Did you know that you can simply write PPM images to a pipe to
         mpv and it will display them in real time?  Amazing!"""
-        now = time.time()
-        if self.next > now:
-            time.sleep(self.next - now)
+        self.timer.wait()
         self.process.stdin.write(b"P6\n%d %d\n255\n" % (self.w, self.h))
         if len(self.pixels) != 18432:
             print(len(self.pixels))
         self.process.stdin.write(self.pixels)
         self.process.stdin.flush()
-        self.next = now + self.interval
 
     def get(self, x, y):
         offset = (x + y * self.w) * 3
