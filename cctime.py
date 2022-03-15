@@ -61,3 +61,13 @@ def isoformat_to_date(s):
 def isoformat_to_time(s):
     """Parses a string in the form yyyy-mm-ddThh:mm:ss into a Unix timestamp."""
     return (isoformat_to_datetime(s) - EPOCH).total_seconds()
+
+
+class FrameTimer:
+    def __init__(self, fps):
+        self.next = 0
+        self.interval = 1/fps
+
+    def wait(self):
+        """Waits until the next frame display time."""
+        self.next = wait_until(self.next) + self.interval
