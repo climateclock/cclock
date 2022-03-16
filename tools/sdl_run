@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+import os
+import re
+import sys
+
+command = sys.argv[0]
+os.chdir(os.path.dirname(command))
+os.chdir('..')
+
+sys.path.append('.')
+for name in os.listdir('.'):
+    if name.startswith('Adafruit_CircuitPython'):
+        sys.path.append(name)
+
+try:
+    module = sys.argv[1]
+    module = re.sub(r'\.py.?$', '', module)
+except:
+    print(f'''\
+Usage: {command} <module>
+
+Runs a module on the local machine, using SDL as the graphics driver.
+<module>.py should be a Python module containing a run() function
+that takes an instance of frame.Frame as its single argument.''')
+    raise SystemExit()
+
+try:
+    run = __import__(module).run
+except Exception as e:
+    raise SystemExit(e)
+
+import sdl_frame
+frame = sdl_frame.SdlFrame(192, 32, 30)
+run(frame)

@@ -2,12 +2,6 @@ import ccapi
 import cctime
 import ccui
 
-FRAME_CONSTRUCTORS = {
-    'mpv': lambda: __import__('mpv_frame').MpvFrame(192, 32, 30),
-    'sdl': lambda: __import__('sdl_frame').SdlFrame(192, 32, 30),
-}
-
-
 def run(frame):
     cctime.enable_rtc()
     # data = ccapi.fetch()
@@ -26,15 +20,3 @@ def run(frame):
         frame.paste(0, 11, symbol_label)
         frame.paste(0, 21, count_label)
         frame.send()
-
-if __name__ == '__main__':
-    import sys
-    try:
-        frame_constructor = FRAME_CONSTRUCTORS[sys.argv[1]]
-    except:
-        print(f'Usage: {sys.argv[0]} <frame-type>')
-        print()
-        constructors = ', '.join(FRAME_CONSTRUCTORS)
-        print(f'<frame-type> is one of: {constructors}')
-        sys.exit(1)
-    run(frame_constructor())

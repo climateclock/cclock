@@ -1,3 +1,6 @@
-env
-unused
+Adafruit_CircuitPython_*/
+env/
+unused/
+
+code.py
 *.pyc
