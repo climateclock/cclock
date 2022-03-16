@@ -26,7 +26,6 @@ def get_time():
     """Returns the current time in seconds since 1970-01-01 00:00:00 UTC."""
     if fake_time:
         return fake_time
-    import time
     return time.time()
 
 
@@ -34,6 +33,14 @@ def set_fake_time(t):
     """Sets the time for testing.  To use the real time, set_fake_time(None)."""
     global fake_time
     fake_time = t
+
+
+def sleep(t):
+    """Advances the time by the given amount, sleeping if necessary."""
+    if fake_time:
+        set_fake_time(fake_time + t)
+    else:
+        time.sleep(t)
 
 
 def wait_until(t):

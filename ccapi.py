@@ -4,6 +4,7 @@ See: https://docs.climateclock.world/climate-clock-docs/climate-clock-api
 """
 
 import cctime
+import math
 
 
 def try_isoformat_to_time(data, key):
@@ -13,11 +14,19 @@ def try_isoformat_to_time(data, key):
         print("Field %r contains an invalid timestamp: %r" % (key, data))
 
 
+def sorted_longest_first(labels):
+    return sorted(labels, key=lambda label: -len(label))
+
+
 class SlotRepr:
     def __repr__(self):
+        cls, slots = self.__class__, []
+        while cls:
+            slots[:0] = getattr(cls, '__slots__', [])
+            cls = cls.__bases__ and cls.__bases__[0]
         return "%s(%s)" % (
             self.__class__.__name__,
-            ", ".join(f"{key}={repr(getattr(self, key))}" for key in self.__slots__),
+            ", ".join(f"{key}={repr(getattr(self, key))}" for key in slots)
         )
 
 
@@ -61,8 +70,7 @@ class Module(SlotRepr):
             "update_time", cctime.get_time() + data.get("update_interval_seconds", 3600)
         )
         # Sort labels in order from longest to shortest
-        self.labels = data.get("labels") or []
-        self.labels.sort(key=lambda label: -len(label))
+        self.labels = sorted_longest_first(data.get("labels") or [])
         self.lang = data.get("lang") or "en"
         return self
 
@@ -102,17 +110,23 @@ class NewsfeedItem(SlotRepr):
 
 
 class Value(Module):
-    __slots__ = "initial", "start_time", "growth", "resolution", "unit_labels"
+    __slots__ = "initial", "ref_time", "growth", "rate", "resolution", "unit_labels"
 
     def load(self, data):
         Module.load(self, data)
         self.initial = data.get("initial") or 0
-        self.start_time = try_isoformat_to_time(data, "timestamp")
+        self.ref_time = try_isoformat_to_time(data, "timestamp")
         self.growth = data.get("growth") or "linear"
+        self.rate = data.get("rate") or 0
         self.resolution = data.get("resolution") or 1
-        self.unit_labels = sorted(
-            data.get("unit_labels") or [], key=lambda label: -len(label)
-        )
+        self.unit_labels = sorted_longest_first(data.get("unit_labels") or [])
+
+        # Convert the resolution field to some useful values.
+        res, decimals, scale = self.resolution, 0, 1
+        while res < 0.9:  # allow for precision error in CircuitPython floats
+            res, decimals, scale = res * 10, decimals + 1, scale * 10
+        self.decimals = decimals  # number of decimal places
+        self.scale = scale  # scaling factor as a bigint
         return self
 
 
