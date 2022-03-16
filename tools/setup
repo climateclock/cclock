@@ -4,3 +4,13 @@ if ! [ -d env ]; then
   virtualenv -p python3 env
 fi
 pip3 install -U -r requirements.txt
+
+bundle_name=adafruit-circuitpython-bundle-7.x-mpy-20220315
+if ! [ -d cache/lib ]; then
+    mkdir cache
+    curl -o cache/$bundle_name.zip -L https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/download/20220315/$bundle_name.zip
+    cd cache
+    unzip $bundle_name.zip
+    mv $bundle_name/lib .
+    cd ..
+fi

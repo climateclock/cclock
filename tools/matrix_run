@@ -6,6 +6,7 @@ cd ..
 module="$1"
 module=${module%.py}
 target=/Volumes/CIRCUITPY
+unalias -a
 
 if [ -z "$module" ]; then
     echo "Usage: $0 <module>"
@@ -24,12 +25,18 @@ if [ ! -d "$target" ]; then
     exit 1
 fi
 
-cat <<EOF >code.py
+mkdir -p $target/lib
+for lib in bitmap_font datetime display_text ds3231 matrixportal requests; do
+    rm -rf $target/lib/adafruit_$lib*
+    cp -r cache/lib/adafruit_$lib* $target/lib/
+done
+
+cp *.py $target
+
+cat <<EOF >$target/code.py
 import matrix_frame
 frame = matrix_frame.new_display_frame(192, 32, 64)
 
 from $module import run
 run(frame)
 EOF
-
-command cp *.py $target
