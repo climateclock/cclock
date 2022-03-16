@@ -45,5 +45,11 @@ a USB cable to the board).  This will cause the MatrixPortal to reboot
 and run your module.
 
 `clock.py` is a partial clock implementation that exercises the font
-rendering methods in `Frame` by showing a countdown timer.  To run it,
-you would run either `tools/sdl_frame clock` or `tools/matrix_frame clock`.
+rendering methods in `Frame` by showing a countdown timer.  You can run
+it in a window on your computer with:
+
+    tools/sdl_frame clock
+
+or run it on an attached MatrixPortal with:
+
+    tools/matrix_frame clock

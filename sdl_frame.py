@@ -1,8 +1,19 @@
 import cctime
 from ctypes import byref, c_char, c_void_p
+import displayio
 import frame
 from sdl2 import *
 import time
+from adafruit_bitmap_font import pcf
+from adafruit_display_text import bitmap_label
+
+FONTS = {}
+
+def load_font(font_id):
+    if font_id not in FONTS:
+        FONTS[font_id] = pcf.PCF(open(font_id + '.pcf', 'rb'), displayio.Bitmap)
+    return FONTS[font_id]
+
 
 def flush_events():
     event = SDL_Event()
@@ -22,14 +33,14 @@ class SdlFrame(frame.Frame):
 
         SDL_Init(SDL_INIT_VIDEO)
         self.window = SDL_CreateWindow(
-            title.encode('utf-8'),
+            bytes(title, 'utf-8'),
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
             w * scale, h * scale,
             SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
         )
         self.surface = SDL_GetWindowSurface(self.window)
         self.canvas = SDL_CreateRGBSurface(
-            0, w, h, 24, 0xff0000, 0x00ff00, 0x0000ff, 0)
+            0, w, h, 24, 0x0000ff, 0x00ff00, 0xff0000, 0)
         flush_events()
 
     def pack(self, r, g, b):
@@ -75,4 +86,15 @@ class SdlFrame(frame.Frame):
             si += source.w * 3
 
     def new_label(self, text, font_id, cv):
-        raise NotImplemented
+        return LabelFrame(text, font_id, cv)
+
+
+class LabelFrame(frame.Frame):
+    def __init__(self, text, font_id, cv):
+        font = load_font(font_id)
+        label = bitmap_label.Label(font, text=text)
+        black = bytearray([0, 0, 0])
+        palette = [black, cv]
+        self.w = label.bitmap.width
+        self.h = label.bitmap.height
+        self.pixels = b''.join(palette[p] for p in label.bitmap)
