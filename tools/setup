@@ -1,7 +1,10 @@
 #!/bin/bash
 
+cd $(dirname "$0")
+cd ..
+
 if ! [ -d env ]; then
-  virtualenv -p python3 env
+    virtualenv -p python3 env
 fi
 pip3 install -U -r requirements.txt
 
@@ -14,3 +17,17 @@ if ! [ -d cache/lib ]; then
     mv $bundle_name/lib .
     cd ..
 fi
+
+if ! [ -d Adafruit_CircuitPython_Bitmap_Font ]; then
+    git clone https://github.com/adafruit/Adafruit_CircuitPython_Bitmap_Font
+fi
+cd Adafruit_CircuitPython_Bitmap_Font
+git checkout 1.5.6
+cd ..
+
+if ! [ -d Adafruit_CircuitPython_Display_Text ]; then
+    git clone https://github.com/adafruit/Adafruit_CircuitPython_Display_Text
+fi
+cd Adafruit_CircuitPython_Display_Text
+git checkout 2.22.2
+cd ..

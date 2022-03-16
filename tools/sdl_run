@@ -9,6 +9,7 @@ os.chdir(os.path.dirname(command))
 os.chdir('..')
 
 sys.path.append('.')
+sys.path.append('stubs')
 for name in os.listdir('.'):
     if name.startswith('Adafruit_CircuitPython'):
         sys.path.append(name)
