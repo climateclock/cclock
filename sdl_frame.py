@@ -7,6 +7,8 @@ import time
 def flush_events():
     event = SDL_Event()
     while SDL_PollEvent(byref(event)):
+        if event.key.keysym.scancode == SDL_SCANCODE_ESCAPE:
+            raise SystemExit()
         if event.type == SDL_QUIT:
             raise SystemExit()
 
