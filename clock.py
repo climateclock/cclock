@@ -5,7 +5,7 @@ import ccui
 def run(frame):
     cctime.enable_rtc()
     # data = ccapi.fetch()
-    data = ccapi.load_file('climateclock.json')
+    data = ccapi.load_file('cache/climateclock.json')
     cv = frame.pack(*data.config.display.deadline.primary)
     carbon_module = data.module_dict['carbon_deadline_1']
 

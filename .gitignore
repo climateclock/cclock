@@ -1,4 +1,5 @@
 Adafruit_CircuitPython_*/
+cache/
 env/
 unused/
 
