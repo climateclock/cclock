@@ -65,8 +65,14 @@ class SdlFrame(frame.Frame):
                 start = (x + y * self.w) * 3
                 self.pixels[start:start + w * 3] = row
 
-    def paste(self, x, y, source, sx, sy, sw, sh):
-        raise NotImplemented
+    def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
+        x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
+        i = (x + y * self.w) * 3
+        si = (sx + sy * source.w) * 3
+        for dy in range(0, h):
+            self.pixels[i:i + w * 3] = source.pixels[si:si + w * 3]
+            i += self.w * 3
+            si += source.w * 3
 
-    def new_text_frame(self, text, font_id, cv):
+    def new_label(self, text, font_id, cv):
         raise NotImplemented

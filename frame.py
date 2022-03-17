@@ -50,11 +50,11 @@ class Frame:  # Frame is an abstract interface
         out of range; pixels in range are filled and the rest are ignored."""
         raise NotImplementedError
 
-    def paste(self, x, y, source, sx=None, sy=None, sw=None, sh=None):
+    def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
         """Copies a rectangle of pixels from a source frame into this frame,
         placing the top-left corner of the rectangle at (x, y).  No exception
-        is raised when some pixels are out of range; pixels in range are
-        pasted over and the rest are ignored."""
+        is raised when some pixels are out of range; all pixels that would
+        land in this frame are pasted over and the rest are ignored."""
         raise NotImplementedError
 
     def new_label(self, text, font_id, cv):
@@ -74,3 +74,30 @@ def clamp_rect(x, y, w, h, fw, fh):
     yt = clamp(y, 0, fh)
     yb = clamp(y + h, yt, fh)
     return xl, yt, xr - xl, yb - yt
+
+def intersect(frame, x, y, source, sx, sy, w, h):
+    # Fill in defaults for the source rectangle.
+    sl = 0 if sx is None else sx
+    st = 0 if sy is None else sy
+    w = source.w if w is None else w
+    h = source.h if h is None else h
+
+    # Clamp the bottom-right corner to the bottom-right of both frames.
+    sr = min(sl + w, source.w, sl + frame.w - x)
+    sb = min(st + h, source.h, st + frame.h - y)
+
+    # Clamp the top-left corner to the top-left of both frames.
+    dx = max(-sl, -x)
+    if dx > 0:
+        x += dx
+        sl += dx
+    dy = max(-st, -y)
+    if dy > 0:
+        y += dy
+        st += dy
+
+    # Return the resulting rectangle if it is non-empty.
+    if x < frame.w and y < frame.h:
+        if sl < sr <= source.w and st < sb <= source.h:
+            return x, y, sl, st, sr - sl, sb - st
+    return 0, 0, 0, 0, 0, 0

@@ -71,12 +71,9 @@ class MatrixFrame(frame.Frame):
         x, y, w, h = frame.clamp_rect(x, y, w, h, self.w, self.h)
         bitmaptools.fill_region(self.bitmap, x, y, x + w, y + h, cv)
 
-    def paste(self, x, y, source, sx=None, sy=None, sw=None, sh=None, cv=None):
-        x1 = sx or 0
-        y1 = sy or 0
-        x2 = x1 + (sw or source.w)
-        y2 = y1 + (sh or source.h)
-        self.bitmap.blit(x, y, source.bitmap, x1=x1, y1=y1, x2=x2, y2=y2)
+    def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
+        x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
+        self.bitmap.blit(x, y, source.bitmap, x1=sx, y1=sy, x2=sx+w, y2=sy+h)
 
     def new_label(self, text, font_id, cv):
         return LabelFrame(text, font_id, cv)
