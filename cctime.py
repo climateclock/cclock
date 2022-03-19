@@ -8,18 +8,30 @@ except:
 
 EPOCH = datetime.datetime(1970, 1, 1)
 fake_time = None
+time_source = None
 
 
 def enable_rtc():
-    """Activates use of an on-board RTC as the time source."""
+    """Activates use of an attached DS3231 RTC as the time source."""
+    global time_source
     try:
         import board
         import rtc
+    except:
+        print(f'No rtc module available; using internal clock')
+        return
+    try:
         from adafruit_ds3231 import DS3231
-        ds3231 = DS3231(board.I2C())
-        rtc.set_time_source(ds3231)
+        time_source = DS3231(board.I2C())
+        rtc.set_time_source(time_source)
     except Exception as e:
         print(f'Could not find an attached DS3231 RTC: {e}')
+
+
+def set_rtc(y, l, d, h, m, s):
+    """Sets the time on the attached RTC, if enabled."""
+    if time_source:
+        time_source.datetime = time.struct_time((y, l, d, h, m, s, 0, -1, -1))
 
 
 def get_time():
