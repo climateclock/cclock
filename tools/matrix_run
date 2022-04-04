@@ -26,7 +26,7 @@ if [ ! -d "$target" ]; then
 fi
 
 mkdir -p $target/lib
-for lib in bitmap_font datetime display_text ds3231 matrixportal requests; do
+for lib in bitmap_font datetime display_text ds3231 esp32spi matrixportal requests; do
     rm -rf $target/lib/adafruit_$lib*
     cp -r cache/lib/adafruit_$lib* $target/lib/
 done
