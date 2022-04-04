@@ -31,3 +31,10 @@ fi
 cd Adafruit_CircuitPython_Display_Text
 git checkout 2.22.2
 cd ..
+
+if ! [ -d Adafruit_CircuitPython_ESP32SPI ]; then
+    git clone https://github.com/adafruit/Adafruit_CircuitPython_ESP32SPI
+fi
+cd Adafruit_CircuitPython_ESP32SPI
+git checkout 4.0.2
+cd ..
