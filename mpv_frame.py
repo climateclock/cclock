@@ -7,7 +7,10 @@ class MpvFrame(frame.Frame):
     """A Frame implementation that uses the mpv video player for display."""
 
     def __init__(self, w, h, fps):
-        frame.Frame.__init__(self, w, h)
+        """Creates a Frame with a given width and height.  Coordinates of the
+        top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
+        self.w = w
+        self.h = h
         self.timer = cctime.FrameTimer(fps)
         self.pixels = bytearray(b'\x00\x00\x00' * w * h)
         self.process = subprocess.Popen([
