@@ -11,12 +11,9 @@ The Frame returned by new_label() need not implement any methods; it only
 needs to have self.w and self.h attributes and be accepted by self.paste().
 """
 
-class Frame:  # Frame is an abstract interface
-    def __init__(self, w, h):
-        """Creates a Frame with a given width and height.  Coordinates of the
-        top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
-        self.w = w
-        self.h = h
+class Frame:
+    def __init__(self):
+        raise NotImplementedError('Frame is an abstract interface')
 
     def pack(self, r, g, b):
         """Packs R, G, B components (each 0 to 255) into a colour value."""

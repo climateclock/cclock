@@ -36,7 +36,10 @@ def new_display_frame(w, h, depth):
 
 class MatrixFrame(frame.Frame):
     def __init__(self, w, h, depth, matrix=None):
-        frame.Frame.__init__(self, w, h)
+        """Creates a Frame with a given width and height.  Coordinates of the
+        top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
+        self.w = w
+        self.h = h
         self.bitmap = displayio.Bitmap(w, h, depth)
         self.depth = depth
         self.display = None
