@@ -1,7 +1,8 @@
 from network import Network, State
 import socket
-import ssl
+from ssl import create_default_context as create_ssl_context
 import time
+
 
 class UnixNetwork(Network):
     def __init__(self, ssid, password, wifi_connect_delay=5, debug=False):
@@ -42,7 +43,7 @@ class UnixNetwork(Network):
         port = port or (443 if ssl else 80)
         sock = socket.create_connection((hostname, port))
         if ssl:
-            context = ssl.create_default_context()
+            context = create_ssl_context()
             sock = context.wrap_socket(sock, server_hostname=hostname)
         self.socket = sock
         self.set_state(State.CONNECTED)
