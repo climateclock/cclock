@@ -1,14 +1,9 @@
 import board
-from digitalio import DigitalInOut, Direction, Pull
+import gpio
 import storage
 
-up = DigitalInOut(board.BUTTON_UP)
-up.direction = Direction.INPUT
-up.pull = Pull.UP
-
-down = DigitalInOut(board.BUTTON_DOWN)
-down.direction = Direction.INPUT
-down.pull = Pull.UP
+up = gpio.input(board.BUTTON_UP, default=True)
+down = gpio.input(board.BUTTON_DOWN, default=True)
 
 # By default, the filesystem is writable from Python to let the software update
 # itself.  Hold either button on boot to make the filesystem writable over USB.

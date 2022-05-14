@@ -1,7 +1,11 @@
+from adafruit_esp32spi import adafruit_esp32spi
 import board
 import busio
-from digitalio import DigitalInOut
+import gpio
 from network import Network, State
+import supervisor
+import time
+
 
 def to_bytes(bytes_or_string):
     if isinstance(bytes_or_string, bytes):
@@ -55,11 +59,12 @@ class EspWifiNetwork(Network):
 
     def enable_step(self, ssid, password):
         if not self.esp:
-            esp32_cs = DigitalInOut(board.ESP_CS)
-            esp32_ready = DigitalInOut(board.ESP_BUSY)
-            esp32_reset = DigitalInOut(board.ESP_RESET)
+            esp32_cs = gpio.output(board.ESP_CS)
+            esp32_ready = gpio.output(board.ESP_BUSY)
+            esp32_reset = gpio.output(board.ESP_RESET)
             self.spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
             self.esp = EspWifi(self.spi, esp32_cs, esp32_ready, esp32_reset)
+            self.esp._debug = self.debug
             self.esp.reset()
 
         elif self.esp.status == 3:
@@ -73,14 +78,14 @@ class EspWifiNetwork(Network):
             self.socket = self.esp.get_socket()
             mode = self.esp.TLS_MODE if ssl else self.esp.TCP_MODE
             port = port or (443 if ssl else 80)
-            self.esp.socket_open(self.socket, self.hostname, port, mode)
+            self.esp.socket_open(self.socket, hostname, port, mode)
 
         if self.esp.socket_connected(self.socket):
             self.set_state(State.CONNECTED)
 
     def send_step(self, data):
         if self.esp.socket_connected(self.socket):
-            self.esp.socket_write(data)
+            self.esp.socket_write(self.socket, data)
         else:
             self.set_state(State.ONLINE)
 
@@ -99,8 +104,10 @@ class EspWifiNetwork(Network):
         self.set_state(State.ONLINE)
 
     def disable_step(self):
-        self.esp.deinit()
-        self.esp = None
-        self.spi.deinit()
-        self.spi = None
+        if self.esp:
+            self.esp.deinit()
+            self.esp = None
+        if self.spi:
+            self.spi.deinit()
+            self.spi = None
         self.set_state(State.OFFLINE)
