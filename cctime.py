@@ -34,6 +34,13 @@ def set_rtc(y, l, d, h, m, s):
         time_source.datetime = time.struct_time((y, l, d, h, m, s, 0, -1, -1))
 
 
+def monotonic():
+    """Returns a monotonically increasing floating-point number of seconds."""
+    if fake_time:
+        return fake_time
+    return time.monotonic()
+
+
 def get_time():
     """Returns the current time in seconds since 1970-01-01 00:00:00 UTC."""
     if fake_time:

@@ -1,7 +1,7 @@
+from cctime import get_time
 from network import Network, State
 import socket
 from ssl import create_default_context as create_ssl_context
-import time
 
 
 class UnixNetwork(Network):
@@ -25,19 +25,19 @@ class UnixNetwork(Network):
     def enable_step(self, ssid, password):
         if not self.initialized:
             if self.initialize_time:
-                if time.time() > self.initialize_time:
+                if get_time() > self.initialize_time:
                     self.initialized = True
                     self.initialize_time = None
             else:
-                self.initialize_time = time.time() + self.initialize_delay
+                self.initialize_time = get_time() + self.initialize_delay
 
         elif self.state == State.OFFLINE:
             if self.wifi_connect_time:
-                if time.time() > self.wifi_connect_time:
+                if get_time() > self.wifi_connect_time:
                     self.wifi_connect_time = None
                     self.set_state(State.ONLINE)
             elif ssid == self.ssid and password == self.password:
-                self.wifi_connect_time = time.time() + self.wifi_connect_delay
+                self.wifi_connect_time = get_time() + self.wifi_connect_delay
 
     def connect_step(self, hostname, port=None, ssl=True):
         port = port or (443 if ssl else 80)

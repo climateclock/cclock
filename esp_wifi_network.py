@@ -1,10 +1,9 @@
 from adafruit_esp32spi import adafruit_esp32spi
 import board
 import busio
+import cctime
 import gpio
 from network import Network, State
-import supervisor
-import time
 
 
 def to_bytes(bytes_or_string):
@@ -25,15 +24,15 @@ class EspWifi(adafruit_esp32spi.ESP_SPIcontrol):
             self._gpio0.value = True  # not bootload mode
         self._cs.value = True
         self._reset.value = False
-        time.sleep(0.01)  # reset
+        cctime.sleep(0.01)  # reset
         self._reset.value = True
         if self._gpio0:
             self._gpio0.direction = Direction.INPUT
-        self.reset_started_ms = supervisor.ticks_ms()
+        self.reset_started = cctime.monotonic()
 
     def is_ready(self):
         if self.reset_started_ms:
-            if supervisor.ticks_ms() < self.reset_started_ms + 750:
+            if cctime.monotonic() < self.reset_started_ms + 0.75:
                 return False
             self.reset_started_ms = None
         return not self._ready.value
@@ -50,6 +49,7 @@ class EspWifiNetwork(Network):
         self.esp = None
         self.socket = None
         self.debug = debug
+        self.wifi_retry_deadline_ms = None
         self.set_state(State.OFFLINE)
 
     def set_state(self, new_state):
@@ -59,9 +59,9 @@ class EspWifiNetwork(Network):
 
     def enable_step(self, ssid, password):
         if not self.esp:
-            esp32_cs = gpio.output(board.ESP_CS)
-            esp32_ready = gpio.output(board.ESP_BUSY)
-            esp32_reset = gpio.output(board.ESP_RESET)
+            esp32_cs = gpio.Output(board.ESP_CS)
+            esp32_ready = gpio.Output(board.ESP_BUSY)
+            esp32_reset = gpio.Output(board.ESP_RESET)
             self.spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
             self.esp = EspWifi(self.spi, esp32_cs, esp32_ready, esp32_reset)
             self.esp._debug = self.debug
@@ -71,7 +71,15 @@ class EspWifiNetwork(Network):
             self.set_state(State.ONLINE)
 
         elif self.esp.is_ready():
+            if self.wifi_retry_deadline:
+                if cctime.monotonic() > self.wifi_retry_deadline:
+                    self.esp.reset()
+                    self.wifi_retry_deadline_ms = None
+                    return
+
             self.esp.wifi_set_passphrase(to_bytes(ssid), to_bytes(password))
+            if not self.wifi_retry_deadline_ms:
+                self.wifi_retry_deadline = cctime.monotonic() + 30
 
     def connect_step(self, hostname, port=None, ssl=True):
         if not self.socket:
