@@ -2,10 +2,12 @@ import board
 import gpio
 import storage
 
-up = gpio.input(board.BUTTON_UP, default=True)
-down = gpio.input(board.BUTTON_DOWN, default=True)
+up = gpio.Button(board.BUTTON_UP)
+down = gpio.Button(board.BUTTON_DOWN)
 
 # By default, the filesystem is writable from Python to let the software update
 # itself.  Hold either button on boot to make the filesystem writable over USB.
-pressed = (not up.value) or (not down.value)
-storage.remount('/', readonly=pressed)
+storage.remount('/', readonly=up.pressed or down.pressed)
+
+up.deinit()
+down.deinit()
