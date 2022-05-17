@@ -3,6 +3,7 @@
 import cctime
 import math
 
+
 def calc_deadline(module, now_time):
     t = int(module.ref_time - now_time)
     s, t = t % 60, t // 60
