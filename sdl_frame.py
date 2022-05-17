@@ -15,13 +15,14 @@ def load_font(font_id):
     return FONTS[font_id]
 
 
-def flush_events():
-    event = SDL_Event()
-    while SDL_PollEvent(byref(event)):
-        if event.key.keysym.scancode == SDL_SCANCODE_ESCAPE:
-            raise SystemExit()
-        if event.type == SDL_QUIT:
-            raise SystemExit()
+class SdlButton:
+    def __init__(self, frame, scancode):
+        self.frame = frame
+        self.scancode = scancode
+
+    @property
+    def pressed(self):
+        return self.scancode in self.frame.pressed_scancodes
 
 
 class SdlFrame(frame.Frame):
@@ -44,7 +45,8 @@ class SdlFrame(frame.Frame):
         self.surface = SDL_GetWindowSurface(self.window)
         self.canvas = SDL_CreateRGBSurface(
             0, w, h, 24, 0x0000ff, 0x00ff00, 0xff0000, 0)
-        flush_events()
+        self.pressed_scancodes = set()
+        self.flush_events()
 
     def pack(self, r, g, b):
         return bytearray([r, g, b])
@@ -60,7 +62,20 @@ class SdlFrame(frame.Frame):
         SDL_BlitScaled(self.canvas, None, self.surface, None)
         self.timer.wait()
         SDL_UpdateWindowSurface(self.window)
-        flush_events()
+        self.flush_events()
+
+    def flush_events(self):
+        event = SDL_Event()
+        while SDL_PollEvent(byref(event)):
+            scancode = event.key.keysym.scancode
+            if event.type == SDL_KEYDOWN:
+                self.pressed_scancodes.add(scancode)
+            if event.type == SDL_KEYUP:
+                self.pressed_scancodes -= {scancode}
+            if scancode == SDL_SCANCODE_ESCAPE:
+                raise SystemExit()
+            if event.type == SDL_QUIT:
+                raise SystemExit()
 
     def get(self, x, y):
         offset = (x + y * self.w) * 3

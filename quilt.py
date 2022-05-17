@@ -1,4 +1,4 @@
-def run(frame):
+def run(frame, button_map):
     t = 0
     while True:
         for i in range(192):

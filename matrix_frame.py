@@ -87,4 +87,5 @@ class LabelFrame(frame.Frame):
         font = load_font(font_id)
         label = bitmap_label.Label(font, text=text, color=cv, save_text=False)
         self.bitmap = label.bitmap
-        frame.Frame.__init__(self, self.bitmap.width, self.bitmap.height)
+        self.w = self.bitmap.width
+        self.h = self.bitmap.height

@@ -11,6 +11,13 @@ fake_time = None
 time_source = None
 
 
+def monotonic():
+    """Returns a monotonically increasing floating-point number of seconds."""
+    if fake_time:
+        return fake_time
+    return time.monotonic()
+
+
 def enable_rtc():
     """Activates use of an attached DS3231 RTC as the time source."""
     global time_source

@@ -38,5 +38,7 @@ import matrix_frame
 frame = matrix_frame.new_display_frame(192, 32, 64)
 
 from $module import run
-run(frame)
+up = gpio.Button(board.BUTTON_UP)
+down = gpio.Button(board.BUTTON_DOWN)
+run(frame, {'UP': up, 'DOWN': down})
 EOF
