@@ -33,11 +33,11 @@ expose a run() function that takes a Frame instance as its one argument.
 An example of such a module is `quilt.py`, provided as a simple demo;
 you can run it like this:
 
-    tools/sdl_frame quilt
+    tools/sdl_run quilt
 
 which will appear in a window on your computer, or like this:
 
-    tools/matrix_frame quilt
+    tools/matrix_run quilt
 
 which will copy all the Python files onto an attached MatrixPortal board
 (via the `CIRCUITPY` drive that appears on your computer when you connect
@@ -48,8 +48,8 @@ and run your module.
 rendering methods in `Frame` by showing a countdown timer.  You can run
 it in a window on your computer with:
 
-    tools/sdl_frame clock
+    tools/sdl_run clock
 
 or run it on an attached MatrixPortal with:
 
-    tools/matrix_frame clock
+    tools/matrix_run clock
