@@ -35,6 +35,6 @@ import sdl2
 from sdl_frame import SdlFrame, SdlButton
 
 frame = SdlFrame(192, 32, 30)
-up = SdlButton(frame, sdl2.SDL_SCANCODE_LSHIFT)
-down = SdlButton(frame, sdl2.SDL_SCANCODE_RSHIFT)
-run(frame, {'UP': up, 'DOWN': down})
+left_shift = SdlButton(frame, sdl2.SDL_SCANCODE_LSHIFT)
+right_shift = SdlButton(frame, sdl2.SDL_SCANCODE_RSHIFT)
+run(frame, {'NEXT': left_shift, 'ENTER': right_shift})

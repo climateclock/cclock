@@ -40,6 +40,14 @@ class Frame:
         given coordinates are out of range, no exception is raised."""
         raise NotImplementedError
 
+    def clear(self, x=0, y=0, w=None, h=None):
+        """Clears all pixels to black."""
+        if w is None:
+            w = self.w
+        if h is None:
+            h = self.h
+        self.fill(x, y, w, h, self.pack(0, 0, 0))
+
     def fill(self, x, y, w, h, cv):
         """Sets the colour of all pixels in the rectangle from (x, y) to
         (x + w - 1), (y + h - 1), inclusive, to cv.  Both w and h must be

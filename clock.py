@@ -18,22 +18,35 @@ class Clock:
         self.state = 'CLOCK'
         self.state_steps = {
             'CLOCK': self.clock_step,
-            'MENU': self.menu_step
+            'MENU': self.menu_step,
+            'PASSWORD': self.password_step,
         }
         self.clock_reader = ButtonReader({
-            button_map['UP']: {
+            button_map['NEXT']: {
                 Press.SHORT: 'NEXT_LIFELINE',
-                Press.DOUBLE: 'MENU'
             },
-            button_map['DOWN']: {
-                Press.SHORT: 'PREV_LIFELINE',
-                Press.REPEAT: 'PREV_LIFELINE'
+            button_map['ENTER']: {
+                Press.LONG: 'MENU',
             }
         })
         self.menu_reader = ButtonReader({
-            button_map['UP']: {
-                Press.DOUBLE: 'CLOCK'
+            button_map['NEXT']: {
+                Press.SHORT: 'NEXT_OPTION',
             },
+            button_map['ENTER']: {
+                Press.SHORT: 'ENTER',
+                Press.LONG: 'PASSWORD'
+            }
+        })
+        self.password_reader = ButtonReader({
+            button_map['NEXT']: {
+                Press.SHORT: 'NEXT_CHAR',
+                Press.REPEAT: 'NEXT_CHAR',
+            },
+            button_map['ENTER']: {
+                Press.SHORT: 'ENTER_CHAR',
+                Press.LONG: 'CLOCK'
+            }
         })
 
         self.carbon_module = self.data.module_dict['carbon_deadline_1']
@@ -59,14 +72,44 @@ class Clock:
         self.frame.send()
 
     def menu_start(self):
-        self.frame.fill(0, 0, self.frame.w, self.frame.h, self.cv)
-        label = self.frame.new_label('menu', 'helvetica-15', self.cv)
-        self.frame.paste(0, 0, label)
+        self.frame.clear()
+        label = self.frame.new_label('Brightness', 'kairon-10', self.cv)
+        self.frame.paste(1, 0, label)
+        label = self.frame.new_label('Wi-Fi connection', 'kairon-10', self.cv)
+        self.frame.paste(1, 11, label)
+        label = self.frame.new_label('Lifelines', 'kairon-10', self.cv)
+        self.frame.paste(1, 22, label)
         self.state = 'MENU'
         self.menu_reader.reset()
 
     def menu_step(self):
         self.menu_reader.step(self.receive)
+        self.frame.send()
+
+    def password_start(self):
+        self.frame.clear()
+        label = self.frame.new_label('Wi-Fi password:', 'kairon-10', self.cv)
+        self.frame.paste(1, 0, label)
+        self.state = 'PASSWORD'
+
+        self.charset = (
+            ' ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            'abcdefghijklmnopqrstuvwxyz'
+            '0123456789.,:;!?'
+            '\'"@#$%^&*+-_=*/()[]<>{}~\\'
+        )
+        self.char_index = 0
+        self.char = self.charset[0]
+        self.entered_text = ''
+
+    def password_step(self):
+        self.char = self.charset[self.char_index % len(self.charset)]
+
+        label = self.frame.new_label(
+            self.entered_text + '[' + self.char + ']', 'kairon-10', self.cv)
+        self.frame.clear(1, 16)
+        self.frame.paste(1, 16, label)
+        self.password_reader.step(self.receive)
         self.frame.send()
 
     def receive(self, command):
@@ -79,6 +122,12 @@ class Clock:
             self.clock_start()
         if command == 'MENU':
             self.menu_start()
+        if command == 'PASSWORD':
+            self.password_start()
+        if command == 'NEXT_CHAR':
+            self.char_index = (self.char_index + 1) % len(self.charset)
+        if command == 'ENTER_CHAR':
+            self.entered_text += self.char
 
     def incr_lifeline(self, delta):
         self.lifeline_index = (
