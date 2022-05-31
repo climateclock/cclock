@@ -48,7 +48,7 @@ def format_value(module, now_time):
 def render_deadline_module(frame, y, module, cv):
     yr, d, h, m, s = calc_deadline(module, cctime.get_time())
     text = f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}'
-    frame.paste(0, y, frame.new_label(text, 'helvetica-15', cv))
+    frame.paste(1, y, frame.new_label(text, 'helvetica-15', cv))
 
 
 def render_lifeline_module(frame, y, module, cv):
@@ -72,7 +72,7 @@ def render_value_module(frame, y, module, cv):
             unit_label = frame.new_label(unit_text + ' ', 'kairon-10', cv)
             if value_label.w + text_label.w + unit_label.w < frame.w:
                 break
-    x = 0
+    x = 1
     frame.paste(x, y, value_label)
     x += value_label.w
     frame.paste(x, y + 4, unit_label)
@@ -83,4 +83,4 @@ def render_value_module(frame, y, module, cv):
 def render_newsfeed_module(frame, y, module, cv):
     item = module.items[0]
     headline_label = frame.new_label(item.headline, 'kairon-10', cv)
-    frame.paste(0, y, headline_label)
+    frame.paste(1, y, headline_label)
