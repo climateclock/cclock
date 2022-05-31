@@ -124,7 +124,8 @@ class Clock:
         self.password_update_char()
 
     def receive(self, command):
-        print(f'[{command}]', gc.mem_free())
+        print(f'[{command}]')
+        gc.collect()
         if command == 'NEXT_LIFELINE':
             self.incr_lifeline(1)
         if command == 'PREV_LIFELINE':
@@ -151,6 +152,7 @@ class Clock:
 def run(frame, button_map):
     cctime.enable_rtc()
     data = ccapi.load_file('cache/climateclock.json')
+    gc.collect()
     clock = Clock(data, frame, button_map)
     while True:
         clock.step()

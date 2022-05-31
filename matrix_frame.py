@@ -75,7 +75,7 @@ class MatrixFrame(frame.Frame):
         bitmaptools.fill_region(self.bitmap, x, y, x + w, y + h, cv)
 
     def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
-        if not source.bitmap:
+        if source.w == 0 or source.h == 0:
             return
         x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
         self.bitmap.blit(x, y, source.bitmap, x1=sx, y1=sy, x2=sx+w, y2=sy+h)

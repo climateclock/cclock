@@ -95,6 +95,8 @@ class SdlFrame(frame.Frame):
                 self.pixels[start:start + w * 3] = row
 
     def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
+        if source.w == 0 or source.h == 0:
+            return
         x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
         i = (x + y * self.w) * 3
         si = (sx + sy * source.w) * 3
@@ -113,6 +115,11 @@ class LabelFrame(frame.Frame):
         label = bitmap_label.Label(font, text=text)
         black = bytearray([0, 0, 0])
         palette = [black, cv]
-        self.w = label.bitmap.width
-        self.h = label.bitmap.height
-        self.pixels = b''.join(palette[p] for p in label.bitmap)
+        if label.bitmap:
+            self.w = label.bitmap.width
+            self.h = label.bitmap.height
+            self.pixels = b''.join(palette[p] for p in label.bitmap)
+        else:
+            # label.bitmap can be None if there is no text to render
+            self.w = self.h = 0
+            self.pixels = b''
