@@ -2,6 +2,7 @@ import ccapi
 import cctime
 import ccui
 from ccinput import ButtonReader, Press
+import gc
 
 
 menu = [
@@ -54,7 +55,8 @@ class Clock:
             m for m in self.data.modules if m.flavor == 'lifeline']
         self.lifeline_index = 0
 
-        self.cv = self.frame.pack(*self.data.config.display.deadline.primary)
+        # self.cv = self.frame.pack(*self.data.config.display.deadline.primary)
+        self.cv = self.frame.pack(0xff, 0xff, 0xc1)
 
     def step(self):
         self.state_steps[self.state]()
@@ -100,20 +102,29 @@ class Clock:
         )
         self.char_index = 0
         self.char = self.charset[0]
-        self.entered_text = ''
+        self.text = ''
+        self.password_update_text()
 
     def password_step(self):
-        self.char = self.charset[self.char_index % len(self.charset)]
-
-        label = self.frame.new_label(
-            self.entered_text + '[' + self.char + ']', 'kairon-10', self.cv)
-        self.frame.clear(1, 16)
-        self.frame.paste(1, 16, label)
         self.password_reader.step(self.receive)
         self.frame.send()
 
+    def password_update_char(self):
+        self.char = self.charset[self.char_index]
+        char_label = self.frame.new_label(self.char, 'kairon-10', self.cv)
+        x = 1 + self.text_label.w
+        self.frame.paste(x, 16, char_label)
+        self.frame.fill(x, 26, char_label.w - 1, 1, self.cv)
+        self.frame.clear(x + char_label.w - 1, 16, 10, 12)
+
+    def password_update_text(self):
+        self.text_label = self.frame.new_label(self.text, 'kairon-10', self.cv)
+        self.frame.paste(1, 16, self.text_label)
+        self.frame.clear(1, 26, self.text_label.w, 1)
+        self.password_update_char()
+
     def receive(self, command):
-        print(f'[{command}]')
+        print(f'[{command}]', gc.mem_free())
         if command == 'NEXT_LIFELINE':
             self.incr_lifeline(1)
         if command == 'PREV_LIFELINE':
@@ -126,8 +137,10 @@ class Clock:
             self.password_start()
         if command == 'NEXT_CHAR':
             self.char_index = (self.char_index + 1) % len(self.charset)
+            self.password_update_char()
         if command == 'ENTER_CHAR':
-            self.entered_text += self.char
+            self.text += self.char
+            self.password_update_text()
 
     def incr_lifeline(self, delta):
         self.lifeline_index = (

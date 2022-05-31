@@ -75,6 +75,8 @@ class MatrixFrame(frame.Frame):
         bitmaptools.fill_region(self.bitmap, x, y, x + w, y + h, cv)
 
     def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
+        if not source.bitmap:
+            return
         x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
         self.bitmap.blit(x, y, source.bitmap, x1=sx, y1=sy, x2=sx+w, y2=sy+h)
 
@@ -87,5 +89,9 @@ class LabelFrame(frame.Frame):
         font = load_font(font_id)
         label = bitmap_label.Label(font, text=text, color=cv, save_text=False)
         self.bitmap = label.bitmap
-        self.w = self.bitmap.width
-        self.h = self.bitmap.height
+        if self.bitmap:
+            self.w = self.bitmap.width
+            self.h = self.bitmap.height
+        else:
+            # label.bitmap can be None if there is no text to render
+            self.w = self.h = 0
