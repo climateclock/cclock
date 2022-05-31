@@ -2,8 +2,7 @@
 
 Each implementation of Frame is free to use its own internal formats and depths
 for pixel data and colour values.  Clients should treat each colour value (cv)
-as an opaque object; call pack() to convert an (r, g, b) triple into a colour
-value and unpack() to extract the (r, g, b) components from a colour value.
+as an opaque object; call pack() with an (r, g, b) triple to get a colour value.
 
 Implementing send() is optional.  A Frame that cannot send() is useful as a
 buffer that can efficiently paste() from and to Frames of the same subtype.
@@ -17,10 +16,6 @@ class Frame:
 
     def pack(self, r, g, b):
         """Packs R, G, B components (each 0 to 255) into a colour value."""
-        raise NotImplementedError
-
-    def unpack(self, cv):
-        """Unpacks a colour value into R, G, B components (each 0 to 255)."""
         raise NotImplementedError
 
     def send(self):

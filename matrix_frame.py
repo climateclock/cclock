@@ -45,20 +45,19 @@ class MatrixFrame(frame.Frame):
         self.display = None
         if matrix:
             self.display = framebufferio.FramebufferDisplay(matrix)
-            self.shader = displayio.Palette(2)
+            self.shader = displayio.Palette(depth)
             self.shader[0] = 0
-            self.shader[1] = 0xffffff
+            self.next_cv = 1
             self.layer = displayio.TileGrid(self.bitmap, pixel_shader=self.shader)
             self.group = displayio.Group()
             self.group.append(self.layer)
             self.display.show(self.group)
 
     def pack(self, r, g, b):
-        # TODO handle real colour values; update the palette shader
-        return ((r << 16) | (g << 8) | b) % self.depth
-
-    def unpack(self, cv):
-        return (cv >> 16) & 0xff, (cv >> 8) & 0xff, cv & 0xff
+        if self.next_cv < self.depth:
+            self.shader[self.next_cv] = ((r << 16) | (g << 8) | b)
+            self.next_cv += 1
+        return self.next_cv - 1
 
     def send(self):
         # FramebufferDisplay has auto_refresh set, so no need to do anything.
@@ -92,6 +91,11 @@ class LabelFrame(frame.Frame):
         if self.bitmap:
             self.w = self.bitmap.width
             self.h = self.bitmap.height
+            if cv > 1:
+                self.bitmap = displayio.Bitmap(self.w, self.h, cv + 1)
+                for x in range(self.w):
+                    for y in range(self.h):
+                        self.bitmap[x, y] = label.bitmap[x, y] * cv
         else:
             # label.bitmap can be None if there is no text to render
             self.w = self.h = 0

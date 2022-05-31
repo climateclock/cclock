@@ -41,10 +41,6 @@ class MpvFrame(frame.Frame):
         """For MpvFrame, the pixel data type is a 3-element bytearray."""
         return bytearray([r, g, b])
 
-    def unpack(self, cv):
-        r, g, b = cv  # unpack bytearray
-        return r, g, b  # return tuple
-
     def send(self):
         """Did you know that you can simply write PPM images to a pipe to
         mpv and it will display them in real time?  Amazing!"""

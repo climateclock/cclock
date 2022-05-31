@@ -49,12 +49,10 @@ class SdlFrame(frame.Frame):
         self.flush_events()
 
     def pack(self, r, g, b):
+        r = int(((float(r & 0xf0)/255.0) ** 0.3) * 255.99)
+        g = int(((float(g & 0xf0)/255.0) ** 0.3) * 255.99)
+        b = int(((float(b & 0xf0)/255.0) ** 0.3) * 255.99)
         return bytearray([r, g, b])
-        return bytearray([r & 0xc0, g & 0xc0, b & 0xc0])
-
-    def unpack(self, cv):
-        r, g, b = cv  # unpack bytearray
-        return r, g, b  # return tuple
 
     def send(self):
         SDL_memcpy(c_void_p(self.canvas.contents.pixels),
@@ -83,7 +81,6 @@ class SdlFrame(frame.Frame):
 
     def set(self, x, y, cv):
         offset = (x + y * self.w) * 3
-        cv = self.pack(*self.unpack(cv))
         self.pixels[offset:offset + 3] = cv
 
     def fill(self, x, y, w, h, cv):

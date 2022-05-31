@@ -55,8 +55,11 @@ class Clock:
             m for m in self.data.modules if m.flavor == 'lifeline']
         self.lifeline_index = 0
 
-        # self.cv = self.frame.pack(*self.data.config.display.deadline.primary)
-        self.cv = self.frame.pack(0xff, 0xff, 0xc1)
+        self.pri_cv = self.frame.pack(*self.data.config.display.deadline.primary)
+        self.sec_cv = self.frame.pack(*self.data.config.display.deadline.secondary)
+        self.menu_cv = self.frame.pack(0x80, 0x80, 0x80)
+        self.edit_cv = self.frame.pack(0x00, 0xff, 0x00)
+        self.pri_cv, self.sec_cv, self.menu_cv, self.edit_cv = range(1, 5)
 
     def step(self):
         self.state_steps[self.state]()
@@ -67,19 +70,20 @@ class Clock:
 
     def clock_step(self):
         ccui.render_deadline_module(
-            self.frame, 0, self.carbon_module, self.cv)
+            self.frame, 0, self.carbon_module, self.pri_cv)
         ccui.render_lifeline_module(
-            self.frame, 16, self.lifeline_modules[self.lifeline_index], self.cv)
+            self.frame, 16, self.lifeline_modules[self.lifeline_index],
+            self.sec_cv)
         self.clock_reader.step(self.receive)
         self.frame.send()
 
     def menu_start(self):
         self.frame.clear()
-        label = self.frame.new_label('Brightness', 'kairon-10', self.cv)
+        label = self.frame.new_label('Brightness', 'kairon-10', self.menu_cv)
         self.frame.paste(1, 0, label)
-        label = self.frame.new_label('Wi-Fi connection', 'kairon-10', self.cv)
+        label = self.frame.new_label('Wi-Fi connection', 'kairon-10', self.menu_cv)
         self.frame.paste(1, 11, label)
-        label = self.frame.new_label('Lifelines', 'kairon-10', self.cv)
+        label = self.frame.new_label('Lifelines', 'kairon-10', self.menu_cv)
         self.frame.paste(1, 22, label)
         self.state = 'MENU'
         self.menu_reader.reset()
@@ -90,7 +94,7 @@ class Clock:
 
     def password_start(self):
         self.frame.clear()
-        label = self.frame.new_label('Wi-Fi password:', 'kairon-10', self.cv)
+        label = self.frame.new_label('Wi-Fi password:', 'kairon-10', self.menu_cv)
         self.frame.paste(1, 0, label)
         self.state = 'PASSWORD'
 
@@ -111,14 +115,15 @@ class Clock:
 
     def password_update_char(self):
         self.char = self.charset[self.char_index]
-        char_label = self.frame.new_label(self.char, 'kairon-10', self.cv)
+        char_label = self.frame.new_label(self.char, 'kairon-10', self.edit_cv)
         x = 1 + self.text_label.w
         self.frame.paste(x, 16, char_label)
-        self.frame.fill(x, 26, char_label.w - 1, 1, self.cv)
+        self.frame.fill(x, 26, char_label.w - 1, 1, self.menu_cv)
         self.frame.clear(x + char_label.w - 1, 16, 10, 12)
 
     def password_update_text(self):
-        self.text_label = self.frame.new_label(self.text, 'kairon-10', self.cv)
+        self.text_label = self.frame.new_label(self.text, 'kairon-10',
+            self.menu_cv)
         self.frame.paste(1, 16, self.text_label)
         self.frame.clear(1, 26, self.text_label.w, 1)
         self.password_update_char()
