@@ -26,10 +26,7 @@ if [ ! -d "$target" ]; then
 fi
 
 if [ ! -f "cache/climateclock.json" ]; then
-    echo "No file at cache/climateclock.json.  Please download it first:"
-    echo
-    echo "    curl https://api.climateclock.world/v1/clock -o cache/climateclock.json"
-    exit 1
+    curl https://api.climateclock.world/v1/clock -o cache/climateclock.json
 fi
 
 if [ ! -d cache/lib ]; then
