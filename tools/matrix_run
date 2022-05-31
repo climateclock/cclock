@@ -25,20 +25,46 @@ if [ ! -d "$target" ]; then
     exit 1
 fi
 
+if [ ! -f "cache/climateclock.json" ]; then
+    echo "No file at cache/climateclock.json.  Please download it first:"
+    echo
+    echo "    curl https://api.climateclock.world/v1/clock -o cache/climateclock.json"
+    exit 1
+fi
+
+if [ ! -d cache/lib ]; then
+    echo "The cache/lib directory is missing.  Did you run tools/setup?"
+    exit 1
+fi
+
+mkdir -p $target/cache
+cp cache/climateclock.json $target/cache
+
+cp boot.py $target
+cp code.py $target
+cp *.pcf $target
+
 mkdir -p $target/lib
-for lib in bitmap_font datetime display_text ds3231 esp32spi matrixportal requests; do
+for lib in bitmap_font datetime display_text ds3231 esp32spi matrixportal register requests; do
     rm -rf $target/lib/adafruit_$lib*
     cp -r cache/lib/adafruit_$lib* $target/lib/
 done
 
-cp *.py $target
+rm -rf $target/v999
+mkdir $target/v999
+cp *.py $target/v999
 
-cat <<EOF >$target/code.py
+cat <<EOF >$target/v999/main.py
 import matrix_frame
 frame = matrix_frame.new_display_frame(192, 32, 64)
 
-from $module import run
+import board, gpio
 up = gpio.Button(board.BUTTON_UP)
 down = gpio.Button(board.BUTTON_DOWN)
+
+from $module import run
 run(frame, {'NEXT': up, 'ENTER': down})
 EOF
+
+touch $target/v999/@VALID
+touch $target/v999/@ENABLED

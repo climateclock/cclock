@@ -4,11 +4,6 @@ import cctime
 import sys
 
 
-def log(message):
-    sys.stdout.write(message)
-    sys.stdout.flush()
-
-
 class Press:
     SHORT = 'SHORT'
     LONG = 'LONG'
@@ -70,8 +65,6 @@ class ButtonReader:
                 self.action_started[button] and
                 now > self.action_started[button] + Press.LONG_PERIOD
             )
-
-            log('x' if just_pressed else 'o' if released else '.')
 
             if button in self.immediate_buttons:
                 if Press.SHORT in commands and just_pressed:
