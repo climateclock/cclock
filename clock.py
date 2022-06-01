@@ -55,8 +55,8 @@ class Clock:
             m for m in self.data.modules if m.flavor == 'lifeline']
         self.lifeline_index = 0
 
-        self.pri_cv = self.frame.pack(*self.data.config.display.deadline.primary)
-        self.sec_cv = self.frame.pack(*self.data.config.display.deadline.secondary)
+        self.deadline_cv = self.frame.pack(*self.data.config.display.deadline.primary)
+        self.lifeline_cv = self.frame.pack(*self.data.config.display.lifeline.primary)
         self.menu_cv = self.frame.pack(0x80, 0x80, 0x80)
         self.edit_cv = self.frame.pack(0x00, 0xff, 0x00)
 
@@ -69,11 +69,11 @@ class Clock:
 
     def clock_step(self):
         ccui.render_deadline_module(
-            self.frame, 0, self.carbon_module, self.pri_cv)
+            self.frame, 0, self.carbon_module, self.deadline_cv)
         self.clock_reader.step(self.receive)
         ccui.render_lifeline_module(
             self.frame, 16, self.lifeline_modules[self.lifeline_index],
-            self.sec_cv)
+            self.lifeline_cv)
         self.clock_reader.step(self.receive)
         self.frame.send()
 
