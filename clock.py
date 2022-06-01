@@ -59,7 +59,6 @@ class Clock:
         self.sec_cv = self.frame.pack(*self.data.config.display.deadline.secondary)
         self.menu_cv = self.frame.pack(0x80, 0x80, 0x80)
         self.edit_cv = self.frame.pack(0x00, 0xff, 0x00)
-        self.pri_cv, self.sec_cv, self.menu_cv, self.edit_cv = range(1, 5)
 
     def step(self):
         self.state_steps[self.state]()
