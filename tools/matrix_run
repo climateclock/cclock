@@ -16,7 +16,7 @@ if [ -z "$module" ]; then
     exit 1
 fi
 
-if ! python -c "from $module import run"; then
+if ! python3 -c "from $module import run"; then
     exit 1
 fi
 

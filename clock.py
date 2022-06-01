@@ -71,6 +71,7 @@ class Clock:
     def clock_step(self):
         ccui.render_deadline_module(
             self.frame, 0, self.carbon_module, self.pri_cv)
+        self.clock_reader.step(self.receive)
         ccui.render_lifeline_module(
             self.frame, 16, self.lifeline_modules[self.lifeline_index],
             self.sec_cv)
