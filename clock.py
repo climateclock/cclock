@@ -16,6 +16,8 @@ class Clock:
     def __init__(self, data, frame, button_map):
         self.data = data
         self.frame = frame
+        self.langs = ['en', 'es', 'de', 'fr', 'is']
+        self.lang_index = 0
         self.state = 'CLOCK'
         self.state_steps = {
             'CLOCK': self.clock_step,
@@ -24,7 +26,7 @@ class Clock:
         }
         self.clock_reader = ButtonReader({
             button_map['NEXT']: {
-                Press.SHORT: 'NEXT_LIFELINE',
+                Press.SHORT: 'NEXT_LANGUAGE',
             },
             button_map['ENTER']: {
                 Press.LONG: 'MENU',
@@ -68,12 +70,13 @@ class Clock:
         self.clock_reader.reset()
 
     def clock_step(self):
+        lang = self.langs[self.lang_index]
         ccui.render_deadline_module(
-            self.frame, 0, self.carbon_module, self.deadline_cv)
+            self.frame, 0, self.carbon_module, self.deadline_cv, lang)
         self.clock_reader.step(self.receive)
         ccui.render_lifeline_module(
             self.frame, 16, self.lifeline_modules[self.lifeline_index],
-            self.lifeline_cv)
+            self.lifeline_cv, lang)
         self.clock_reader.step(self.receive)
         self.frame.send()
 
@@ -131,6 +134,9 @@ class Clock:
     def receive(self, command):
         print(f'[{command}]')
         gc.collect()
+        if command == 'NEXT_LANGUAGE':
+            self.frame.clear()
+            self.lang_index = (self.lang_index + 1) % len(self.langs)
         if command == 'NEXT_LIFELINE':
             self.incr_lifeline(1)
         if command == 'PREV_LIFELINE':

@@ -45,39 +45,56 @@ def format_value(module, now_time):
     return ''
 
 
-def render_deadline_module(frame, y, module, cv):
+def render_deadline_module(frame, y, module, cv, lang='en'):
     yr, d, h, m, s = calc_deadline(module, cctime.get_time())
-    text = f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}'
+    # Just testing various languages for now.
+    texts = {
+        'de': f'{yr} Jahre {d} Tage {h:02d}:{m:02d}:{s:02d}',
+        'en': f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}',
+        'es': f'{yr} años {d} días {h:02d}:{m:02d}:{s:02d}',
+        'fr': f'{yr} ans {d} jours {h:02d}:{m:02d}:{s:02d}',
+        'is': f'{yr} ár {d} dagar {h:02d}:{m:02d}:{s:02d}'
+    }
+    text = texts.get(lang, texts['en'])
     frame.paste(1, y, frame.new_label(text, 'kairon-16', cv))
 
 
-def render_lifeline_module(frame, y, module, cv):
+def render_lifeline_module(frame, y, module, cv, lang='en'):
     if module.type == 'value':
-        render_value_module(frame, y, module, cv)
+        render_value_module(frame, y, module, cv, lang)
     if module.type == 'newsfeed':
-        render_newsfeed_module(frame, y, module, cv)
+        render_newsfeed_module(frame, y, module, cv, lang)
 
 
 def measure_text(frame, font_id, text):
     return frame.new_label(text, font_id, 0).width
 
 
-def render_value_module(frame, y, module, cv):
-    formatted_value = format_value(module, cctime.get_time())
-    value_label = frame.new_label(formatted_value, 'kairon-16', cv)
-    space = frame.w - value_label.w
-    for text in module.labels:
-        text_label = frame.new_label(text, 'kairon-10', cv)
-        for unit_text in module.unit_labels:
-            unit_label = frame.new_label(unit_text + ' ', 'kairon-10', cv)
-            if value_label.w + text_label.w + unit_label.w < frame.w:
-                break
+def render_value_module(frame, y, module, cv, lang='en'):
+    # formatted_value = format_value(module, cctime.get_time())
+    formatted_value = '43.5'
+    unit_text = 'M km²'
+    value_label = frame.new_label(formatted_value + unit_text, 'kairon-16', cv)
+    # Just testing various languages for now.
+    texts = {
+      'de': 'geshütztes indigenes Land',
+      'en': 'indigenous protected land',
+      'es': 'tierra indígena protegida',
+      'fr': 'terre indigène protégée',
+      'is': 'friðlýst frumbyggjaland'
+    }
+    text_label = frame.new_label(texts.get(lang, texts['en']), 'kairon-10', cv)
+    #space = frame.w - value_label.w
+    #for text in module.labels:
+    #    text_label = frame.new_label(text, 'kairon-10', cv)
+    #    for unit_text in module.unit_labels:
+    #        unit_label = frame.new_label(unit_text + ' ', 'kairon-10', cv)
+    #        if value_label.w + text_label.w + unit_label.w < frame.w:
+    #            break
     x = 1
     frame.paste(x, y, value_label)
     x += value_label.w
-    frame.paste(x, y + 5, unit_label)
-    x += unit_label.w
-    frame.paste(x, y + 5, text_label)
+    frame.paste(x + 4, y + 5, text_label)
 
 
 def render_newsfeed_module(frame, y, module, cv):
