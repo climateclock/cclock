@@ -52,7 +52,7 @@ class SdlFrame(frame.Frame):
         r = int(((float(r & 0xf0)/255.0) ** 0.3) * 255.99)
         g = int(((float(g & 0xf0)/255.0) ** 0.3) * 255.99)
         b = int(((float(b & 0xf0)/255.0) ** 0.3) * 255.99)
-        return bytearray([r, g, b])
+        return bytes([r, g, b])
 
     def send(self):
         SDL_memcpy(c_void_p(self.canvas.contents.pixels),
@@ -110,7 +110,7 @@ class LabelFrame(frame.Frame):
     def __init__(self, text, font_id, cv):
         font = load_font(font_id)
         label = bitmap_label.Label(font, text=text)
-        black = bytearray([0, 0, 0])
+        black = bytes([0, 0, 0])
         palette = [black, cv]
         if label.bitmap:
             self.w = label.bitmap.width
