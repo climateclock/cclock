@@ -41,6 +41,9 @@ class ButtonReader:
                 return
             self.waiting_for_release = False
 
+        print('.', end='')
+        if hasattr(sys.stdout, 'flush'):
+            sys.stdout.flush()
         now = cctime.monotonic()
         for button, commands in self.map.items():
             if self.debounce_started[button]:
