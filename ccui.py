@@ -55,8 +55,8 @@ def render_deadline_module(frame, y, module, cv, lang='en'):
         'fr': f'{yr} ans {d} jours {h:02d}:{m:02d}:{s:02d}',
         'is': f'{yr} ár {d} dagar {h:02d}:{m:02d}:{s:02d}'
     }
-    text = texts.get(lang, texts['en'])
-    frame.paste(1, y, frame.new_label(text, 'kairon-16', cv))
+    text = texts.get(lang, texts['en']).upper()
+    frame.paste(2, y, frame.new_label(text, 'kairon-16', cv))
 
 
 def render_lifeline_module(frame, y, module, cv, lang='en'):
@@ -83,7 +83,8 @@ def render_value_module(frame, y, module, cv, lang='en'):
       'fr': 'terre indigène protégée',
       'is': 'friðlýst frumbyggjaland'
     }
-    text_label = frame.new_label(texts.get(lang, texts['en']), 'kairon-10', cv)
+    text = texts.get(lang, texts['en']).upper()
+    text_label = frame.new_label(text, 'kairon-10', cv)
     #space = frame.w - value_label.w
     #for text in module.labels:
     #    text_label = frame.new_label(text, 'kairon-10', cv)
