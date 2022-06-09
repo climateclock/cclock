@@ -26,25 +26,29 @@ class SdlButton:
 
 
 class SdlFrame(frame.Frame):
-    def __init__(self, w, h, fps, title='Frame', scale=8):
+    def __init__(self, w, h, fps, title='Frame', scale=8, pad=4):
         """Creates a Frame with a given width and height.  Coordinates of the
         top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
         self.w = w
         self.h = h
+        self.pw = w + pad*2  # width with padding
+        self.ph = h + pad*2  # height with padding
+        self.pad = pad
         self.timer = cctime.FrameTimer(fps)
-        self.pixels = bytearray(b'\x00\x00\x00' * w * h)
+        self.pixels = bytearray(b'\x60\x60\x60' * self.pw * self.ph)
         self.pixels_cptr = (c_char * len(self.pixels)).from_buffer(self.pixels)
         self.scale = scale
+        self.clear()
 
         SDL_Init(SDL_INIT_VIDEO)
         self.window = SDL_CreateWindow(
             bytes(title, 'utf-8'),
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-            w * scale, h * scale,
+            (w + pad*2) * scale, (h + pad*2) * scale,
             SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
         )
         self.canvas = SDL_CreateRGBSurface(
-            0, w, h, 24, 0x0000ff, 0x00ff00, 0xff0000, 0)
+            0, self.pw, self.ph, 24, 0x0000ff, 0x00ff00, 0xff0000, 0)
         self.pressed_scancodes = set()
         self.flush_events()
 
@@ -56,7 +60,7 @@ class SdlFrame(frame.Frame):
 
     def set_scale(self, scale):
         self.scale = scale
-        SDL_SetWindowSize(self.window, self.w * scale, self.h * scale)
+        SDL_SetWindowSize(self.window, self.pw * scale, self.ph * scale)
 
     def send(self):
         SDL_memcpy(c_void_p(self.canvas.contents.pixels),
@@ -86,12 +90,15 @@ class SdlFrame(frame.Frame):
             if event.type == SDL_QUIT:
                 raise SystemExit()
 
+    def get_offset(self, x, y):
+        return ((x + self.pad) + (y + self.pad) * self.pw) * 3
+
     def get(self, x, y):
-        offset = (x + y * self.w) * 3
+        offset = self.get_offset(x, y)
         return self.pixels[offset:offset + 3]
 
     def set(self, x, y, cv):
-        offset = (x + y * self.w) * 3
+        offset = self.get_offset(x, y)
         self.pixels[offset:offset + 3] = cv
 
     def fill(self, x, y, w, h, cv):
@@ -99,18 +106,18 @@ class SdlFrame(frame.Frame):
         if w > 0 and h > 0:
             row = cv * w
             for y in range(y, y + h):
-                start = (x + y * self.w) * 3
+                start = self.get_offset(x, y)
                 self.pixels[start:start + w * 3] = row
 
     def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
         if source.w == 0 or source.h == 0:
             return
         x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
-        i = (x + y * self.w) * 3
         si = (sx + sy * source.w) * 3
         for dy in range(0, h):
-            self.pixels[i:i + w * 3] = source.pixels[si:si + w * 3]
-            i += self.w * 3
+            offset = self.get_offset(x, y)
+            self.pixels[offset:offset + w * 3] = source.pixels[si:si + w * 3]
+            y += 1
             si += source.w * 3
 
     def new_label(self, text, font_id, cv):
