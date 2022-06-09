@@ -27,6 +27,7 @@ class Clock:
         self.clock_reader = ButtonReader({
             button_map['NEXT']: {
                 Press.SHORT: 'NEXT_LANGUAGE',
+                Press.LONG: 'TOGGLE_CASE',
             },
             button_map['ENTER']: {
                 Press.LONG: 'MENU',
@@ -61,6 +62,7 @@ class Clock:
         self.lifeline_cv = self.frame.pack(*self.data.config.display.lifeline.primary)
         self.menu_cv = self.frame.pack(0x80, 0x80, 0x80)
         self.edit_cv = self.frame.pack(0x00, 0xff, 0x00)
+        self.force_upper = False
 
     def step(self):
         self.state_steps[self.state]()
@@ -72,11 +74,12 @@ class Clock:
     def clock_step(self):
         lang = self.langs[self.lang_index]
         ccui.render_deadline_module(
-            self.frame, 0, self.carbon_module, self.deadline_cv, lang)
+            self.frame, 0, self.carbon_module,
+            self.deadline_cv, lang, self.force_upper)
         self.clock_reader.step(self.receive)
         ccui.render_lifeline_module(
             self.frame, 16, self.lifeline_modules[self.lifeline_index],
-            self.lifeline_cv, lang)
+            self.lifeline_cv, lang, self.force_upper)
         self.clock_reader.step(self.receive)
         self.frame.send()
 
@@ -137,6 +140,9 @@ class Clock:
         if command == 'NEXT_LANGUAGE':
             self.frame.clear()
             self.lang_index = (self.lang_index + 1) % len(self.langs)
+        if command == 'TOGGLE_CASE':
+            self.frame.clear()
+            self.force_upper = not self.force_upper
         if command == 'NEXT_LIFELINE':
             self.incr_lifeline(1)
         if command == 'PREV_LIFELINE':

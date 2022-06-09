@@ -45,7 +45,7 @@ def format_value(module, now_time):
     return ''
 
 
-def render_deadline_module(frame, y, module, cv, lang='en'):
+def render_deadline_module(frame, y, module, cv, lang='en', upper=False):
     yr, d, h, m, s = calc_deadline(module, cctime.get_time())
     # Just testing various languages for now.
     texts = {
@@ -55,22 +55,24 @@ def render_deadline_module(frame, y, module, cv, lang='en'):
         'fr': f'{yr} ans {d} jours {h:02d}:{m:02d}:{s:02d}',
         'is': f'{yr} ár {d} dagar {h:02d}:{m:02d}:{s:02d}'
     }
-    text = texts.get(lang, texts['en']).upper()
+    text = texts.get(lang, texts['en'])
+    if upper:
+        text = text.upper()
     frame.paste(2, y, frame.new_label(text, 'kairon-16', cv))
 
 
-def render_lifeline_module(frame, y, module, cv, lang='en'):
+def render_lifeline_module(frame, y, module, cv, lang='en', upper=False):
     if module.type == 'value':
-        render_value_module(frame, y, module, cv, lang)
+        render_value_module(frame, y, module, cv, lang, upper)
     if module.type == 'newsfeed':
-        render_newsfeed_module(frame, y, module, cv, lang)
+        render_newsfeed_module(frame, y, module, cv, lang, upper)
 
 
 def measure_text(frame, font_id, text):
     return frame.new_label(text, font_id, 0).width
 
 
-def render_value_module(frame, y, module, cv, lang='en'):
+def render_value_module(frame, y, module, cv, lang='en', upper=False):
     # formatted_value = format_value(module, cctime.get_time())
     formatted_value = '43.5'
     unit_text = 'M km²'
@@ -83,7 +85,9 @@ def render_value_module(frame, y, module, cv, lang='en'):
       'fr': 'terre indigène protégée',
       'is': 'friðlýst frumbyggjaland'
     }
-    text = texts.get(lang, texts['en']).upper()
+    text = texts.get(lang, texts['en'])
+    if upper:
+        text = text.upper()
     text_label = frame.new_label(text, 'kairon-10', cv)
     #space = frame.w - value_label.w
     #for text in module.labels:
