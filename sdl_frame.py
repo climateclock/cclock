@@ -34,6 +34,7 @@ class SdlFrame(frame.Frame):
         self.timer = cctime.FrameTimer(fps)
         self.pixels = bytearray(b'\x00\x00\x00' * w * h)
         self.pixels_cptr = (c_char * len(self.pixels)).from_buffer(self.pixels)
+        self.scale = scale
 
         SDL_Init(SDL_INIT_VIDEO)
         self.window = SDL_CreateWindow(
@@ -42,7 +43,6 @@ class SdlFrame(frame.Frame):
             w * scale, h * scale,
             SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
         )
-        self.surface = SDL_GetWindowSurface(self.window)
         self.canvas = SDL_CreateRGBSurface(
             0, w, h, 24, 0x0000ff, 0x00ff00, 0xff0000, 0)
         self.pressed_scancodes = set()
@@ -54,10 +54,15 @@ class SdlFrame(frame.Frame):
         b = int(((float(b & 0xf0)/255.0) ** 0.3) * 255.99)
         return bytes([r, g, b])
 
+    def set_scale(self, scale):
+        self.scale = scale
+        SDL_SetWindowSize(self.window, self.w * scale, self.h * scale)
+
     def send(self):
         SDL_memcpy(c_void_p(self.canvas.contents.pixels),
             self.pixels_cptr, len(self.pixels))
-        SDL_BlitScaled(self.canvas, None, self.surface, None)
+        surface = SDL_GetWindowSurface(self.window)
+        SDL_BlitScaled(self.canvas, None, surface, None)
         self.timer.wait()
         SDL_UpdateWindowSurface(self.window)
         self.flush_events()
@@ -67,7 +72,13 @@ class SdlFrame(frame.Frame):
         while SDL_PollEvent(byref(event)):
             scancode = event.key.keysym.scancode
             if event.type == SDL_KEYDOWN:
-                self.pressed_scancodes.add(scancode)
+                if scancode == SDL_SCANCODE_MINUS:
+                    if self.scale > 1:
+                        self.set_scale(self.scale - 1)
+                elif scancode == SDL_SCANCODE_EQUALS:
+                    self.set_scale(self.scale + 1)
+                else:
+                    self.pressed_scancodes.add(scancode)
             if event.type == SDL_KEYUP:
                 self.pressed_scancodes -= {scancode}
             if scancode == SDL_SCANCODE_ESCAPE:
