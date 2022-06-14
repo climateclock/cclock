@@ -25,28 +25,30 @@ if [ ! -d "$target" ]; then
     exit 1
 fi
 
-if [ ! -f "cache/climateclock.json" ]; then
-    curl https://api.climateclock.world/v1/clock -o cache/climateclock.json
-fi
-
 if [ ! -d cache/lib ]; then
     echo "The cache/lib directory is missing.  Did you run tools/setup?"
     exit 1
 fi
 
+echo "Installing startup logic..."
+cp boot.py code.py gpio.py $target
+
+echo "Installing fonts..."
+cp *.pcf $target
+
+echo "Installing climateclock.json..."
+curl https://api.climateclock.world/v1/clock -o cache/climateclock.json
 mkdir -p $target/cache
 cp cache/climateclock.json $target/cache
 
-cp boot.py $target
-cp code.py $target
-cp *.pcf $target
-
 mkdir -p $target/lib
 for lib in bitmap_font datetime display_text ds3231 esp32spi matrixportal register requests; do
+    echo "Installing $lib..."
     rm -rf $target/lib/adafruit_$lib*
     cp -r cache/lib/adafruit_$lib* $target/lib/
 done
 
+echo "Installing clock program..."
 rm -rf $target/v999
 mkdir $target/v999
 cp *.py $target/v999
@@ -65,3 +67,4 @@ EOF
 
 touch $target/v999/@VALID
 touch $target/v999/@ENABLED
+echo "All done!"
