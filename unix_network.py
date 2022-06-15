@@ -5,7 +5,7 @@ from ssl import create_default_context as create_ssl_context
 
 
 class UnixNetwork(Network):
-    def __init__(self, ssid, password, wifi_connect_delay=5, debug=False):
+    def __init__(self, ssid, password, wifi_connect_delay=2, debug=False):
         self.ssid = ssid
         self.password = password
         self.initialized = False
@@ -52,9 +52,9 @@ class UnixNetwork(Network):
         if self.socket:
             self.socket.send(data)
 
-    def receive_step(self):
+    def receive_step(self, count):
         if self.socket:
-            data = self.socket.recv(1024)
+            data = self.socket.recv(count)
             if len(data) == 0:
                 self.set_state(State.ONLINE)
             return data

@@ -97,11 +97,11 @@ class EspWifiNetwork(Network):
         else:
             self.set_state(State.ONLINE)
 
-    def receive_step(self):
+    def receive_step(self, count):
         if self.esp.socket_connected(self.socket):
             available = self.esp.socket_available(self.socket)
             if available:
-                return self.esp.socket_read(self.socket, available)
+                return self.esp.socket_read(self.socket, count)
             else:
                 return b''
         else:

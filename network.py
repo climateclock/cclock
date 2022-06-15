@@ -33,8 +33,8 @@ class Network:
         data) or ONLINE (other side has closed the connection)."""
         raise NotImplementedError
 
-    def receive_step(self):
-        """In state CONNECTED, reads and returns data (as bytes) from the
+    def receive_step(self, count):
+        """In state CONNECTED, reads and returns up to 'count' bytes from the
         current connection, resulting in state CONNECTED (ready to send or
         receive more data) or ONLINE or OFFLINE."""
         raise NotImplementedError

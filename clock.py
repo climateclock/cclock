@@ -9,6 +9,9 @@ import ccui
 debug.mem('clock4')
 from ccinput import ButtonReader, DialReader, Press
 debug.mem('clock5')
+import pack_loader
+from network import State
+import unix_network
 
 
 menu = [
@@ -19,9 +22,11 @@ menu = [
 
 
 class Clock:
-    def __init__(self, data, frame, button_map, dial_map):
+    def __init__(self, network, data, frame, button_map, dial_map):
         debug.mem('Clock.__init__')
 
+        self.network = network
+        self.loader = None
         self.data = data
         self.frame = frame
         self.langs = ['en', 'es', 'de', 'fr', 'is']
@@ -124,6 +129,17 @@ class Clock:
         self.clock_reader.step(self.receive)
         self.frame.send()
 
+        if self.network.state == State.OFFLINE:
+            self.network.enable_step('climateclock', 'climateclock')
+        elif self.network.state == State.ONLINE:
+            self.network.connect_step('api.climateclock.world')
+        elif self.network.state == State.CONNECTED:
+            if self.loader:
+                self.loader.next_step()
+            else:
+                self.loader = pack_loader.PackLoader(
+                    self.network, b'api.climateclock.world', b'/v1/clock')
+
     def menu_start(self):
         self.frame.clear()
         label = self.frame.new_label('Brightness', 'kairon-10')
@@ -223,9 +239,9 @@ class Clock:
 debug.mem('clock6')
 
 
-def run(frame, button_map, dial_map):
+def run(network, frame, button_map, dial_map):
     cctime.enable_rtc()
     data = ccapi.load_file('cache/climateclock.json')
-    clock = Clock(data, frame, button_map, dial_map)
+    clock = Clock(network, data, frame, button_map, dial_map)
     while True:
         clock.step()
