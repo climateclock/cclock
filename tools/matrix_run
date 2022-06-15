@@ -3,16 +3,22 @@
 cd $(dirname "$0")
 cd ..
 
+if [ "$1" = "-q" ]; then
+    quick=yes
+    shift
+fi
+
 module="$1"
 module=${module%.py}
 target=/Volumes/CIRCUITPY
 unalias -a
 
 if [ -z "$module" ]; then
-    echo "Usage: $0 <module>"
+    echo "Usage: $0 [-q] <module>"
     echo
     echo "Runs a module on the attached CircuitPython device, using"
-    echo "adafruit.rgbmatrix as the graphics driver."
+    echo "adafruit.rgbmatrix as the graphics driver.  Specify -q for"
+    echo "a quick run (skip reinstalling data, libraries, and fonts)."
     exit 1
 fi
 
@@ -30,28 +36,30 @@ if [ ! -d cache/lib ]; then
     exit 1
 fi
 
-echo "Installing startup logic..."
-cp boot.py code.py gpio.py $target
-
-echo "Installing fonts..."
-cp *.pcf $target
-
-echo "Installing climateclock.json..."
-curl https://api.climateclock.world/v1/clock -o cache/climateclock.json
-mkdir -p $target/cache
-cp cache/climateclock.json $target/cache
-
-mkdir -p $target/lib
-for lib in bitmap_font datetime display_text ds3231 esp32spi matrixportal register requests; do
-    echo "Installing $lib..."
-    rm -rf $target/lib/adafruit_$lib*
-    cp -r cache/lib/adafruit_$lib* $target/lib/
-done
-
 echo "Installing clock program..."
 rm -rf $target/v999
 mkdir $target/v999
 cp *.py $target/v999
+
+if [ -z "$quick" ]; then
+    echo "Installing climateclock.json..."
+    curl https://api.climateclock.world/v1/clock -o cache/climateclock.json
+    mkdir -p $target/cache
+    cp cache/climateclock.json $target/cache
+
+    echo "Installing fonts..."
+    cp *.pcf $target
+
+    mkdir -p $target/lib
+    for lib in bitmap_font datetime display_text ds3231 esp32spi matrixportal register requests; do
+        echo "Installing $lib..."
+        rm -rf $target/lib/adafruit_$lib*
+        cp -r cache/lib/adafruit_$lib* $target/lib/
+    done
+fi
+
+echo "Installing startup logic..."
+cp boot.py code.py gpio.py $target
 
 cat <<EOF >$target/v999/main.py
 import matrix_frame
