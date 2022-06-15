@@ -3,5 +3,4 @@ cache/
 env/
 unused/
 
-code.py
 *.pyc
