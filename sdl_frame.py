@@ -25,6 +25,23 @@ class SdlButton:
         return self.scancode in self.frame.pressed_scancodes
 
 
+class SdlDial:
+    def __init__(self, frame, decr_scancode, incr_scancode):
+        frame.key_handlers.append(self)
+        self.value = 0.0
+        self.decr_scancode = decr_scancode
+        self.incr_scancode = incr_scancode
+
+    def key_down(self, scancode):
+        if scancode == self.decr_scancode:
+            self.value = max(0.0, self.value - 0.1)
+        if scancode == self.incr_scancode:
+            self.value = min(1.0, self.value + 0.1)
+
+    def key_up(self, scancode):
+        pass
+
+
 class SdlFrame(frame.Frame):
     def __init__(self, w, h, fps, title='Frame', scale=8, pad=4):
         """Creates a Frame with a given width and height.  Coordinates of the
@@ -38,6 +55,7 @@ class SdlFrame(frame.Frame):
         self.pixels = bytearray(b'\x60\x60\x60' * self.pw * self.ph)
         self.pixels_cptr = (c_char * len(self.pixels)).from_buffer(self.pixels)
         self.scale = scale
+        self.key_handlers = []
         self.clear()
 
         SDL_Init(SDL_INIT_VIDEO)
@@ -51,6 +69,10 @@ class SdlFrame(frame.Frame):
             0, self.pw, self.ph, 24, 0x0000ff, 0x00ff00, 0xff0000, 0)
         self.pressed_scancodes = set()
         self.flush_events()
+
+    def set_brightness(self, brightness):
+        print('brightness =', brightness)
+        # TODO: Actually change the brightness of the displayed pixels
 
     def pack(self, r, g, b):
         r = int(((float(r & 0xf0)/255.0) ** 0.3) * 255.99)
@@ -76,15 +98,18 @@ class SdlFrame(frame.Frame):
         while SDL_PollEvent(byref(event)):
             scancode = event.key.keysym.scancode
             if event.type == SDL_KEYDOWN:
+                self.pressed_scancodes.add(scancode)
+                for key_handler in self.key_handlers:
+                    key_handler.key_down(scancode)
                 if scancode == SDL_SCANCODE_MINUS:
                     if self.scale > 1:
                         self.set_scale(self.scale - 1)
                 elif scancode == SDL_SCANCODE_EQUALS:
                     self.set_scale(self.scale + 1)
-                else:
-                    self.pressed_scancodes.add(scancode)
             if event.type == SDL_KEYUP:
                 self.pressed_scancodes -= {scancode}
+                for key_handler in self.key_handlers:
+                    key_handler.key_up(scancode)
             if scancode == SDL_SCANCODE_ESCAPE:
                 raise SystemExit()
             if event.type == SDL_QUIT:

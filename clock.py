@@ -13,7 +13,7 @@ menu = [
 
 
 class Clock:
-    def __init__(self, data, frame, button_map):
+    def __init__(self, data, frame, button_map, dial_map):
         self.data = data
         self.frame = frame
         self.langs = ['en', 'es', 'de', 'fr', 'is']
@@ -52,6 +52,7 @@ class Clock:
                 Press.LONG: 'CLOCK'
             }
         })
+        self.brightness_dial = dial_map['BRIGHTNESS']
 
         self.carbon_module = self.data.module_dict['carbon_deadline_1']
         self.lifeline_modules = [
@@ -66,6 +67,7 @@ class Clock:
 
     def step(self):
         self.state_steps[self.state]()
+        self.frame.set_brightness(self.brightness_dial.value)
 
     def clock_start(self):
         self.state = 'CLOCK'
@@ -166,10 +168,10 @@ class Clock:
         ) % len(self.lifeline_modules)
 
 
-def run(frame, button_map):
+def run(frame, button_map, dial_map):
     cctime.enable_rtc()
     data = ccapi.load_file('cache/climateclock.json')
     gc.collect()
-    clock = Clock(data, frame, button_map)
+    clock = Clock(data, frame, button_map, dial_map)
     while True:
         clock.step()

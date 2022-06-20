@@ -32,9 +32,11 @@ except Exception as e:
     raise SystemExit(e)
 
 import sdl2
-from sdl_frame import SdlFrame, SdlButton
+from sdl_frame import SdlFrame, SdlButton, SdlDial
 
 frame = SdlFrame(192, 32, 30)
-left_shift = SdlButton(frame, sdl2.SDL_SCANCODE_LSHIFT)
-right_shift = SdlButton(frame, sdl2.SDL_SCANCODE_RSHIFT)
-run(frame, {'NEXT': left_shift, 'ENTER': right_shift})
+up = SdlButton(frame, sdl2.SDL_SCANCODE_LSHIFT)
+down = SdlButton(frame, sdl2.SDL_SCANCODE_RSHIFT)
+brightness = SdlDial(
+    frame, sdl2.SDL_SCANCODE_LEFTBRACKET, sdl2.SDL_SCANCODE_RIGHTBRACKET)
+run(frame, {'NEXT': up, 'ENTER': down}, {'BRIGHTNESS': brightness})

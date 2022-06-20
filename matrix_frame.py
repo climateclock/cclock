@@ -20,7 +20,7 @@ def load_font(font_id):
 def new_display_frame(w, h, depth):
     displayio.release_displays()
     return MatrixFrame(w, h, depth, rgbmatrix.RGBMatrix(
-        width=192, height=32, bit_depth=4,
+        width=192, height=32, bit_depth=6,
         rgb_pins=[
             board.MTX_R1, board.MTX_G1, board.MTX_B1,
             board.MTX_R2, board.MTX_G2, board.MTX_B2
@@ -34,6 +34,10 @@ def new_display_frame(w, h, depth):
     ))
 
 
+def apply_brightness(brightness, r, g, b):
+    return int(brightness * r), int(brightness * g), int(brightness * b)
+
+
 class MatrixFrame(frame.Frame):
     def __init__(self, w, h, depth, matrix=None):
         """Creates a Frame with a given width and height.  Coordinates of the
@@ -43,19 +47,29 @@ class MatrixFrame(frame.Frame):
         self.bitmap = displayio.Bitmap(w, h, depth)
         self.depth = depth
         self.display = None
+        self.brightness = 1.0
         if matrix:
             self.display = framebufferio.FramebufferDisplay(matrix)
+            self.colours = [(0, 0, 0)] * self.depth
             self.shader = displayio.Palette(depth)
-            self.shader[0] = 0
-            self.next_cv = 1
+            self.next_cv = 0
+            self.pack(0, 0, 0)
             self.layer = displayio.TileGrid(self.bitmap, pixel_shader=self.shader)
             self.group = displayio.Group()
             self.group.append(self.layer)
             self.display.show(self.group)
 
+    def set_brightness(self, brightness):
+        self.brightness = brightness
+        for cv in range(self.next_cv):
+            sr, sg, sb = apply_brightness(self.brightness, *self.colours[cv])
+            self.shader[cv] = ((sr << 16) | (sg << 8) | sb)
+
     def pack(self, r, g, b):
         if self.next_cv < self.depth:
-            self.shader[self.next_cv] = ((r << 16) | (g << 8) | b)
+            self.colours[self.next_cv] = (r, g, b)
+            sr, sg, sb = apply_brightness(self.brightness, r, g, b)
+            self.shader[self.next_cv] = ((sr << 16) | (sg << 8) | sb)
             self.next_cv += 1
         return self.next_cv - 1
 

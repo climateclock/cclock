@@ -1,3 +1,4 @@
+from analogio import AnalogIn
 from digitalio import DigitalInOut, Direction, Pull
 
 
@@ -8,10 +9,6 @@ class IO:
     @property
     def value(self):
         return self.io.value
-
-    @value.setter
-    def set_value(self, new_value):
-        self.io.value = new_value
 
     def deinit(self):
         self.io.deinit()
@@ -30,6 +27,14 @@ class Output(IO):
         super().__init__(pin)
         self.io.direction = Direction.OUTPUT
 
+    @property
+    def value(self):
+        return self.io.value
+
+    @value.setter
+    def set_value(self, new_value):
+        self.io.value = new_value
+
 
 class Button(Input):
     def __init__(self, pin, normally_high=True):
@@ -39,3 +44,12 @@ class Button(Input):
     @property
     def pressed(self):
         return (not self.io.value) if self.inverted else self.io.value
+
+
+class AnalogInput(Input):
+    def __init__(self, pin):
+        self.io = AnalogIn(pin)
+
+    @property
+    def value(self):
+        return self.io.value/65536.0
