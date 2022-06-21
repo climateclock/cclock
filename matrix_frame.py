@@ -20,7 +20,7 @@ def load_font(font_id):
 def new_display_frame(w, h, depth):
     displayio.release_displays()
     return MatrixFrame(w, h, depth, rgbmatrix.RGBMatrix(
-        width=192, height=32, bit_depth=6,
+        width=192, height=32, bit_depth=4,
         rgb_pins=[
             board.MTX_R1, board.MTX_G1, board.MTX_B1,
             board.MTX_R2, board.MTX_G2, board.MTX_B2
@@ -60,7 +60,7 @@ class MatrixFrame(frame.Frame):
             self.display.show(self.group)
 
     def set_brightness(self, brightness):
-        self.brightness = brightness
+        self.brightness = 0.46 + (brightness * 0.54)
         for cv in range(self.next_cv):
             sr, sg, sb = apply_brightness(self.brightness, *self.colours[cv])
             self.shader[cv] = ((sr << 16) | (sg << 8) | sb)

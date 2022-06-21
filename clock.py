@@ -66,8 +66,8 @@ class Clock:
         self.force_upper = False
 
     def step(self):
-        self.state_steps[self.state]()
         self.frame.set_brightness(self.brightness_dial.value)
+        self.state_steps[self.state]()
 
     def clock_start(self):
         self.state = 'CLOCK'
