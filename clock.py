@@ -1,7 +1,7 @@
 import ccapi
 import cctime
 import ccui
-from ccinput import ButtonReader, Press
+from ccinput import ButtonReader, DialReader, Press
 import gc
 
 
@@ -25,34 +25,45 @@ class Clock:
             'PASSWORD': self.password_step,
         }
         self.clock_reader = ButtonReader({
-            button_map['NEXT']: {
+            button_map['UP']: {
                 Press.SHORT: 'NEXT_LANGUAGE',
                 Press.LONG: 'TOGGLE_CASE',
             },
-            button_map['ENTER']: {
+            button_map['DOWN']: {
                 Press.LONG: 'MENU',
+            },
+            button_map['ENTER']: {
+                Press.SHORT: 'MENU',
             }
         })
         self.menu_reader = ButtonReader({
-            button_map['NEXT']: {
+            button_map['UP']: {
                 Press.SHORT: 'NEXT_OPTION',
             },
+            button_map['DOWN']: {
+                Press.SHORT: 'PASSWORD',
+            },
             button_map['ENTER']: {
-                Press.SHORT: 'ENTER',
-                Press.LONG: 'PASSWORD'
+                Press.SHORT: 'PASSWORD',
             }
         })
         self.password_reader = ButtonReader({
-            button_map['NEXT']: {
+            button_map['UP']: {
                 Press.SHORT: 'NEXT_CHAR',
                 Press.REPEAT: 'NEXT_CHAR',
             },
+            button_map['DOWN']: {
+                Press.SHORT: 'ENTER_CHAR',
+                Press.LONG: 'CLOCK',
+            },
             button_map['ENTER']: {
                 Press.SHORT: 'ENTER_CHAR',
-                Press.LONG: 'CLOCK'
+                Press.LONG: 'CLOCK',
             }
         })
-        self.brightness_dial = dial_map['BRIGHTNESS']
+        self.brightness_reader = DialReader('BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0)
+        self.menu_selector_reader = DialReader('MENU_SELECTOR', dial_map['SELECTOR'], 1)
+        self.password_selector_reader = DialReader('PASSWORD_SELECTOR', dial_map['SELECTOR'], 1)
 
         self.carbon_module = self.data.module_dict['carbon_deadline_1']
         self.lifeline_modules = [
@@ -66,10 +77,11 @@ class Clock:
         self.force_upper = False
 
     def step(self):
-        self.frame.set_brightness(self.brightness_dial.value)
+        self.brightness_reader.step(self.receive)
         self.state_steps[self.state]()
 
     def clock_start(self):
+        self.frame.clear()
         self.state = 'CLOCK'
         self.clock_reader.reset()
 
@@ -97,6 +109,7 @@ class Clock:
         self.menu_reader.reset()
 
     def menu_step(self):
+        self.menu_selector_reader.step(self.receive)
         self.menu_reader.step(self.receive)
         self.frame.send()
 
@@ -118,6 +131,7 @@ class Clock:
         self.password_update_text()
 
     def password_step(self):
+        self.password_selector_reader.step(self.receive)
         self.password_reader.step(self.receive)
         self.frame.send()
 
@@ -136,8 +150,11 @@ class Clock:
         self.frame.clear(1, 26, self.text_label.w, 1)
         self.password_update_char()
 
-    def receive(self, command):
-        print(f'[{command}]')
+    def receive(self, command, value=None):
+        if value is not None:
+            print(f'[{command}: {value}]')
+        else:
+            print(f'[{command}]')
         gc.collect()
         if command == 'NEXT_LANGUAGE':
             self.frame.clear()
@@ -161,6 +178,11 @@ class Clock:
         if command == 'ENTER_CHAR':
             self.text += self.char
             self.password_update_text()
+        if command == 'BRIGHTNESS':
+            self.frame.set_brightness(value)
+        if command == 'PASSWORD_SELECTOR':
+            self.char_index = (self.char_index + len(self.charset) + value) % len(self.charset)
+            self.password_update_char()
 
     def incr_lifeline(self, delta):
         self.lifeline_index = (

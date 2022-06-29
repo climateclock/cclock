@@ -1,5 +1,6 @@
 from analogio import AnalogIn
 from digitalio import DigitalInOut, Direction, Pull
+from rotaryio import IncrementalEncoder
 
 
 class IO:
@@ -53,3 +54,15 @@ class AnalogInput(Input):
     @property
     def value(self):
         return self.io.value/65536.0
+
+
+class RotaryInput(Input):
+    def __init__(self, left_pin, right_pin):
+        self.encoder = IncrementalEncoder(left_pin, right_pin)
+
+    @property
+    def value(self):
+        return self.encoder.position
+
+    def deinit(self):
+        self.encoder.deinit()

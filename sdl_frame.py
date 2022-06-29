@@ -26,17 +26,24 @@ class SdlButton:
 
 
 class SdlDial:
-    def __init__(self, frame, decr_scancode, incr_scancode):
+    def __init__(
+        self, frame, decr_scancode, incr_scancode, min_value, max_value, delta
+    ):
         frame.key_handlers.append(self)
-        self.value = 0.0
         self.decr_scancode = decr_scancode
         self.incr_scancode = incr_scancode
+        self.min_value = min_value
+        self.max_value = max_value
+        self.delta = delta
+        self.value = (min_value + max_value)/2
+        if isinstance(min_value + max_value, int):
+            self.value = int(self.value)
 
     def key_down(self, scancode):
         if scancode == self.decr_scancode:
-            self.value = max(0.0, self.value - 0.1)
+            self.value = max(self.min_value, self.value - self.delta)
         if scancode == self.incr_scancode:
-            self.value = min(1.0, self.value + 0.1)
+            self.value = min(self.max_value, self.value + self.delta)
 
     def key_up(self, scancode):
         pass

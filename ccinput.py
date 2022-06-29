@@ -100,3 +100,21 @@ class ButtonReader:
         for io in self.ios:
             io.deinit()
         self.ios = {}
+
+
+class DialReader:
+    def __init__(self, command, dial, epsilon):
+        self.command = command
+        self.dial = dial
+        self.last_value = dial.value
+        self.epsilon = epsilon
+
+    def step(self, receiver):
+        value = self.dial.value
+        change = value - self.last_value
+        if abs(change) >= self.epsilon:
+            self.last_value = value
+            receiver(self.command, change)
+
+    def deinit(self):
+        self.dial.deinit()
