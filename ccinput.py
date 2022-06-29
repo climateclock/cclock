@@ -111,10 +111,10 @@ class DialReader:
 
     def step(self, receiver):
         value = self.dial.value
-        change = value - self.last_value
-        if abs(change) >= self.epsilon:
+        delta = value - self.last_value
+        if abs(delta) >= self.epsilon:
             self.last_value = value
-            receiver(self.command, change)
+            receiver(self.command, (delta, value))
 
     def deinit(self):
         self.dial.deinit()

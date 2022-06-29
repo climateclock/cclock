@@ -150,9 +150,9 @@ class Clock:
         self.frame.clear(1, 26, self.text_label.w, 1)
         self.password_update_char()
 
-    def receive(self, command, value=None):
-        if value is not None:
-            print(f'[{command}: {value}]')
+    def receive(self, command, arg=None):
+        if arg is not None:
+            print(f'[{command}: {arg}]')
         else:
             print(f'[{command}]')
         gc.collect()
@@ -179,9 +179,11 @@ class Clock:
             self.text += self.char
             self.password_update_text()
         if command == 'BRIGHTNESS':
+            delta, value = arg
             self.frame.set_brightness(value)
         if command == 'PASSWORD_SELECTOR':
-            self.char_index = (self.char_index + len(self.charset) + value) % len(self.charset)
+            delta, value = arg
+            self.char_index = (self.char_index + len(self.charset) + delta) % len(self.charset)
             self.password_update_char()
 
     def incr_lifeline(self, delta):
