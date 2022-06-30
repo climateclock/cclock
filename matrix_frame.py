@@ -1,13 +1,26 @@
+import debug
+
+debug.mem('matrix_frame1')
 from adafruit_bitmap_font import bitmap_font
+debug.mem('matrix_frame2')
 from adafruit_display_text import bitmap_label
+debug.mem('matrix_frame3')
 import bitmaptools
+debug.mem('matrix_frame4')
 import board
+debug.mem('matrix_frame5')
 import cctime
+debug.mem('matrix_frame6')
 import displayio
+debug.mem('matrix_frame7')
 import frame
+debug.mem('matrix_frame8')
 import framebufferio
+debug.mem('matrix_frame9')
 import rgbmatrix
+debug.mem('matrix_frame10')
 from ulab import numpy as np
+debug.mem('matrix_frame11')
 
 FONTS = {}
 

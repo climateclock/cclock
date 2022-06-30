@@ -1,10 +1,16 @@
 """Time-handling functions that work in both Python and CircuitPython."""
 
+import debug
+
+debug.mem('cctime1')
 import time
+debug.mem('cctime2')
 try:
     import datetime
+    debug.mem('cctime3')
 except:
     import adafruit_datetime as datetime
+    debug.mem('cctime4')
 
 EPOCH = datetime.datetime(1970, 1, 1)
 fake_time = None
@@ -89,6 +95,9 @@ def isoformat_to_time(s):
     return (isoformat_to_datetime(s) - EPOCH).total_seconds()
 
 
+debug.mem('cctime5')
+
+
 class FrameTimer:
     def __init__(self, fps):
         self.next = 0
@@ -97,3 +106,6 @@ class FrameTimer:
     def wait(self):
         """Waits until the next frame display time."""
         self.next = wait_until(self.next) + self.interval
+
+
+debug.mem('cctime6')

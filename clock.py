@@ -1,8 +1,14 @@
+import debug
+
+debug.mem('clock1')
 import ccapi
+debug.mem('clock2')
 import cctime
+debug.mem('clock3')
 import ccui
+debug.mem('clock4')
 from ccinput import ButtonReader, DialReader, Press
-import gc
+debug.mem('clock5')
 
 
 menu = [
@@ -14,6 +20,8 @@ menu = [
 
 class Clock:
     def __init__(self, data, frame, button_map, dial_map):
+        debug.mem('Clock.__init__')
+
         self.data = data
         self.frame = frame
         self.langs = ['en', 'es', 'de', 'fr', 'is']
@@ -76,7 +84,10 @@ class Clock:
         self.edit_cv = self.frame.pack(0x00, 0xff, 0x00)
         self.force_upper = False
 
+        debug.mem('Clock.__init__ done')
+
     def step(self):
+        debug.mem('step')
         self.brightness_reader.step(self.receive)
         self.state_steps[self.state]()
 
@@ -155,7 +166,6 @@ class Clock:
             print(f'[{command}: {arg}]')
         else:
             print(f'[{command}]')
-        gc.collect()
         if command == 'NEXT_LANGUAGE':
             self.frame.clear()
             self.lang_index = (self.lang_index + 1) % len(self.langs)
@@ -192,10 +202,12 @@ class Clock:
         ) % len(self.lifeline_modules)
 
 
+debug.mem('clock6')
+
+
 def run(frame, button_map, dial_map):
     cctime.enable_rtc()
     data = ccapi.load_file('cache/climateclock.json')
-    gc.collect()
     clock = Clock(data, frame, button_map, dial_map)
     while True:
         clock.step()
