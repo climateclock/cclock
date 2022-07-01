@@ -102,7 +102,7 @@ def render_value_module(frame, y, module, cv, lang='en', upper=False):
     frame.paste(x + 4, y + 5, text_label)
 
 
-def render_newsfeed_module(frame, y, module, cv):
+def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
     item = module.items[0]
     headline_label = frame.new_label(item.headline, 'kairon-10', cv)
     frame.paste(1, y, headline_label)

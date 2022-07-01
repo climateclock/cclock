@@ -38,9 +38,11 @@ class Clock:
                 Press.LONG: 'TOGGLE_CASE',
             },
             button_map['DOWN']: {
+                Press.SHORT: 'NEXT_LIFELINE',
                 Press.LONG: 'MENU',
             },
             button_map['ENTER']: {
+                Press.SHORT: 'NEXT_LIFELINE',
                 Press.SHORT: 'MENU',
             }
         })
@@ -197,6 +199,7 @@ class Clock:
             self.password_update_char()
 
     def incr_lifeline(self, delta):
+        self.frame.clear()
         self.lifeline_index = (
             self.lifeline_index + len(self.lifeline_modules) + delta
         ) % len(self.lifeline_modules)
