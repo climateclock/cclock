@@ -1,7 +1,6 @@
 import os
 import supervisor
 import sys
-import traceback
 
 # Directories containing software versions are named v1, v2, etc.  We need
 # a way to mark software versions as enabled, disabled, or partial, and we
@@ -35,9 +34,20 @@ if versions:
         import main
         main.main()
     except Exception as e:
-        traceback.print_exception(e.__class__, e, e.__traceback__)
-        print(f'\nDisabling /{name} due to crash: {e}\n')
-        os.remove(name + '/@ENABLED')
+        print('Error:', e)
+        try:
+            import traceback
+            traceback.print_exception(e.__class__, e, e.__traceback__)
+        except Exception as ee:
+            print(repr(e))
+        if len(versions) > 1:
+            print(f'\nDisabling /{name} due to crash: {e}\n')
+            try:
+                os.remove(name + '/@ENABLED')
+            except Exception as ee:
+                print(ee)
+        else:
+            print(f'\nThis is the last available version; not disabling.\n')
         supervisor.reload()
 else:
     print('\nNo valid, enabled versions found.\n')
