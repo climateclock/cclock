@@ -146,10 +146,11 @@ class Clock:
         self.state = 'PASSWORD'
 
         self.charset = (
-            ' ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            'abcdefghijklmnopqrstuvwxyz'
-            '0123456789.,:;!?'
-            '\'"@#$%^&*+-_=*/()[]<>{}~\\'
+            ' aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ' +
+            '0123456789' +
+            '.,:;!?' +
+            '\'"@#$%^&*+-_=*' +
+            '/\\()[]<>{}~'
         )
         self.char_index = 0
         self.char = self.charset[0]
