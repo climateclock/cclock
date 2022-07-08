@@ -98,7 +98,45 @@ def render_value_module(frame, y, module, cv, lang='en', upper=False):
     frame.paste(x + 4, y + 5, text_label, cv=cv)
 
 
+DISPLAY_WIDTH = 192
+newsfeed_x = DISPLAY_WIDTH
+newsfeed_index = 0
+headline_label = None
+headline_width = None
+
 def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
-    item = module.items[0]
-    headline_label = frame.new_label(item.headline, 'kairon-10')
-    frame.paste(1, y, headline_label, cv=cv)
+    global newsfeed_x
+    global newsfeed_index
+    global headline_label
+    global headline_width
+
+    i = newsfeed_index
+    n = len(module.items)
+
+    if not headline_label:
+        item = module.items[i]
+        text = f'{item.headline} ({item.source}) \xb7 '
+        if upper:
+            text = text.upper()
+        headline_width = frame.new_label(text, 'kairon-16').w
+
+        text_with_trail = text
+        while True:
+            i = (i + 1) % n
+            item = module.items[i]
+            trail = f'{item.headline} ({item.source}) \xb7 '
+            if upper:
+                trail = trail.upper()
+            text_with_trail += trail
+            headline_label = frame.new_label(text_with_trail, 'kairon-16')
+            if headline_label.w >= headline_width + DISPLAY_WIDTH:
+                break
+
+    frame.paste(newsfeed_x, y, headline_label, cv=cv)
+
+    if newsfeed_x + headline_width < 0:
+        newsfeed_x = 0
+        newsfeed_index = (i + 1) % n
+        headline_label = None
+    else:
+        newsfeed_x -= 1
