@@ -141,27 +141,31 @@ class SdlFrame(frame.Frame):
                 start = self.get_offset(x, y)
                 self.pixels[start:start + w * 3] = row
 
-    def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
+    def paste(self, x, y, source, sx=None, sy=None, w=None, h=None, cv=None):
         if source.w == 0 or source.h == 0:
             return
         x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
-        si = (sx + sy * source.w) * 3
-        for dy in range(0, h):
-            offset = self.get_offset(x, y)
-            self.pixels[offset:offset + w * 3] = source.pixels[si:si + w * 3]
-            y += 1
-            si += source.w * 3
+        for dy in range(h):
+            i = self.get_offset(x, y + dy)
+            si = (sx + (sy + dy) * source.w) * 3
+            if cv is None:
+                self.pixels[i:i + w * 3] = source.pixels[si:si + w * 3]
+            else:
+                for dx in range(w):
+                    is_zero = source.pixels[si:si + 3] == b'\x00\x00\x00'
+                    self.pixels[i:i + 3] = b'\x00\x00\x00' if is_zero else cv
+                    i += 3
+                    si += 3
 
-    def new_label(self, text, font_id, cv):
-        return LabelFrame(text, font_id, cv)
+    def new_label(self, text, font_id):
+        return LabelFrame(text, font_id)
 
 
 class LabelFrame(frame.Frame):
-    def __init__(self, text, font_id, cv):
+    def __init__(self, text, font_id):
         font = load_font(font_id)
         label = bitmap_label.Label(font, text=text)
-        black = bytes([0, 0, 0])
-        palette = [black, cv]
+        palette = b'\x00\x00\x00', b'\xff\xff\xff'
         if label.bitmap:
             self.w = label.bitmap.width
             self.h = label.bitmap.height

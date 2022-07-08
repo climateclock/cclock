@@ -51,17 +51,18 @@ class Frame:
         raise NotImplementedError
 
     def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
-        """Copies a rectangle of pixels from a source frame into this frame,
-        placing the top-left corner of the rectangle at (x, y).  No exception
-        is raised when some pixels are out of range; all pixels that would
-        land in this frame are pasted over and the rest are ignored."""
+        """Copies a rectangle of w x h pixels from a source frame into this
+        frame, with the top-left corner at (sx, sy) in the source corresponding
+        to the top-left corner at (x, y) in this frame.  No exception is raised
+        when some pixels are out of range; all the pixels that would land in
+        this frame are pasted and the rest are ignored."""
         raise NotImplementedError
 
-    def new_label(self, text, font_id, cv):
+    def new_label(self, text, font_id):
         """Returns a new Frame, acceptable as a source argument to the paste()
-        method, containing the given text rendered with the specified font and
-        colour value.  The resulting frame is sized to the total width of the
-        text and the height of a character cell in the specified font."""
+        method, containing the given text rendered with the specified font in
+        a default colour.  The resulting frame is sized to the total width of
+        the text and the height of a character cell in the specified font."""
         raise NotImplementedError
 
 

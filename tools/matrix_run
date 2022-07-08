@@ -49,13 +49,6 @@ if [ -z "$quick" ]; then
 
     echo "Installing fonts..."
     cp *.pcf $target
-
-    mkdir -p $target/lib
-    for lib in bitmap_font datetime display_text ds3231 esp32spi matrixportal register requests; do
-        echo "Installing $lib..."
-        rm -rf $target/lib/adafruit_$lib*
-        cp -r cache/lib/adafruit_$lib* $target/lib/
-    done
 fi
 
 echo "Installing startup logic..."

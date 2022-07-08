@@ -100,29 +100,22 @@ class MatrixFrame(frame.Frame):
         x, y, w, h = frame.clamp_rect(x, y, w, h, self.w, self.h)
         bitmaptools.fill_region(self.bitmap, x, y, x + w, y + h, cv)
 
-    def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
+    def paste(self, x, y, source, sx=None, sy=None, w=None, h=None, cv=None):
         if source.w == 0 or source.h == 0:
             return
         x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
-        self.bitmap.blit(x, y, source.bitmap, x1=sx, y1=sy, x2=sx+w, y2=sy+h)
+        self.bitmap.blit(
+            x, y, source.bitmap, x1=sx, y1=sy, x2=sx+w, y2=sy+h, write_value=cv)
 
-    def new_label(self, text, font_id, cv):
-        return LabelFrame(text, font_id, cv)
+    def new_label(self, text, font_id):
+        return LabelFrame(text, font_id)
 
 
 class LabelFrame(frame.Frame):
-    def __init__(self, text, font_id, cv):
+    def __init__(self, text, font_id):
         font = load_font(font_id)
-        label = bitmap_label.Label(font, text=text, color=cv, save_text=False)
+        label = bitmap_label.Label(font, text=text, save_text=False)
         self.bitmap = label.bitmap
-        if self.bitmap:
-            self.w = self.bitmap.width
-            self.h = self.bitmap.height
-            if cv > 1:
-                self.bitmap = displayio.Bitmap(self.w, self.h, cv + 1)
-                for x in range(self.w):
-                    for y in range(self.h):
-                        self.bitmap[x, y] = label.bitmap[x, y] * cv
-        else:
-            # label.bitmap can be None if there is no text to render
-            self.w = self.h = 0
+        # label.bitmap can be None if there is no text to render
+        self.w = label.bitmap.width if label.bitmap else 0
+        self.h = label.bitmap.height if label.bitmap else 0
