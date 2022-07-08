@@ -72,6 +72,7 @@ class Clock:
             }
         })
         self.brightness_reader = DialReader('BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0)
+        self.frame.set_brightness(self.brightness_reader.value)
         self.menu_selector_reader = DialReader('MENU_SELECTOR', dial_map['SELECTOR'], 1)
         self.password_selector_reader = DialReader('PASSWORD_SELECTOR', dial_map['SELECTOR'], 1)
 

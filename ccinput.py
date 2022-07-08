@@ -109,6 +109,10 @@ class DialReader:
         self.last_value = dial.value
         self.epsilon = epsilon
 
+    @property
+    def value(self):
+        return self.dial.value
+
     def step(self, receiver):
         value = self.dial.value
         delta = value - self.last_value
