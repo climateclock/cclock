@@ -86,12 +86,25 @@ class Clock:
         self.edit_cv = self.frame.pack(0x00, 0xff, 0x00)
         self.force_upper = False
 
+        self.start_time = cctime.get_time()
+        self.auto_advance_interval = 30
+        self.next_advance_time = self.start_time + self.auto_advance_interval
+        self.frame_count = 0
+
         debug.mem('Clock.__init__ done')
 
     def step(self):
         debug.mem('step')
         self.brightness_reader.step(self.receive)
         self.state_steps[self.state]()
+        self.frame_count += 1
+
+        now = cctime.get_time()
+        if now > self.next_advance_time:
+            elapsed = now - self.start_time
+            print(f'frames: {self.frame_count} / elapsed: {elapsed:.1f} / fps: {self.frame_count/elapsed:.1f}')
+            self.incr_lifeline(1)
+            self.next_advance_time += self.auto_advance_interval
 
     def clock_start(self):
         self.frame.clear()
@@ -203,6 +216,7 @@ class Clock:
         self.lifeline_index = (
             self.lifeline_index + len(self.lifeline_modules) + delta
         ) % len(self.lifeline_modules)
+        self.frame.clear()
 
 
 debug.mem('clock6')
