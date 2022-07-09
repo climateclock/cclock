@@ -8,6 +8,9 @@ except:
     import adafruit_datetime as datetime
 
 
+TEST_MODE = True
+
+
 def calc_deadline(module, now):
     deadline = module.ref_datetime
     next_anniversary = deadline.replace(year=now.year)
@@ -54,15 +57,18 @@ def format_value(module, now):
 
 def render_deadline_module(frame, y, module, cv, lang='en', upper=False):
     yr, d, h, m, s = calc_deadline(module, cctime.get_datetime())
-    # Just testing various languages for now.
-    texts = {
-        'de': f'{yr} Jahre {d} Tage {h:02d}:{m:02d}:{s:02d}',
-        'en': f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}',
-        'es': f'{yr} años {d} días {h:02d}:{m:02d}:{s:02d}',
-        'fr': f'{yr} ans {d} jours {h:02d}:{m:02d}:{s:02d}',
-        'is': f'{yr} ár {d} dagar {h:02d}:{m:02d}:{s:02d}'
-    }
-    text = texts.get(lang, texts['en'])
+    if TEST_MODE:
+        # Just testing various languages for now.
+        texts = {
+            'de': f'{yr} Jahre {d} Tage {h:02d}:{m:02d}:{s:02d}',
+            'en': f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}',
+            'es': f'{yr} años {d} días {h:02d}:{m:02d}:{s:02d}',
+            'fr': f'{yr} ans {d} jours {h:02d}:{m:02d}:{s:02d}',
+            'is': f'{yr} ár {d} dagar {h:02d}:{m:02d}:{s:02d}'
+        }
+        text = texts.get(lang, texts['en'])
+    else:
+        text = f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}'
     if upper:
         text = text.upper()
     frame.paste(2, y, frame.new_label(text, 'kairon-16'), cv=cv)
@@ -76,29 +82,32 @@ def render_lifeline_module(frame, y, module, cv, lang='en', upper=False):
 
 
 def render_value_module(frame, y, module, cv, lang='en', upper=False):
-    # formatted_value = format_value(module, cctime.get_datetime())
-    formatted_value = '43.5'
-    unit_text = 'M km²'
-    value_label = frame.new_label(formatted_value + unit_text, 'kairon-16')
-    # Just testing various languages for now.
-    texts = {
-      'de': 'geshütztes indigenes Land',
-      'en': 'indigenous protected land',
-      'es': 'tierra indígena protegida',
-      'fr': 'terre indigène protégée',
-      'is': 'friðlýst frumbyggjaland'
-    }
-    text = texts.get(lang, texts['en'])
-    if upper:
-        text = text.upper()
-    text_label = frame.new_label(text, 'kairon-10')
-    #space = frame.w - value_label.w
-    #for text in module.labels:
-    #    text_label = frame.new_label(text, 'kairon-10')
-    #    for unit_text in module.unit_labels:
-    #        unit_label = frame.new_label(unit_text + ' ', 'kairon-10')
-    #        if value_label.w + text_label.w + unit_label.w < frame.w:
-    #            break
+    if TEST_MODE:
+        value_text = '43.5'
+        unit_text = 'M km²'
+        value_label = frame.new_label(value_text + unit_text, 'kairon-16')
+        # Just testing various languages for now.
+        texts = {
+          'de': 'geshütztes indigenes Land',
+          'en': 'indigenous protected land',
+          'es': 'tierra indígena protegida',
+          'fr': 'terre indigène protégée',
+          'is': 'friðlýst frumbyggjaland'
+        }
+        text = texts.get(lang, texts['en'])
+        if upper:
+            text = text.upper()
+        text_label = frame.new_label(text, 'kairon-10')
+    else:
+        value_text = format_value(module, cctime.get_datetime())
+        for text in module.labels:
+            text_label = frame.new_label(text, 'kairon-10')
+            for unit_text in module.unit_labels:
+                value_label = frame.new_label(value_text + unit_text, 'kairon-16')
+                if value_label.w + text_label.w < frame.w:
+                    break
+            if value_label.w + text_label.w < frame.w:
+                break
     x = 1
     frame.paste(x, y, value_label, cv=cv)
     x += value_label.w
