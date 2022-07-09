@@ -11,9 +11,9 @@ import math
 debug.mem('ccapi3')
 
 
-def try_isoformat_to_time(data, key):
+def try_isoformat_to_datetime(data, key):
     try:
-        return cctime.isoformat_to_time(data.get(key))
+        return cctime.isoformat_to_datetime(data.get(key))
     except Exception as e:
         print("Field %r contains an invalid timestamp: %r" % (key, data))
 
@@ -83,11 +83,11 @@ class Module(SlotRepr):
 
 
 class Timer(Module):
-    __slots__ = ("ref_time",)
+    __slots__ = ("ref_datetime",)
 
     def load(self, data):
         Module.load(self, data)
-        self.ref_time = try_isoformat_to_time(data, "timestamp")
+        self.ref_datetime = try_isoformat_to_datetime(data, "timestamp")
         return self
 
 
@@ -96,18 +96,18 @@ class Newsfeed(Module):
 
     def load(self, data):
         Module.load(self, data)
-        self.items = sorted(
+        self.items = list(reversed(sorted(
             [NewsfeedItem().load(item) for item in data.get("newsfeed", [])],
-            key=lambda item: -item.pub_time,
-        )
+            key=lambda item: item.pub_datetime,
+        )))
         return self
 
 
 class NewsfeedItem(SlotRepr):
-    __slots__ = "pub_time", "headline", "headline_original", "source", "link", "summary"
+    __slots__ = "pub_datetime", "headline", "headline_original", "source", "link", "summary"
 
     def load(self, data):
-        self.pub_time = try_isoformat_to_time(data, "date")
+        self.pub_datetime = try_isoformat_to_datetime(data, "date")
         self.headline = data.get("headline") or ""
         self.headline_original = data.get("headline_original") or ""
         self.source = data.get("source") or ""
@@ -117,12 +117,12 @@ class NewsfeedItem(SlotRepr):
 
 
 class Value(Module):
-    __slots__ = "initial", "ref_time", "growth", "rate", "resolution", "unit_labels"
+    __slots__ = "initial", "ref_datetime", "growth", "rate", "resolution", "unit_labels"
 
     def load(self, data):
         Module.load(self, data)
         self.initial = data.get("initial") or 0
-        self.ref_time = try_isoformat_to_time(data, "timestamp")
+        self.ref_datetime = try_isoformat_to_datetime(data, "timestamp")
         self.growth = data.get("growth") or "linear"
         self.rate = data.get("rate") or 0
         self.resolution = data.get("resolution") or 1

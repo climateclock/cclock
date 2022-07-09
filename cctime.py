@@ -54,6 +54,16 @@ def get_time():
     return time.time()
 
 
+def get_datetime():
+    """Returns the current time as a datetime in UTC."""
+    if hasattr(time, 'gmtime'):
+        return datetime.datetime.utcfromtimestamp(get_time())
+    else:
+        # In CircuitPython, time.gmtime and datetime.utcfromtimestamp are
+        # missing; there are no time zones and all datetimes are in UTC.
+        return datetime.datetime.fromtimestamp(get_time())
+
+
 def set_fake_time(t):
     """Sets the time for testing.  To use the real time, set_fake_time(None)."""
     global fake_time
@@ -88,11 +98,6 @@ def isoformat_to_datetime(s):
 def isoformat_to_date(s):
     """Parses a string in the form yyyy-mm-ddThh:mm:ss into a date."""
     return isoformat_to_datetime(s).date()
-
-
-def isoformat_to_time(s):
-    """Parses a string in the form yyyy-mm-ddThh:mm:ss into a Unix timestamp."""
-    return (isoformat_to_datetime(s) - EPOCH).total_seconds()
 
 
 debug.mem('cctime5')

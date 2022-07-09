@@ -2,15 +2,22 @@
 
 import cctime
 import math
+try:
+    import datetime
+except:
+    import adafruit_datetime as datetime
 
 
-def calc_deadline(module, now_time):
-    t = int(module.ref_time - now_time)
+def calc_deadline(module, now):
+    deadline = module.ref_datetime
+    next_anniversary = deadline.replace(year=now.year)
+    if next_anniversary < now:
+        next_anniversary = deadline.replace(year=now.year + 1)
+    y = deadline.year - next_anniversary.year
+    t = int((next_anniversary - now).total_seconds())
     s, t = t % 60, t // 60
     m, t = t % 60, t // 60
-    h, t = t % 24, t // 24
-    d, t = t % 365, t // 365
-    y = t
+    h, d = t % 24, t // 24
     return y, d, h, m, s
 
 
@@ -25,8 +32,8 @@ def to_bigint(f, scale):
     return scaled // (1<<22)
 
 
-def format_value(module, now_time):
-    elapsed_ms = int(now_time * 1000 - module.ref_time * 1000)
+def format_value(module, now):
+    elapsed_ms = int((now - module.ref_datetime).total_seconds() * 1000)
     if module.growth == 'linear':
         scale = module.scale * 10000000  # 22 bits = about 7 decimal places
         decimals = module.decimals + 7
@@ -46,7 +53,7 @@ def format_value(module, now_time):
 
 
 def render_deadline_module(frame, y, module, cv, lang='en', upper=False):
-    yr, d, h, m, s = calc_deadline(module, cctime.get_time())
+    yr, d, h, m, s = calc_deadline(module, cctime.get_datetime())
     # Just testing various languages for now.
     texts = {
         'de': f'{yr} Jahre {d} Tage {h:02d}:{m:02d}:{s:02d}',
@@ -69,7 +76,7 @@ def render_lifeline_module(frame, y, module, cv, lang='en', upper=False):
 
 
 def render_value_module(frame, y, module, cv, lang='en', upper=False):
-    # formatted_value = format_value(module, cctime.get_time())
+    # formatted_value = format_value(module, cctime.get_datetime())
     formatted_value = '43.5'
     unit_text = 'M km²'
     value_label = frame.new_label(formatted_value + unit_text, 'kairon-16')
