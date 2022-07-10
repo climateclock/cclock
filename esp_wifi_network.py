@@ -65,7 +65,6 @@ class EspWifiNetwork(Network):
             self.spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
             self.esp = EspWifi(self.spi, esp32_cs, esp32_ready, esp32_reset)
             self.esp._debug = self.debug
-            self.esp.reset()
 
         elif self.esp.status == 3:
             self.set_state(State.ONLINE)
