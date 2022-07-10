@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+
+from hashlib import md5
+import os
+import sys
+
+def pack(source_dir, pack_name, pack_file):
+    os.chdir(source_dir)
+    file_list = sum((
+        [os.path.join(path.lstrip('./'), file) for file in files]
+        for path, dirs, files in os.walk('.')
+    ), [])
+    digest = md5()
+    for path in file_list:
+        digest.update(to_bytes(path))
+        digest.update(open(path, 'rb').read())
+    pack_hash = digest.hexdigest()
+
+    write_magic(pack_file, 1)
+    write_block(pack_file, 'pn', to_bytes(pack_name))
+    write_block(pack_file, 'ph', to_bytes(pack_hash))
+    for path in file_list:
+        write_block(pack_file, 'fn', path)
+        with open(path, 'rb') as source_file:
+            content = source_file.read(65535)
+            if len(content) == 0:
+                break
+            write_block(pack_file, 'fc', content)
+    write_block(pack_file, 'pe', b'')
+
+def to_bytes(arg):
+    if isinstance(arg, bytes):
+        return arg
+    if isinstance(arg, str):
+        return bytes(arg, encoding='ascii')
+    raise TypeError('Not a str or bytes object: ' + repr(arg))
+
+def to_short(arg):
+    assert arg <= 0xffff
+    return bytes([arg >> 8, arg & 0xff])
+
+def write_magic(file, version):
+    file.write(b'pk')
+    file.write(to_short(version))
+
+def write_block(file, block_type, content):
+    file.write(to_bytes(block_type))
+    file.write(to_short(len(content)))
+    file.write(to_bytes(content))
+
+def main(source_dir, pack_name):
+    with os.fdopen(1, 'wb') as binary_stdout:
+        pack(source_dir, pack_name, binary_stdout)
+
+if __name__ == '__main__':
+    main(*sys.argv[1:])
