@@ -11,6 +11,10 @@ class IO:
     def value(self):
         return self.io.value
 
+    @value.setter
+    def set_value(self, new_value):
+        self.io.value = new_value
+
     def deinit(self):
         self.io.deinit()
         self.io = None
@@ -25,16 +29,8 @@ class Input(IO):
 
 class Output(IO):
     def __init__(self, pin):
-        super().__init__(pin)
+        self.io = DigitalInOut(pin)
         self.io.direction = Direction.OUTPUT
-
-    @property
-    def value(self):
-        return self.io.value
-
-    @value.setter
-    def set_value(self, new_value):
-        self.io.value = new_value
 
 
 class Button(Input):

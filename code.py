@@ -34,20 +34,19 @@ if versions:
         import main
         main.main()
     except Exception as e:
-        print('Error:', e)
         try:
             import traceback
             traceback.print_exception(e.__class__, e, e.__traceback__)
         except Exception as ee:
-            print(repr(e))
+            print(f'{repr(e)}: {e}')
         if len(versions) > 1:
             print(f'\nDisabling /{name} due to crash: {e}\n')
             try:
                 os.remove(name + '/@ENABLED')
             except Exception as ee:
-                print(ee)
+                print(f'{repr(ee)}: {ee}')
         else:
-            print(f'\nThis is the last available version; not disabling.\n')
+            print(f'\n/{name} is the last available version; not disabling.\n')
         supervisor.reload()
 else:
     print('\nNo valid, enabled versions found.\n')

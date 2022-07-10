@@ -9,9 +9,10 @@ import ccui
 debug.mem('clock4')
 from ccinput import ButtonReader, DialReader, Press
 debug.mem('clock5')
-import pack_loader
+import pack_fetcher
+debug.mem('clock6')
 from network import State
-import unix_network
+debug.mem('clock7')
 
 
 menu = [
@@ -22,11 +23,12 @@ menu = [
 
 
 class Clock:
-    def __init__(self, network, data, frame, button_map, dial_map):
+    def __init__(self, fs, network, data, frame, button_map, dial_map):
         debug.mem('Clock.__init__')
 
+        self.fs = fs
         self.network = network
-        self.loader = None
+        self.fetcher = None
         self.data = data
         self.frame = frame
         self.langs = ['en', 'es', 'de', 'fr', 'is']
@@ -93,6 +95,8 @@ class Clock:
         self.force_upper = False
 
         self.start_time = cctime.get_time()
+        self.pack_fetch_interval = 30 * 60  # wait 30 minutes between fetches
+        self.next_fetch_time = self.start_time + 5
         self.auto_advance_interval = 30
         self.next_advance_time = self.start_time + self.auto_advance_interval
         self.frame_count = 0
@@ -131,14 +135,24 @@ class Clock:
 
         if self.network.state == State.OFFLINE:
             self.network.enable_step('climateclock', 'climateclock')
+            self.fetcher = None
         elif self.network.state == State.ONLINE:
-            self.network.connect_step('api.climateclock.world')
+            self.network.connect_step('example.com')
+            self.fetcher = None
         elif self.network.state == State.CONNECTED:
-            if self.loader:
-                self.loader.next_step()
-            else:
-                self.loader = pack_loader.PackLoader(
-                    self.network, b'api.climateclock.world', b'/v1/clock')
+            if not self.fetcher and cctime.get_time() > self.next_fetch_time:
+                self.fetcher = pack_fetcher.PackFetcher(
+                    self.fs, self.network, b'example.com', b'/cclock.pk')
+                self.next_fetch_time += self.pack_fetch_interval
+            if self.fetcher:
+                try:
+                    result = self.fetcher.next_step()
+                except StopIteration:
+                    print('PackFetcher completed successfully')
+                    self.fetcher = None
+                except Exception as e:
+                    print(f'PackFetcher aborted due to {e} ({repr(e)})')
+                    self.fetcher = None
 
     def menu_start(self):
         self.frame.clear()
@@ -236,12 +250,12 @@ class Clock:
         self.frame.clear()
 
 
-debug.mem('clock6')
+debug.mem('clock8')
 
 
-def run(network, frame, button_map, dial_map):
+def run(fs, network, frame, button_map, dial_map):
     cctime.enable_rtc()
     data = ccapi.load_file('cache/climateclock.json')
-    clock = Clock(network, data, frame, button_map, dial_map)
+    clock = Clock(fs, network, data, frame, button_map, dial_map)
     while True:
         clock.step()

@@ -26,14 +26,12 @@ Runs a module on the local machine, using SDL as the graphics driver.
 that takes an instance of frame.Frame as its single argument.''')
     raise SystemExit()
 
-try:
-    run = __import__(module).run
-except Exception as e:
-    raise SystemExit(e)
+run = __import__(module).run
 
 import sdl2
 from sdl_frame import SdlFrame, SdlButton, SdlDial
 
+from fs import FileSystem
 from unix_network import UnixNetwork
 network = UnixNetwork('climateclock', 'climateclock', debug=True)
 
@@ -46,6 +44,7 @@ brightness = SdlDial(
 selector = SdlDial(
     frame, sdl2.SDL_SCANCODE_LEFT, sdl2.SDL_SCANCODE_RIGHT, -100000, 100000, 1)
 run(
+    FileSystem(b'/tmp/cclock'),
     network,
     frame,
     {'UP': up, 'DOWN': down, 'ENTER': enter},

@@ -72,17 +72,21 @@ brightness = gpio.AnalogInput(board.A1)
 selector = gpio.RotaryInput(board.A2, board.A3)
 debug.mem('main5')
 
+from fs import FileSystem
 from esp_wifi_network import EspWifiNetwork
+debug.mem('main6')
 network = EspWifiNetwork(debug=True)
+debug.mem('main7')
 
 from $module import run
-debug.mem('main6')
+debug.mem('main8')
 run(
+    FileSystem(b'/'),
+    network,
     frame,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )
-run(network, frame, {'NEXT': up, 'ENTER': down}, {'BRIGHTNESS': brightness})
 EOF
 
 touch $target/v999/@VALID

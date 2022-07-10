@@ -5,7 +5,7 @@ from ssl import create_default_context as create_ssl_context
 
 
 class UnixNetwork(Network):
-    def __init__(self, ssid, password, wifi_connect_delay=2, debug=False):
+    def __init__(self, ssid, password, wifi_connect_delay=1, debug=False):
         self.ssid = ssid
         self.password = password
         self.initialized = False

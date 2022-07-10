@@ -2,8 +2,8 @@ from adafruit_esp32spi import adafruit_esp32spi
 import board
 import busio
 import cctime
-import gpio
 from network import Network, State
+from digitalio import DigitalInOut, Direction
 
 
 def to_bytes(bytes_or_string):
@@ -59,9 +59,9 @@ class EspWifiNetwork(Network):
 
     def enable_step(self, ssid, password):
         if not self.esp:
-            esp32_cs = gpio.Output(board.ESP_CS)
-            esp32_ready = gpio.Output(board.ESP_BUSY)
-            esp32_reset = gpio.Output(board.ESP_RESET)
+            esp32_cs = DigitalInOut(board.ESP_CS)
+            esp32_ready = DigitalInOut(board.ESP_BUSY)
+            esp32_reset = DigitalInOut(board.ESP_RESET)
             self.spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
             self.esp = EspWifi(self.spi, esp32_cs, esp32_ready, esp32_reset)
             self.esp._debug = self.debug

@@ -15,7 +15,7 @@ def try_isoformat_to_datetime(data, key):
     try:
         return cctime.isoformat_to_datetime(data.get(key))
     except Exception as e:
-        print("Field %r contains an invalid timestamp: %r" % (key, data))
+        print(f'Invalid timestamp in field "{key}": {repr(data)} ({e})')
 
 
 def sorted_longest_first(labels):
