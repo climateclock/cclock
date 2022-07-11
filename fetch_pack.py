@@ -207,7 +207,7 @@ def exists(name):
     except:
         return False
 
-def run():
+def run(*args):
     req = PackFetcher('example.com', '/cclock.pk')
     for i in range(50):
         req.next()
