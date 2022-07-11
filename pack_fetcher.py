@@ -6,6 +6,12 @@ import os
 from network import State
 
 
+def to_bytes(arg):
+    if isinstance(arg, bytes):
+        return arg
+    return bytes(str(arg), 'ascii')
+
+
 class PackFetcher:
     MAX_PACK_FORMAT_VERSION = 1
 
@@ -30,19 +36,19 @@ class PackFetcher:
         self.file_path = b'file'
 
         self.network.send_step(
-            b'GET ' + path + b' HTTP/1.1\r\n' +
-            b'Host: ' + hostname + b'\r\n' +
+            b'GET ' + to_bytes(path) + b' HTTP/1.1\r\n' +
+            b'Host: ' + to_bytes(hostname) + b'\r\n' +
             b'Connection: Close\r\n' +
             b'\r\n'
         )
         self.next_step = self.read_http_response_step
         self.digest = md5()
 
-    def extend_buffer(self, target_length=1024):
+    def extend_buffer(self, target_length=256):
         """Reads bytes into the buffer until the buffer contains at least
         target_length bytes.  Returns True if the target length was reached."""
         if len(self.buffer) < target_length:
-            count = max(1024, target_length - len(self.buffer))
+            count = max(256, target_length - len(self.buffer))
             self.buffer.extend(self.network.receive_step(count))
         return len(self.buffer) >= target_length
 
@@ -52,12 +58,12 @@ class PackFetcher:
             return
         if self.buffer[:5] != b'HTTP/' or b' ' not in self.buffer:
             raise ValueError(f'Invalid HTTP response {self.buffer}')
-        words = self.buffer.split(b' ')
+        words = bytes(self.buffer).split(b' ')
         if words[1] != b'200':
             raise ValueError(f'HTTP status {words[1]}')
         double_crlf = self.buffer.find(b'\r\n\r\n')
         if double_crlf < 0:
-            self.extend_buffer(len(buffer) + 128)
+            self.extend_buffer(len(self.buffer) + 128)
             return
         self.buffer[:double_crlf + 4] = b''
         self.next_step = self.read_magic_step

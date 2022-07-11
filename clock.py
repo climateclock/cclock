@@ -155,6 +155,7 @@ class ClockMode(Mode):
 
         self.ota_step()
 
+        self.frame_count += 1
         now = cctime.get_time()
         if now > self.next_advance_time:
             self.next_advance_time += self.auto_advance_interval

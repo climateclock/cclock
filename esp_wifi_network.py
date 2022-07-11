@@ -2,19 +2,25 @@ from adafruit_esp32spi import adafruit_esp32spi
 import board
 import busio
 import cctime
-from network import Network, State
 from digitalio import DigitalInOut, Direction
+from network import Network, State
 
 
-def to_bytes(bytes_or_string):
-    if isinstance(bytes_or_string, bytes):
-        return bytes_or_string
-    return bytes(str(bytes_or_string), 'ascii')
+def to_bytes(arg):
+    if isinstance(arg, bytes):
+        return arg
+    return bytes(str(arg), 'ascii')
+
+
+def to_str(arg):
+    if isinstance(arg, bytes):
+        return str(arg, 'ascii')
+    return str(arg)
 
 
 class EspWifi(adafruit_esp32spi.ESP_SPIcontrol):
     """Patched version of ESP_SPIcontrol that resets without sleeping."""
-    reset_started_ms = 0
+    reset_started = None
 
     def reset(self):
         if self._debug:
@@ -31,10 +37,10 @@ class EspWifi(adafruit_esp32spi.ESP_SPIcontrol):
         self.reset_started = cctime.monotonic()
 
     def is_ready(self):
-        if self.reset_started_ms:
-            if cctime.monotonic() < self.reset_started_ms + 0.75:
+        if self.reset_started:
+            if cctime.monotonic() < self.reset_started + 0.75:
                 return False
-            self.reset_started_ms = None
+            self.reset_started = None
         return not self._ready.value
 
     def deinit(self):
@@ -49,7 +55,8 @@ class EspWifiNetwork(Network):
         self.esp = None
         self.socket = None
         self.debug = debug
-        self.wifi_retry_deadline_ms = None
+        self.wifi_started = None
+        self.socket_started = None
         self.set_state(State.OFFLINE)
 
     def set_state(self, new_state):
@@ -59,6 +66,7 @@ class EspWifiNetwork(Network):
 
     def enable_step(self, ssid, password):
         if not self.esp:
+            print('Initializing ESP32.')
             esp32_cs = DigitalInOut(board.ESP_CS)
             esp32_ready = DigitalInOut(board.ESP_BUSY)
             esp32_reset = DigitalInOut(board.ESP_RESET)
@@ -66,29 +74,47 @@ class EspWifiNetwork(Network):
             self.esp = EspWifi(self.spi, esp32_cs, esp32_ready, esp32_reset)
             self.esp._debug = self.debug
 
-        elif self.esp.status == 3:
-            self.set_state(State.ONLINE)
+        elif not self.wifi_started:
+            if self.esp.is_ready():
+                print(f'Joining Wi-Fi network {repr(ssid)}.')
+                # NOTE: ssid and password must be bytes, not str!
+                self.esp.wifi_set_passphrase(to_bytes(ssid), to_bytes(password))
+                self.wifi_started = cctime.monotonic()
 
-        elif self.esp.is_ready():
-            if self.wifi_retry_deadline:
-                if cctime.monotonic() > self.wifi_retry_deadline:
-                    self.esp.reset()
-                    self.wifi_retry_deadline_ms = None
-                    return
+        elif self.wifi_started:
+            # NOTE: Reading esp.status is only safe in certain states; it
+            # cause a crash if wifi_set_passphrase hasn't been called yet.
+            if self.esp.status == 3:
+                self.set_state(State.ONLINE)
 
-            self.esp.wifi_set_passphrase(to_bytes(ssid), to_bytes(password))
-            if not self.wifi_retry_deadline_ms:
-                self.wifi_retry_deadline = cctime.monotonic() + 30
+            elif cctime.monotonic() > self.wifi_started + 30:
+                print('Could not join Wi-Fi network after 30 seconds; resetting.')
+                self.esp.reset()
+                self.wifi_started = None
+
 
     def connect_step(self, hostname, port=None, ssl=True):
-        if not self.socket:
+        if self.socket is None:
             self.socket = self.esp.get_socket()
-            mode = self.esp.TLS_MODE if ssl else self.esp.TCP_MODE
             port = port or (443 if ssl else 80)
-            self.esp.socket_open(self.socket, hostname, port, mode)
+            mode = self.esp.TLS_MODE if ssl else self.esp.TCP_MODE
+            print(f'Connecting to', hostname, 'port', port)
+            try:
+                # NOTE: hostname must be str, not bytes!
+                self.esp.socket_open(self.socket, hostname, port, mode)
+                self.socket_started = cctime.monotonic()
+            except Exception as e:
+                print(f'Error! {e}')
 
         if self.esp.socket_connected(self.socket):
+            print('Connected!')
             self.set_state(State.CONNECTED)
+
+        else:
+            if cctime.monotonic() > self.socket_started + 30:
+                print('No connection after 30 seconds; retrying.')
+                self.esp.socket_close(self.socket)
+                self.socket = None
 
     def send_step(self, data):
         if self.esp.socket_connected(self.socket):
