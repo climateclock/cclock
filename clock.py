@@ -62,7 +62,7 @@ class App:
         self.mode.step()
 
     def receive(self, command, arg=None):
-        print(f'[{command}{"" if arg is None else ": " + str(arg)}]')
+        print('[' + command + ('' if arg is None else ': ' + str(arg)) + ']')
         if command == 'BRIGHTNESS':
             delta, value = arg
             self.frame.set_brightness(value)

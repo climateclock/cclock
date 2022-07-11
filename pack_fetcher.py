@@ -1,7 +1,7 @@
 try:
     from hashlib import md5
 except:
-    from adafruit_hashlib_md5 import md5
+    from adafruit_hashlib import md5
 import os
 from network import State
 
