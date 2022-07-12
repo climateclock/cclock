@@ -61,8 +61,7 @@ class EspWifiNetwork(Network):
 
     def set_state(self, new_state):
         self.state = new_state
-        if self.debug:
-            print(f'Network is now {self.state}.')
+        print(f'Network is now {self.state}.')
 
     def enable_step(self, ssid, password):
         if not self.esp:
@@ -84,11 +83,17 @@ class EspWifiNetwork(Network):
         elif self.wifi_started:
             # NOTE: Reading esp.status is only safe in certain states; it
             # cause a crash if wifi_set_passphrase hasn't been called yet.
-            if self.esp.status == 3:
+            esp_status = self.esp.status
+
+            if esp_status == 3:
                 self.set_state(State.ONLINE)
 
-            elif cctime.monotonic() > self.wifi_started + 30:
-                print('Could not join Wi-Fi network after 30 seconds; resetting.')
+            elif esp_status == 4:
+                print(f'Failed to join Wi-Fi network {repr(ssid)}.')
+                self.wifi_started = None
+
+            elif cctime.monotonic() > self.wifi_started + 15:
+                print('Could not join Wi-Fi network after 15 seconds; resetting.')
                 self.esp.reset()
                 self.wifi_started = None
 
@@ -111,8 +116,8 @@ class EspWifiNetwork(Network):
             self.set_state(State.CONNECTED)
 
         else:
-            if cctime.monotonic() > self.socket_started + 30:
-                print('No connection after 30 seconds; retrying.')
+            if cctime.monotonic() > self.socket_started + 15:
+                print('No connection after 15 seconds; retrying.')
                 self.esp.socket_close(self.socket)
                 self.socket = None
 

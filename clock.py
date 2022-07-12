@@ -184,7 +184,7 @@ class ClockMode(Mode):
                     print('Fetch completed successfully')
                     self.fetcher = None
                 except Exception as e:
-                    print(f'Fetcht aborted due to {e} ({repr(e)})')
+                    print(f'Fetch aborted due to {e} ({repr(e)})')
                     self.fetcher = None
 
     def receive(self, command, arg=None):
