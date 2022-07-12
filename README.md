@@ -18,14 +18,8 @@ own pixel representation to optimize for the target device.
 ## Firmware setup
 
 This code is written to run on a custom build of the MatrixPortal
-firmware that has several of the Adafruit libraries built-in, to conserve RAM.
-To build the firmware:
-
-    git clone https://github.com/zestyping/circuitpython
-    cd circuitpython/ports/atmel-samd
-    make -j8 V=1 BOARD=matrixportal_m4_cclock
-
-This will produce a `firmware.uf2` file.  To install it:
+firmware that has several of the Adafruit libraries built-in,
+to conserve RAM.  To install the firmware:
 
   - Connect your MatrixPortal to your computer with a USB cable.
   - Reset the board to bootloader mode by double-pressing the reset button.
@@ -42,6 +36,16 @@ Once you have a `CIRCUITPY` volume visible, run:
 This will copy all the Python source files to the MatrixPortal, which
 should automatically restart and run the clock.  If necessary, you can
 press the reset button once to restart the board.
+
+## Building firmware
+
+If you want to build the firmware image yourself:
+
+    git clone https://github.com/zestyping/circuitpython
+    cd circuitpython/ports/atmel-samd
+    make -j8 V=1 BOARD=matrixportal_m4_cclock
+
+This will produce the aforementioned `firmware.uf2` file.
 
 ## Development setup
 
@@ -64,7 +68,7 @@ to the board.  The status light can be white or purple; the mnemonic is:
   - WhITE means you can WrITE files to the board over USB
   - PuRple means the board is in PRoduction mode, non-writable over USB
 
-## Frame implementations
+## Frame implementation notes
 
 `sdl_frame.py` is an implementation of `Frame` that will run on standard
 Python, using the SDL2 graphics library for display.
