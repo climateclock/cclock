@@ -151,8 +151,8 @@ def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
     frame.paste(newsfeed_x, y, headline_label, cv=cv)
 
     if newsfeed_x + headline_width < 0:
-        newsfeed_x = 0
+        newsfeed_x += headline_width
         newsfeed_index = (i + 1) % n
         headline_label = None
     else:
-        newsfeed_x -= 1
+        newsfeed_x -= 4
