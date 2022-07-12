@@ -37,6 +37,23 @@ This will copy all the Python source files to the MatrixPortal, which
 should automatically restart and run the clock.  If necessary, you can
 press the reset button once to restart the board.
 
+## Networking configuration
+
+For now, the Wi-Fi network and software update URL are configured
+directly in the code.  In `clock.py`, edit the strings in the `ota_step`
+function to set the Wi-Fi network name and password, as well as the
+hostname and path of an HTTPS URL for fetching software updates.
+
+You can create a software update package yourself using `tools/pack`.
+Run it with a directory path as the first argument and a package name
+(such as "cclock") as the second argument; for example:
+
+    tools/pack /tmp/folder/ cclock > cclock.pk
+
+Then make the resulting `cclock.pk` file available for download at
+a HTTPS URL, put the hostname in the `connect_step()` call, and
+put the hostname and path of the URL in the `PackFetcher()` call.
+
 ## Building firmware
 
 If you want to build the firmware image yourself:
