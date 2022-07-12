@@ -91,4 +91,5 @@ EOF
 
 touch $target/v999/@VALID
 touch $target/v999/@ENABLED
+sync
 echo "All done!"
