@@ -93,13 +93,13 @@ sequence sets the filesystem to be writable from CircuitPython, which
 makes it non-writable over the USB cable.
 
 To enable writing over USB, press the reset button once and then hold
-down either of the other two buttons until the status light turns white.
-The white light indicates that the board is now writable, so you can
+down either of the other two buttons until the status light turns red.
+The red light indicates that the board is now writable, so you can
 run `tools/matrix_run clock` again to copy any of your local edits over
-to the board.  The status light can be white or purple; the mnemonic is:
+to the board.  The status light can be red or purple; the mnemonic is:
 
-  - WhITE means you can WrITE files to the board over USB
-  - PuRple means the board is in PRoduction mode, non-writable over USB
+  - Red means you can wRite (or think of a red recording light)
+  - PuRple means it's in PRoduction (non-writable over USB)
 
 ### Communicating with the MatrixPortal
 
@@ -126,7 +126,7 @@ Scroll down to the `ota_step()` function and edit the strings in the
 
 Once you've done that, put the board into writable mode by pressing the
 reset button and holding down one of the other buttons until the status
-light turns white (see the preceding section), then use
+light turns red (see the preceding section), then use
 `tools/matrix_run clock` to write your changes to the board.
 
 ### Software update (under development)
