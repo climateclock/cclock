@@ -169,13 +169,13 @@ class ClockMode(Mode):
             self.network.enable_step('climateclock', 'climateclock')
             self.fetcher = None
         elif self.network.state == State.ONLINE:
-            self.network.connect_step('example.com')
+            self.network.connect_step('zestyping.github.io')
             self.fetcher = None
         if self.network.state == State.CONNECTED:
             if not self.fetcher and cctime.get_time() > self.next_fetch_time:
                 # TODO: instantiate PackFetcher just once
                 self.fetcher = pack_fetcher.PackFetcher(
-                    self.fs, self.network, b'example.com', b'/cclock.pk')
+                    self.fs, self.network, b'zestyping.github.io', b'/test.pk')
                 self.next_fetch_time += self.pack_fetch_interval
             if self.fetcher:
                 try:
