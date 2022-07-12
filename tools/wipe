@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Wipes the contents of /Volumes/CIRCUITPY.
+
+echo -n 'Really wipe /Volumes/CIRCUITPY? '
+read confirm
+if [[ $confirm = y* ]]; then
+    rm -rf /Volumes/CIRCUITPY/*
+    echo 'Wiped.'
+else
+    echo 'Not wiping.'
+fi
