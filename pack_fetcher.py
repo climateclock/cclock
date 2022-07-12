@@ -5,6 +5,17 @@ except:
 import os
 from network import State
 
+MAX_PACK_FORMAT_VERSION = 1
+
+# To limit memory usage, we read data from the network in chunks.
+MAX_CHUNK_SIZE = 1024
+
+# For safety, we set an upper limit on the total size of the unpacked
+# files.  We aim to allow at least 4 versions to fit in flash storage.
+DISK_CAPACITY = 2*1024*1024  # total flash disk space available
+MAX_ROOT_SIZE = 512*1024  # max allotted for root files and lib/ directory
+MAX_UNPACKED_SIZE = (DISK_CAPACITY - MAX_ROOT_SIZE) / 4
+
 
 def to_bytes(arg):
     if isinstance(arg, bytes):
@@ -13,15 +24,6 @@ def to_bytes(arg):
 
 
 class PackFetcher:
-    MAX_PACK_FORMAT_VERSION = 1
-
-    # For safety, we set an upper limit on the total size of the unpacked
-    # files.  We aim to allow at least 4 versions to fit in flash storage.
-    DISK_CAPACITY = 2*1024*1024  # total flash disk space available
-    MAX_ROOT_SIZE = 512*1024  # max allotted for root files and lib/ directory
-    MAX_UNPACKED_SIZE = (DISK_CAPACITY - MAX_ROOT_SIZE) / 4
-
-
     def __init__(self, fs, network, hostname, path):
         if network.state != State.CONNECTED:
             raise ValueError('Network is not yet CONNECTED.')
@@ -44,11 +46,11 @@ class PackFetcher:
         self.next_step = self.read_http_response_step
         self.digest = md5()
 
-    def extend_buffer(self, target_length=256):
+    def extend_buffer(self, target_length=MAX_CHUNK_SIZE):
         """Reads bytes into the buffer until the buffer contains at least
         target_length bytes.  Returns True if the target length was reached."""
         if len(self.buffer) < target_length:
-            count = max(256, target_length - len(self.buffer))
+            count = max(MAX_CHUNK_SIZE, target_length - len(self.buffer))
             self.buffer.extend(self.network.receive_step(count))
         return len(self.buffer) >= target_length
 
@@ -63,7 +65,9 @@ class PackFetcher:
             raise ValueError(f'HTTP status {words[1]}')
         double_crlf = self.buffer.find(b'\r\n\r\n')
         if double_crlf < 0:
-            self.extend_buffer(len(self.buffer) + 128)
+            # Keep the last 4 bytes so we don't miss the b'\r\n\r\n' sequence.
+            self.buffer[:-4] = b''
+            self.extend_buffer(MAX_CHUNK_SIZE)
             return
         self.buffer[:double_crlf + 4] = b''
         self.next_step = self.read_magic_step
@@ -76,7 +80,7 @@ class PackFetcher:
         if magic != b'pk':
             raise ValueError(f'Invalid magic {bytes(magic)}')
         version = (self.buffer[2] << 8) + self.buffer[3]
-        if version > self.MAX_PACK_FORMAT_VERSION:
+        if version > MAX_PACK_FORMAT_VERSION:
             raise ValueError(f'Unsupported version {version}')
         print(f'Receiving pack version {version}')
         self.buffer[:4] = b''
@@ -92,15 +96,18 @@ class PackFetcher:
         self.next_step = self.read_block_content_step
 
     def read_block_content_step(self):
-        """Reads the contents of a block."""
-        if not self.extend_buffer(self.block_length):
+        """Reads a block, splitting blocks of length > 256 into chunks. """
+        chunk_length = min(MAX_CHUNK_SIZE, self.block_length)
+        if not self.extend_buffer(chunk_length):
             return
-        content = self.buffer[:self.block_length][:]
-        self.buffer[:self.block_length] = b''
+        content = self.buffer[:chunk_length]
+        self.buffer[:chunk_length] = b''
         done = self.handle_block(self.block_type, content)
         if done:
             raise StopIteration
-        self.next_step = self.read_block_header_step
+        self.block_length -= chunk_length
+        if self.block_length == 0:
+            self.next_step = self.read_block_header_step
 
     def handle_block(self, block_type, content):
         """Handles a block according to its type."""
@@ -126,13 +133,13 @@ class PackFetcher:
             self.digest.update(content)
         if block_type == b'fc':  # file chunk
             self.unpacked_size += len(content)
-            if self.unpacked_size > self.MAX_UNPACKED_SIZE:
+            if self.unpacked_size > MAX_UNPACKED_SIZE:
                 raise ValueError(
-                    f'Pack exceeded limit of {self.MAX_UNPACKED_SIZE} bytes.')
+                    f'Pack exceeded limit of {MAX_UNPACKED_SIZE} bytes.')
             self.digest.update(content)
             self.fs.append(self.file_path, content)
         if block_type == b'pe':  # pack end
-            actual_hash = bytes(self.digest.hexdigest(), encoding='ascii')
+            actual_hash = bytes(self.digest.hexdigest(), 'ascii')
             if actual_hash == self.pack_hash:
                 self.fs.write(self.dir_name + b'/@VALID', b'')
                 return True

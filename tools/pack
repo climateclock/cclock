@@ -32,7 +32,7 @@ def to_bytes(arg):
     if isinstance(arg, bytes):
         return arg
     if isinstance(arg, str):
-        return bytes(arg, encoding='ascii')
+        return bytes(arg, 'ascii')
     raise TypeError('Not a str or bytes object: ' + repr(arg))
 
 def to_short(arg):

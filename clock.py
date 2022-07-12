@@ -181,7 +181,7 @@ class ClockMode(Mode):
                 try:
                     self.fetcher.next_step()
                 except StopIteration:
-                    print('Fetch completed successfully')
+                    print('Fetch completed successfully!')
                     self.fetcher = None
                 except Exception as e:
                     print(f'Fetch aborted due to {e} ({repr(e)})')

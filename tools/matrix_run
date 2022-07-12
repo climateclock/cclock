@@ -75,7 +75,7 @@ debug.mem('main5')
 from fs import FileSystem
 from esp_wifi_network import EspWifiNetwork
 debug.mem('main6')
-network = EspWifiNetwork(debug=True)
+network = EspWifiNetwork()
 debug.mem('main7')
 
 from $module import run
