@@ -23,7 +23,7 @@ from ulab import numpy as np
 debug.mem('matrix_frame11')
 
 FONTS = {}
-BIT_DEPTH = 4
+BIT_DEPTH = 5
 MIN_RGB_VALUE = 0x100 >> BIT_DEPTH
 
 def load_font(font_id):

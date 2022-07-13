@@ -15,13 +15,6 @@ from network import State
 debug.mem('clock7')
 
 
-menu = [
-    'Brightness',
-    'Wi-Fi connection',
-    'Lifelines'
-]
-
-
 class Cycle:
     def __init__(self, *items):
         self.items = items
@@ -104,6 +97,7 @@ class App:
         self.mode.receive(command, arg)
 
     def set_mode(self, mode):
+        self.frame.clear()
         self.mode.end()
         self.mode = mode
         mode.start()
@@ -219,29 +213,77 @@ class ClockMode(Mode):
 class MenuMode(Mode):
     def __init__(self, app, button_map, dial_map):
         super().__init__(app)
+        self.tree = ('Settings', None, [
+            ('Wi-Fi network', None, [
+                ('Network', ('WIFI_NETWORK_MODE', None), []),
+                ('Password', ('WIFI_PASSWORD_MODE', None), []),
+                ('Back', ('CANCEL', None), [])
+            ]),
+            ('Lifeline cycling', None, [
+                ('Off', ('SET_CYCLING', 0), []),
+                ('15 seconds', ('SET_CYCLING', 15), []),
+                ('60 seconds', ('SET_CYCLING', 60), []),
+                ('Back', ('CANCEL', None), [])
+            ]),
+            ('System information', None, [
+                ('Action Clock v4', None, []),
+                ('Back', ('CANCEL', None), [])
+            ]),
+            ('Exit', ('CLOCK_MODE', None), [])
+        ])
+        self.cv = self.frame.pack(0x80, 0x80, 0x80)
+        self.cursor_cv = self.frame.pack(0x00, 0xff, 0x00)
+        self.cursor_label = self.frame.new_label('>', 'kairon-10')
+
         self.reader = ButtonReader({
             button_map['UP']: {
-                Press.SHORT: 'NEXT_OPTION',
+                Press.SHORT: 'PREV_OPTION',
+                Press.LONG: 'CANCEL',
             },
             button_map['DOWN']: {
-                Press.SHORT: 'PASSWORD_MODE',
+                Press.SHORT: 'NEXT_OPTION',
+                Press.LONG: 'PROCEED',
             },
             button_map['ENTER']: {
-                Press.SHORT: 'PASSWORD_MODE',
+                Press.SHORT: 'PROCEED',
             }
         })
-        self.dial_reader = DialReader('MENU_SELECTOR', dial_map['SELECTOR'], 1)
-        self.cv = self.frame.pack(0x80, 0x80, 0x80)
+        self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
 
     def start(self):
         self.reader.reset()
         self.frame.clear()
-        label = self.frame.new_label('Brightness', 'kairon-10')
+        self.crumbs = []
+        self.top = 0
+        self.index = 0
+        self.proceed(self.tree)
+
+    def proceed(self, node):
+        label = self.frame.new_label('Hello', 'kairon-10')
+        title, command_arg, children = node
+        if command_arg:
+            self.app.receive(*command_arg)
+        else:
+            self.crumbs.append((node, self.top, self.index))
+            self.top = 0
+            self.index = 0
+            self.draw()
+
+    def draw(self):
+        (title, command, children), _, _ = self.crumbs[-1]
+        self.frame.clear()
+        label = self.frame.new_label(title, 'kairon-10')
         self.frame.paste(1, 0, label, cv=self.cv)
-        label = self.frame.new_label('Wi-Fi connection', 'kairon-10')
-        self.frame.paste(1, 11, label, cv=self.cv)
-        label = self.frame.new_label('Lifelines', 'kairon-10')
-        self.frame.paste(1, 22, label, cv=self.cv)
+        y = 0
+        for index in range(self.top, self.top + 3):
+            if index >= len(children):
+                break
+            child = children[index]
+            label = self.frame.new_label(child[0], 'kairon-10')
+            self.frame.paste(96, y, label, cv=self.cv)
+            if index == self.index:
+                self.frame.paste(90, y, self.cursor_label, cv=self.cursor_cv)
+            y += 11
 
     def step(self):
         self.reader.step(self.app.receive)
@@ -249,6 +291,27 @@ class MenuMode(Mode):
         # TODO: Currently every mode's step() method must call self.frame.send()
         # in order for sdl_frame to detect events; fix this leaky abstraction.
         self.frame.send()
+
+    def receive(self, command, arg=None):
+        if command == 'SELECTOR':
+            delta, value = arg
+            self.move_cursor(delta)
+        if command == 'PREV_OPTION':
+            self.move_cursor(-1)
+        if command == 'NEXT_OPTION':
+            self.move_cursor(1)
+        if command == 'PROCEED':
+            (title, command_arg, children), _, _ = self.crumbs[-1]
+            self.proceed(children[self.index])
+        if command == 'CANCEL':
+            _, self.top, self.index = self.crumbs.pop()
+            self.draw()
+
+    def move_cursor(self, delta):
+        (title, command, children), _, _ = self.crumbs[-1]
+        self.index = max(0, min(len(children) - 1, self.index + delta))
+        self.top = max(self.index - 2, min(self.index, self.top))
+        self.draw()
 
 
 class PasswordMode(Mode):
