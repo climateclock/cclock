@@ -41,7 +41,6 @@ class ButtonReader:
                 return
             self.waiting_for_release = False
 
-        print('.', end='')
         if hasattr(sys.stdout, 'flush'):
             sys.stdout.flush()
         now = cctime.monotonic()
@@ -103,11 +102,13 @@ class ButtonReader:
 
 
 class DialReader:
-    def __init__(self, command, dial, epsilon):
+    def __init__(self, command, dial, epsilon, min=None, max=None):
         self.command = command
         self.dial = dial
         self.last_value = dial.value
         self.epsilon = epsilon
+        self.min = min
+        self.max = max
 
     @property
     def value(self):
@@ -116,7 +117,7 @@ class DialReader:
     def step(self, receiver):
         value = self.dial.value
         delta = value - self.last_value
-        if abs(delta) >= self.epsilon:
+        if abs(delta) >= self.epsilon or value == self.min or value == self.max:
             self.last_value = value
             receiver(self.command, (delta, value))
 

@@ -49,7 +49,7 @@ class App:
         self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
         self.lang = self.langs.current()
 
-        self.brightness_reader = DialReader('BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0)
+        self.brightness_reader = DialReader('BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
         debug.mem('Clock.__init__ done')
 
     def start(self):
@@ -57,6 +57,7 @@ class App:
         self.mode.start()
 
     def step(self):
+        print('.', end='')
         debug.mem('step')
         self.brightness_reader.step(self.receive)
         self.mode.step()

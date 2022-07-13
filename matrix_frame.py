@@ -23,6 +23,8 @@ from ulab import numpy as np
 debug.mem('matrix_frame11')
 
 FONTS = {}
+BIT_DEPTH = 4
+MIN_RGB_VALUE = 0x100 >> BIT_DEPTH
 
 def load_font(font_id):
     if font_id not in FONTS:
@@ -33,7 +35,7 @@ def load_font(font_id):
 def new_display_frame(w, h, depth):
     displayio.release_displays()
     return MatrixFrame(w, h, depth, rgbmatrix.RGBMatrix(
-        width=192, height=32, bit_depth=5,
+        width=192, height=32, bit_depth=BIT_DEPTH,
         rgb_pins=[
             board.MTX_R1, board.MTX_G1, board.MTX_B1,
             board.MTX_R2, board.MTX_G2, board.MTX_B2
@@ -48,7 +50,15 @@ def new_display_frame(w, h, depth):
 
 
 def apply_brightness(brightness, r, g, b):
-    return int(brightness * r), int(brightness * g), int(brightness * b)
+    # When scaling down, don't scale down any nonzero values to zero.
+    min_r = MIN_RGB_VALUE if r else 0
+    min_g = MIN_RGB_VALUE if g else 0
+    min_b = MIN_RGB_VALUE if b else 0
+    return (
+        max(min_r, int(brightness * r)),
+        max(min_g, int(brightness * g)),
+        max(min_b, int(brightness * b))
+    )
 
 
 class MatrixFrame(frame.Frame):
@@ -73,7 +83,7 @@ class MatrixFrame(frame.Frame):
             self.display.show(self.group)
 
     def set_brightness(self, brightness):
-        self.brightness = 0.25 + (brightness * 0.75)
+        self.brightness = brightness
         for cv in range(self.next_cv):
             sr, sg, sb = apply_brightness(self.brightness, *self.colours[cv])
             self.shader[cv] = ((sr << 16) | (sg << 8) | sb)
