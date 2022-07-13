@@ -35,11 +35,35 @@ class Cycle:
         return self.items[self.index]
 
 
+class FrameCounter:
+    def __init__(self):
+        self.start = cctime.monotonic()
+        self.frame_count = 0
+        self.fps = 0
+        self.last_tick = self.start
+        self.next_report = self.start + 10
+
+    def tick(self):
+        print('.', end='')
+        now = cctime.monotonic()
+        duration = now - self.last_tick
+        if duration > 0:
+            last_fps = 1.0/duration
+            self.fps = 0.9 * self.fps + 0.1 * last_fps
+        self.frame_count += 1
+        self.last_tick = now
+
+        if now > self.next_report:
+            print(f'uptime: {now - self.start:.1f} s / {self.fps:.1f} fps')
+            self.next_report += 10
+
+
 class App:
     def __init__(self, fs, network, defn, frame, button_map, dial_map):
         debug.mem('Clock.__init__')
         self.network = network
         self.frame = frame
+        self.frame_counter = FrameCounter()
 
         self.clock_mode = ClockMode(self, fs, network, defn, button_map)
         self.menu_mode = MenuMode(self, button_map, dial_map)
@@ -49,7 +73,8 @@ class App:
         self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
         self.lang = self.langs.current()
 
-        self.brightness_reader = DialReader('BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
+        self.brightness_reader = DialReader(
+            'BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
         debug.mem('Clock.__init__ done')
 
     def start(self):
@@ -57,7 +82,7 @@ class App:
         self.mode.start()
 
     def step(self):
-        print('.', end='')
+        self.frame_counter.tick()
         debug.mem('step')
         self.brightness_reader.step(self.receive)
         self.mode.step()
@@ -134,15 +159,13 @@ class ClockMode(Mode):
         self.lifeline_cv = self.frame.pack(*defn.config.display.lifeline.primary)
 
     def start(self):
-        self.start_time = cctime.get_time()
-        self.pack_fetch_interval = 30 * 60  # wait 30 minutes between fetches
-        self.next_fetch_time = self.start_time + 5
-        self.auto_advance_interval = 30
-        self.next_advance_time = self.start_time + self.auto_advance_interval
-        self.frame_count = 0
-
         self.reader.reset()
         self.frame.clear()
+        now = cctime.monotonic()
+        self.pack_fetch_interval = 30 * 60  # wait 30 minutes between fetches
+        self.next_fetch = now + 3
+        self.auto_advance_interval = 60
+        self.next_advance = now + self.auto_advance_interval
 
     def step(self):
         ccui.render_deadline_module(
@@ -156,12 +179,8 @@ class ClockMode(Mode):
 
         self.ota_step()
 
-        self.frame_count += 1
-        now = cctime.get_time()
-        if now > self.next_advance_time:
-            self.next_advance_time += self.auto_advance_interval
-            elapsed = now - self.start_time
-            print(f'frames: {self.frame_count} / elapsed: {elapsed:.1f} / fps: {self.frame_count/elapsed:.1f}')
+        if cctime.monotonic() > self.next_advance:
+            self.next_advance += self.auto_advance_interval
             self.lifeline_module = self.lifeline_modules.next()
             self.frame.clear()
 
@@ -173,11 +192,11 @@ class ClockMode(Mode):
             self.network.connect_step('zestyping.github.io')
             self.fetcher = None
         if self.network.state == State.CONNECTED:
-            if not self.fetcher and cctime.get_time() > self.next_fetch_time:
+            if not self.fetcher and cctime.monotonic() > self.next_fetch:
                 # TODO: instantiate PackFetcher just once
                 self.fetcher = pack_fetcher.PackFetcher(
                     self.fs, self.network, b'zestyping.github.io', b'/test.pk')
-                self.next_fetch_time += self.pack_fetch_interval
+                self.next_fetch += self.pack_fetch_interval
             if self.fetcher:
                 try:
                     self.fetcher.next_step()
@@ -217,14 +236,12 @@ class MenuMode(Mode):
     def start(self):
         self.reader.reset()
         self.frame.clear()
-
         label = self.frame.new_label('Brightness', 'kairon-10')
         self.frame.paste(1, 0, label, cv=self.cv)
         label = self.frame.new_label('Wi-Fi connection', 'kairon-10')
         self.frame.paste(1, 11, label, cv=self.cv)
         label = self.frame.new_label('Lifelines', 'kairon-10')
         self.frame.paste(1, 22, label, cv=self.cv)
-        self.reader.reset()
 
     def step(self):
         self.reader.step(self.app.receive)
@@ -266,10 +283,8 @@ class PasswordMode(Mode):
     def start(self):
         self.reader.reset()
         self.frame.clear()
-
         label = self.frame.new_label('Wi-Fi password:', 'kairon-10')
         self.frame.paste(1, 0, label, cv=self.cv)
-
         self.text = ''
         self.draw_text()
 
