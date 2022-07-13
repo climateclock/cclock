@@ -1,3 +1,10 @@
 #!/bin/bash
 
+if ! [ -c /dev/tty.usb* ]; then
+    echo -n 'Waiting for /dev/tty.usb* to appear..'
+  while ! [ -c /dev/tty.usb* ]; do
+    echo -n '.'
+    sleep 0.4
+  done
+fi
 screen /dev/tty.usb* 115200
