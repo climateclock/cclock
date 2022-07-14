@@ -59,6 +59,16 @@ class EspWifiNetwork(Network):
         self.socket_started = None
         self.set_state(State.OFFLINE)
 
+    def get_firmware_version(self):
+        if self.esp:
+            return str(bytes(self.esp.firmware_version), 'ascii')
+        return 'None'
+
+    def get_hardware_address(self):
+        if self.esp:
+            return ':'.join('%02x' % byte for byte in self.esp.MAC_address)
+        return 'None'
+
     def set_state(self, new_state):
         self.state = new_state
         print(f'Network is now {self.state}.')

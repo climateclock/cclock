@@ -213,24 +213,6 @@ class ClockMode(Mode):
 class MenuMode(Mode):
     def __init__(self, app, button_map, dial_map):
         super().__init__(app)
-        self.tree = ('Settings', None, [
-            ('Wi-Fi network', None, [
-                ('Network', ('WIFI_NETWORK_MODE', None), []),
-                ('Password', ('WIFI_PASSWORD_MODE', None), []),
-                ('Back', ('CANCEL', None), [])
-            ]),
-            ('Lifeline cycling', None, [
-                ('Off', ('SET_CYCLING', 0), []),
-                ('15 seconds', ('SET_CYCLING', 15), []),
-                ('60 seconds', ('SET_CYCLING', 60), []),
-                ('Back', ('CANCEL', None), [])
-            ]),
-            ('System information', None, [
-                ('Action Clock v4', None, []),
-                ('Back', ('CANCEL', None), [])
-            ]),
-            ('Exit', ('CLOCK_MODE', None), [])
-        ])
         self.cv = self.frame.pack(0x80, 0x80, 0x80)
         self.cursor_cv = self.frame.pack(0x00, 0xff, 0x00)
         self.cursor_label = self.frame.new_label('>', 'kairon-10')
@@ -253,6 +235,28 @@ class MenuMode(Mode):
     def start(self):
         self.reader.reset()
         self.frame.clear()
+        firmware_version = self.app.network.get_firmware_version()
+        hardware_address = self.app.network.get_hardware_address()
+        self.tree = ('Settings', None, [
+            ('Wi-Fi setup', None, [
+                ('Network', ('WIFI_NETWORK_MODE', None), []),
+                ('Password', ('WIFI_PASSWORD_MODE', None), []),
+                ('Back', ('CANCEL', None), [])
+            ]),
+            ('Auto cycling', None, [
+                ('Off', ('SET_CYCLING', 0), []),
+                ('15 seconds', ('SET_CYCLING', 15), []),
+                ('60 seconds', ('SET_CYCLING', 60), []),
+                ('Back', ('CANCEL', None), [])
+            ]),
+            ('System info', None,  [
+                ('Action Clock v4', None, []),
+                ('ESP firmware: ' + firmware_version, None, []),
+                ('MAC ID: ' + hardware_address, None, []),
+                ('Back', ('CANCEL', None), [])
+            ]),
+            ('Exit', ('CLOCK_MODE', None), [])
+        ])
         self.crumbs = []
         self.top = 0
         self.index = 0
@@ -280,9 +284,9 @@ class MenuMode(Mode):
                 break
             child = children[index]
             label = self.frame.new_label(child[0], 'kairon-10')
-            self.frame.paste(96, y, label, cv=self.cv)
+            self.frame.paste(64, y, label, cv=self.cv)
             if index == self.index:
-                self.frame.paste(90, y, self.cursor_label, cv=self.cursor_cv)
+                self.frame.paste(58, y, self.cursor_label, cv=self.cursor_cv)
             y += 11
 
     def step(self):

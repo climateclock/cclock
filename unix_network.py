@@ -17,6 +17,12 @@ class UnixNetwork(Network):
         self.debug = debug
         self.set_state(State.OFFLINE)
 
+    def get_firmware_version(self):
+        return 'None'
+
+    def get_hardware_address(self):
+        return '00:00:00:00:00:00'
+
     def set_state(self, new_state):
         self.state = new_state
         if self.debug:

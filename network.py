@@ -17,6 +17,12 @@ class Network:
         """Sets the initial state to OFFLINE."""
         raise NotImplementedError('Network is an abstract interface')
 
+    def get_firmware_version(self):
+        raise NotImplementedError
+
+    def get_hardware_address(self):
+        raise NotImplementedError
+
     def enable_step(self, ssid, password):
         """In state OFFLINE, connects to the Internet, resulting in state
         OFFLINE (call again) or ONLINE."""
