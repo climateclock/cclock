@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/bash -e
 
 cd $(dirname "$0")
 cd ..
 
-if [ "$1" = "-q" ]; then
+if [ "$1" = -q ]; then
     quick=yes
     shift
 fi
@@ -22,9 +22,14 @@ if [ -z "$module" ]; then
     exit 1
 fi
 
-if ! python3 -c "from $module import run"; then
-    exit 1
-fi
+echo 'Checking syntax...'
+python3 <<EOF || exit 1
+import os
+from $module import run
+for name in os.listdir():
+    if name.endswith('.py'):
+        compile(open(name).read(), name, 'exec')
+EOF
 
 if [ ! -d "$target" ]; then
     echo "No drive found at $target.  Is a CircuitPython device connected?"
@@ -36,22 +41,22 @@ if [ ! -d cache/lib ]; then
     exit 1
 fi
 
-echo "Installing clock program..."
+echo 'Installing clock program...'
 rm -rf $target/v999
 mkdir $target/v999
 cp *.py $target/v999
 
-if [ -z "$quick" ]; then
-    echo "Installing climateclock.json..."
+if [ -z '$quick' ]; then
+    echo 'Installing climateclock.json...'
     curl https://api.climateclock.world/v1/clock -o cache/climateclock.json
     mkdir -p $target/cache
     cp cache/climateclock.json $target/cache
 
-    echo "Installing fonts..."
+    echo 'Installing fonts...'
     cp *.pcf $target
 fi
 
-echo "Installing startup logic..."
+echo 'Installing startup logic...'
 cp boot.py code.py gpio.py $target
 
 cat <<EOF >$target/v999/main.py
@@ -92,4 +97,4 @@ EOF
 touch $target/v999/@VALID
 touch $target/v999/@ENABLED
 sync
-echo "All done!"
+echo 'All done!'
