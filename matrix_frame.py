@@ -72,7 +72,8 @@ class MatrixFrame(frame.Frame):
         self.display = None
         self.brightness = 1.0
         if matrix:
-            self.display = framebufferio.FramebufferDisplay(matrix)
+            self.display = framebufferio.FramebufferDisplay(
+                matrix, auto_refresh=False)
             self.colours = [(0, 0, 0)] * self.depth
             self.shader = displayio.Palette(depth)
             self.next_cv = 0
@@ -97,8 +98,10 @@ class MatrixFrame(frame.Frame):
         return self.next_cv - 1
 
     def send(self):
-        # FramebufferDisplay has auto_refresh set, so no need to do anything.
-        pass
+        self.display.refresh(minimum_frames_per_second=0)
+        # Display bug: refresh() doesn't cause a refresh unless we also set
+        # auto_refresh = False (even though auto_refresh is already False!).
+        self.display.auto_refresh = False
 
     def get(self, x, y):
         return self.bitmap[x, y]
