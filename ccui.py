@@ -137,7 +137,7 @@ def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
         headline_width = frame.new_label(text, 'kairon-16').w
 
         text_with_trail = text
-        while True:
+        for attempt in range(3):
             i = (i + 1) % n
             item = module.items[i]
             trail = f'{item.headline} ({item.source}) \xb7 '

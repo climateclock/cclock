@@ -67,21 +67,23 @@ class MatrixFrame(frame.Frame):
         top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
         self.w = w
         self.h = h
-        self.bitmap = displayio.Bitmap(w, h, depth)
         self.depth = depth
+        self.bitmap = displayio.Bitmap(w, h, depth)
         self.display = None
-        self.brightness = 1.0
         if matrix:
             self.display = framebufferio.FramebufferDisplay(
                 matrix, auto_refresh=False)
-            self.colours = [(0, 0, 0)] * self.depth
+
             self.shader = displayio.Palette(depth)
-            self.next_cv = 0
-            self.pack(0, 0, 0)
+            self.colours = [(0, 0, 0)] * self.depth
+            self.brightness = 1.0
+            self.next_cv = 1
+
             self.layer = displayio.TileGrid(self.bitmap, pixel_shader=self.shader)
             self.group = displayio.Group()
             self.group.append(self.layer)
             self.display.show(self.group)
+            self.error_label = None
 
     def set_brightness(self, brightness):
         self.brightness = brightness
@@ -121,7 +123,13 @@ class MatrixFrame(frame.Frame):
             x, y, source.bitmap, x1=sx, y1=sy, x2=sx+w, y2=sy+h, write_value=cv)
 
     def new_label(self, text, font_id):
-        return LabelFrame(text, font_id)
+        if not self.error_label:
+            self.error_label = LabelFrame('[MemoryError] ', font_id)
+        try:
+            return LabelFrame(text, font_id)
+        except MemoryError as e:
+            print(f'Failed to draw "{text}": {e}')
+            return self.error_label
 
 
 class LabelFrame(frame.Frame):
