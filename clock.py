@@ -9,46 +9,13 @@ import ccui
 debug.mem('clock4')
 from ccinput import ButtonReader, DialReader, Press
 debug.mem('clock5')
-import pack_fetcher
+import json
+import os
 debug.mem('clock6')
 from network import State
 debug.mem('clock7')
-
-
-class Cycle:
-    def __init__(self, *items):
-        self.items = items
-        self.index = 0
-
-    def current(self):
-        return self.items[self.index]
-
-    def next(self):
-        self.index = (self.index + 1) % len(self.items)
-        return self.items[self.index]
-
-
-class FrameCounter:
-    def __init__(self):
-        self.start = cctime.monotonic()
-        self.frame_count = 0
-        self.fps = 0
-        self.last_tick = self.start
-        self.next_report = self.start + 10
-
-    def tick(self):
-        print('.', end='')
-        now = cctime.monotonic()
-        duration = now - self.last_tick
-        if duration > 0:
-            last_fps = 1.0/duration
-            self.fps = 0.9 * self.fps + 0.1 * last_fps
-        self.frame_count += 1
-        self.last_tick = now
-
-        if now > self.next_report:
-            print(f'uptime: {now - self.start:.1f} s / {self.fps:.1f} fps')
-            self.next_report += 10
+import pack_fetcher
+debug.mem('clock8')
 
 
 class App:
@@ -57,6 +24,11 @@ class App:
         self.network = network
         self.frame = frame
         self.frame_counter = FrameCounter()
+        self.prefs = Prefs(fs)
+        self.prefs.set(
+            'wifi_ssid', self.prefs.get('wifi_ssid', 'climateclock'))
+        self.prefs.set(
+            'wifi_password', self.prefs.get('wifi_password', 'climateclock'))
 
         self.clock_mode = ClockMode(self, fs, network, defn, button_map)
         self.menu_mode = MenuMode(self, button_map, dial_map)
@@ -101,6 +73,63 @@ class App:
         self.mode.end()
         self.mode = mode
         mode.start()
+
+
+class Cycle:
+    def __init__(self, *items):
+        self.items = items
+        self.index = 0
+
+    def current(self):
+        return self.items[self.index]
+
+    def next(self):
+        self.index = (self.index + 1) % len(self.items)
+        return self.items[self.index]
+
+
+class FrameCounter:
+    def __init__(self):
+        self.start = cctime.monotonic()
+        self.frame_count = 0
+        self.fps = 0
+        self.last_tick = self.start
+        self.next_report = self.start + 10
+
+    def tick(self):
+        print('.', end='')
+        now = cctime.monotonic()
+        duration = now - self.last_tick
+        if duration > 0:
+            last_fps = 1.0/duration
+            self.fps = 0.9 * self.fps + 0.1 * last_fps
+        self.frame_count += 1
+        self.last_tick = now
+
+        if now > self.next_report:
+            print(f'uptime: {now - self.start:.1f} s / {self.fps:.1f} fps')
+            self.next_report += 10
+
+
+class Prefs:
+    def __init__(self, fs):
+        self.fs = fs
+        try:
+            self.prefs = json.load(self.fs.open(b'/prefs.json'))
+        except Exception as e:
+            print(f'Could not read prefs.json: {e}')
+            self.prefs = {}
+        self.get = self.prefs.get
+
+    def set(self, name, value):
+        if self.prefs.get(name) != value:
+            self.prefs[name] = value
+            try:
+                with self.fs.open(b'/prefs.json.new', 'wb') as file:
+                    json.dump(self.prefs, file)
+                self.fs.rename(b'/prefs.json.new', b'/prefs.json')
+            except OSError as e:
+                print(f'Could not write prefs.json: {e}')
 
 
 class Mode:
@@ -180,7 +209,10 @@ class ClockMode(Mode):
 
     def ota_step(self):
         if self.network.state == State.OFFLINE:
-            self.network.enable_step('climateclock', 'climateclock')
+            self.network.enable_step(
+                self.app.prefs.get('wifi_ssid'),
+                self.app.prefs.get('wifi_password')
+            )
             self.fetcher = None
         elif self.network.state == State.ONLINE:
             self.network.connect_step('zestyping.github.io')
@@ -389,7 +421,7 @@ class PasswordMode(Mode):
             self.draw_text()
 
 
-debug.mem('clock8')
+debug.mem('clock9')
 
 
 def run(fs, network, frame, button_map, dial_map):

@@ -9,7 +9,7 @@ class FileSystem:
     def resolve(self, relpath):
         return self.root + b'/' + relpath.strip(b'/')
 
-    def open(self, relpath, mode):
+    def open(self, relpath, mode='rb'):
         path = self.resolve(relpath)
         makeparent(path)
         return open(path, mode)
@@ -25,6 +25,11 @@ class FileSystem:
         assert isinstance(content, bytes)
         with self.open(relpath, 'ab') as file:
             file.write(content)
+
+    def rename(self, relpath, newrelpath):
+        path = self.resolve(relpath)
+        newpath = self.resolve(newrelpath)
+        os.rename(path, newpath)
 
     def destroy(self, relpath):
         """Removes a file or directory and all its descendants."""

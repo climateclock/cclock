@@ -120,14 +120,14 @@ put you in an interactive Python interpreter.
 ### Connecting to an existing Wi-Fi network
 
 If you prefer to use an existing Wi-Fi network instead of creating a hotspot,
-you can edit `clock.py` to customize the network name and password.
-Scroll down to the `ota_step()` function and edit the strings in the
-`enable_step()` call.
+you can edit `prefs.json` to customize the network name and password.
 
-Once you've done that, put the board into writable mode by pressing the
-reset button and holding down one of the other buttons until the status
-light turns red (see the preceding section), then use
-`tools/matrix_run clock` to write your changes to the board.
+First, put the board into writable mode by pressing the reset button and
+holding down one of the other buttons until the status light turns red
+(see the preceding section).  Then open `/Volumes/CIRCUITPY/prefs.json`
+in a text editor, edit the network's SSID and password, and save the file.
+Eject the `/Volumes/CIRCUITPY` drive from your computer, then press the
+reset button to restart the board.
 
 ### Software update (under development)
 
