@@ -258,7 +258,7 @@ class MenuMode(Mode):
         self.reader = ButtonReader({
             button_map['UP']: {
                 Press.SHORT: 'PREV_OPTION',
-                Press.LONG: 'CANCEL',
+                Press.LONG: 'BACK',
             },
             button_map['DOWN']: {
                 Press.SHORT: 'NEXT_OPTION',
@@ -282,20 +282,20 @@ class MenuMode(Mode):
             ('Wi-Fi setup', None, [
                 ('Network: ' + wifi_ssid, ('WIFI_SSID_MODE', None), []),
                 ('Password', ('WIFI_PASSWORD_MODE', None), []),
-                ('Back', ('CANCEL', None), [])
+                ('Back', ('BACK', None), [])
             ]),
             ('Auto cycling', None, [
                 ('Off', ('SET_CYCLING', 0), []),
                 ('15 seconds', ('SET_CYCLING', 15), []),
                 ('60 seconds', ('SET_CYCLING', 60), []),
-                ('Back', ('CANCEL', None), [])
+                ('Back', ('BACK', None), [])
             ]),
             ('System info', None,  [
                 ('Action Clock 4', None, []),
                 (software_version, None, []),
                 ('ESP firmware: ' + firmware_version, None, []),
                 ('MAC ID: ' + hardware_address, None, []),
-                ('Back', ('CANCEL', None), [])
+                ('Back', ('BACK', None), [])
             ]),
             ('Exit', ('CLOCK_MODE', None), [])
         ])
@@ -348,8 +348,11 @@ class MenuMode(Mode):
             self.move_cursor(1)
         if command == 'PROCEED':
             (title, command_arg, children), _, _ = self.crumbs[-1]
-            self.proceed(children[self.index])
-        if command == 'CANCEL':
+            if children:
+                self.proceed(children[self.index])
+            else:
+                command = 'BACK'
+        if command == 'BACK':
             _, self.top, self.index = self.crumbs.pop()
             self.draw()
 
