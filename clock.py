@@ -32,7 +32,10 @@ class App:
 
         self.clock_mode = ClockMode(self, fs, network, defn, button_map)
         self.menu_mode = MenuMode(self, button_map, dial_map)
-        self.password_mode = PasswordMode(self, button_map, dial_map)
+        self.wifi_ssid_mode = PrefEntryMode(
+            self, 'Wi-Fi network name:', 'wifi_ssid', button_map, dial_map)
+        self.wifi_password_mode = PrefEntryMode(
+            self, 'Wi-Fi password:', 'wifi_password', button_map, dial_map)
         self.mode = self.clock_mode
 
         self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
@@ -64,8 +67,10 @@ class App:
             self.set_mode(self.clock_mode)
         if command == 'MENU_MODE':
             self.set_mode(self.menu_mode)
-        if command == 'PASSWORD_MODE':
-            self.set_mode(self.password_mode)
+        if command == 'WIFI_SSID_MODE':
+            self.set_mode(self.wifi_ssid_mode)
+        if command == 'WIFI_PASSWORD_MODE':
+            self.set_mode(self.wifi_password_mode)
         self.mode.receive(command, arg)
 
     def set_mode(self, mode):
@@ -266,12 +271,14 @@ class MenuMode(Mode):
 
     def start(self):
         self.reader.reset()
+        self.dial_reader.reset()
         self.frame.clear()
+        wifi_ssid = self.app.prefs.get('wifi_ssid')
         firmware_version = self.app.network.get_firmware_version()
         hardware_address = self.app.network.get_hardware_address()
         self.tree = ('Settings', None, [
             ('Wi-Fi setup', None, [
-                ('Network', ('WIFI_NETWORK_MODE', None), []),
+                ('Network: ' + wifi_ssid, ('WIFI_SSID_MODE', None), []),
                 ('Password', ('WIFI_PASSWORD_MODE', None), []),
                 ('Back', ('CANCEL', None), [])
             ]),
@@ -350,9 +357,11 @@ class MenuMode(Mode):
         self.draw()
 
 
-class PasswordMode(Mode):
-    def __init__(self, app, button_map, dial_map):
+class PrefEntryMode(Mode):
+    def __init__(self, app, pref_title, pref_name, button_map, dial_map):
         super().__init__(app)
+        self.pref_title = pref_title
+        self.pref_name = pref_name
         self.cv = self.frame.pack(0x80, 0x80, 0x80)
         self.cursor_cv = self.frame.pack(0x00, 0xff, 0x00)
         self.reader = ButtonReader({
@@ -362,11 +371,11 @@ class PasswordMode(Mode):
             },
             button_map['DOWN']: {
                 Press.SHORT: 'ENTER_CHAR',
-                Press.LONG: 'CLOCK_MODE',
+                Press.LONG: 'SAVE_PREF',
             },
             button_map['ENTER']: {
                 Press.SHORT: 'ENTER_CHAR',
-                Press.LONG: 'CLOCK_MODE',
+                Press.LONG: 'SAVE_PREF',
             }
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
@@ -381,8 +390,9 @@ class PasswordMode(Mode):
 
     def start(self):
         self.reader.reset()
+        self.dial_reader.reset()
         self.frame.clear()
-        label = self.frame.new_label('Wi-Fi password:', 'kairon-10')
+        label = self.frame.new_label(self.pref_title, 'kairon-10')
         self.frame.paste(1, 0, label, cv=self.cv)
         self.text = ''
         self.draw_text()
@@ -419,6 +429,9 @@ class PasswordMode(Mode):
         if command == 'ENTER_CHAR':
             self.text += self.char
             self.draw_text()
+        if command == 'SAVE_PREF':
+            self.app.prefs.set(self.pref_name, self.text)
+            self.app.receive('MENU_MODE')
 
 
 debug.mem('clock9')

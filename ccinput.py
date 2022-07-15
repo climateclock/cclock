@@ -105,10 +105,13 @@ class DialReader:
     def __init__(self, command, dial, epsilon, min=None, max=None):
         self.command = command
         self.dial = dial
-        self.last_value = dial.value
         self.epsilon = epsilon
         self.min = min
         self.max = max
+        self.reset()
+
+    def reset(self):
+        self.last_value = self.dial.value
 
     @property
     def value(self):
