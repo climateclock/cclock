@@ -4,10 +4,10 @@ import os
 class FileSystem:
     def __init__(self, root):
         # self.root is absolute and always starts with '/' unless it is empty
-        self.root = (b'/' + root.lstrip(b'/')).rstrip(b'/')
+        self.root = ('/' + root.lstrip('/')).rstrip('/')
 
     def resolve(self, relpath):
-        return self.root + b'/' + relpath.strip(b'/')
+        return self.root + '/' + relpath.strip('/')
 
     def open(self, relpath, mode='rb'):
         path = self.resolve(relpath)
@@ -15,14 +15,10 @@ class FileSystem:
         return open(path, mode)
 
     def write(self, relpath, content):
-        assert isinstance(relpath, bytes)
-        assert isinstance(content, bytes)
         with self.open(relpath, 'wb') as file:
             file.write(content)
 
     def append(self, relpath, content):
-        assert isinstance(relpath, bytes)
-        assert isinstance(content, bytes)
         with self.open(relpath, 'ab') as file:
             file.write(content)
 
@@ -58,10 +54,10 @@ def mode(path):
 
 
 def makeparent(path):
-    parts = path.strip(b'/').split(b'/')
-    path = b''
+    parts = path.strip('/').split('/')
+    path = ''
     for part in parts[:-1]:
-        path += b'/' + part
+        path += '/' + part
         if isfile(path):
             os.remove(path)
         if not isdir(path):
@@ -73,5 +69,5 @@ def destroy(path):
         os.remove(path)
     if isdir(path):
         for file in os.listdir(path):
-            destroy(path + b'/' + file)
+            destroy(path + '/' + file)
         os.rmdir(path)

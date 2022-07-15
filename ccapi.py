@@ -1,4 +1,4 @@
-"""Client for the Climate Clock API.  Main entry points: load_file(), fetch().
+"""Client for the Climate Clock API.  Main entry points: load(), load_url().
 
 See: https://docs.climateclock.world/climate-clock-docs/climate-clock-api
 """
@@ -181,10 +181,10 @@ def parse_css_color(color):
             return int(r + r, 16), int(g + g, 16), int(b + b, 16)
 
 
-def load_file(filename):
+def load(file):
     import json
 
-    return ClockDefinition().load(json.load(open(filename))["data"])
+    return ClockDefinition().load(json.load(file)["data"])
 
 
 def load_url(url):

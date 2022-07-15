@@ -28,14 +28,18 @@ that takes an instance of frame.Frame as its single argument.''')
 
 run = __import__(module).run
 
-import sdl2
-from sdl_frame import SdlFrame, SdlButton, SdlDial
-
 from fs import FileSystem
+fs = FileSystem('/tmp/cclock')
+for path in ['cache/climateclock.json', 'kairon-10.pcf', 'kairon-16.pcf']:
+    fs.write(path, open(path, 'rb').read())
+
 from unix_network import UnixNetwork
 network = UnixNetwork('climateclock', 'climateclock', debug=True)
 
-frame = SdlFrame(192, 32, 30)
+from fontlib import FontLibrary
+import sdl2
+from sdl_frame import SdlFrame, SdlButton, SdlDial
+frame = SdlFrame(192, 32, 30, fontlib=FontLibrary(fs, ['.']))
 up = SdlButton(frame, sdl2.SDL_SCANCODE_LSHIFT)
 down = SdlButton(frame, sdl2.SDL_SCANCODE_RSHIFT)
 enter = SdlButton(frame, sdl2.SDL_SCANCODE_RETURN)
@@ -44,7 +48,7 @@ brightness = SdlDial(
 selector = SdlDial(
     frame, sdl2.SDL_SCANCODE_LEFT, sdl2.SDL_SCANCODE_RIGHT, -100000, 100000, 1)
 run(
-    FileSystem(b'/tmp/cclock'),
+    fs,
     network,
     frame,
     {'UP': up, 'DOWN': down, 'ENTER': enter},

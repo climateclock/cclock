@@ -16,6 +16,7 @@ from network import State
 debug.mem('clock7')
 import pack_fetcher
 debug.mem('clock8')
+import sys
 
 
 class App:
@@ -120,7 +121,7 @@ class Prefs:
     def __init__(self, fs):
         self.fs = fs
         try:
-            self.prefs = json.load(self.fs.open(b'/prefs.json'))
+            self.prefs = json.load(self.fs.open('/prefs.json'))
         except Exception as e:
             print(f'Could not read prefs.json: {e}')
             self.prefs = {}
@@ -130,9 +131,9 @@ class Prefs:
         if self.prefs.get(name) != value:
             self.prefs[name] = value
             try:
-                with self.fs.open(b'/prefs.json.new', 'wb') as file:
+                with self.fs.open('/prefs.json.new', 'wt') as file:
                     json.dump(self.prefs, file)
-                self.fs.rename(b'/prefs.json.new', b'/prefs.json')
+                self.fs.rename('/prefs.json.new', '/prefs.json')
             except OSError as e:
                 print(f'Could not write prefs.json: {e}')
 
@@ -226,7 +227,7 @@ class ClockMode(Mode):
             if not self.fetcher and cctime.monotonic() > self.next_fetch:
                 # TODO: instantiate PackFetcher just once
                 self.fetcher = pack_fetcher.PackFetcher(
-                    self.fs, self.network, b'zestyping.github.io', b'/test.pk')
+                    self.fs, self.network, 'zestyping.github.io', '/test.pk')
                 self.next_fetch += self.pack_fetch_interval
             if self.fetcher:
                 try:
@@ -274,6 +275,7 @@ class MenuMode(Mode):
         self.dial_reader.reset()
         self.frame.clear()
         wifi_ssid = self.app.prefs.get('wifi_ssid')
+        software_version = sys.path[0]
         firmware_version = self.app.network.get_firmware_version()
         hardware_address = self.app.network.get_hardware_address()
         self.tree = ('Settings', None, [
@@ -289,7 +291,8 @@ class MenuMode(Mode):
                 ('Back', ('CANCEL', None), [])
             ]),
             ('System info', None,  [
-                ('Action Clock v4', None, []),
+                ('Action Clock 4', None, []),
+                (software_version, None, []),
                 ('ESP firmware: ' + firmware_version, None, []),
                 ('MAC ID: ' + hardware_address, None, []),
                 ('Back', ('CANCEL', None), [])
@@ -439,7 +442,7 @@ debug.mem('clock9')
 
 def run(fs, network, frame, button_map, dial_map):
     cctime.enable_rtc()
-    data = ccapi.load_file('cache/climateclock.json')
+    data = ccapi.load(fs.open('/cache/climateclock.json'))
     app = App(fs, network, data, frame, button_map, dial_map)
     app.start()
     while True:

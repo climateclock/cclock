@@ -1,18 +1,9 @@
 import cctime
 from ctypes import byref, c_char, c_void_p
-import displayio
 import frame
 from sdl2 import *
 import time
-from adafruit_bitmap_font import pcf
 from adafruit_display_text import bitmap_label
-
-FONTS = {}
-
-def load_font(font_id):
-    if font_id not in FONTS:
-        FONTS[font_id] = pcf.PCF(open(font_id + '.pcf', 'rb'), displayio.Bitmap)
-    return FONTS[font_id]
 
 
 class SdlButton:
@@ -50,18 +41,20 @@ class SdlDial:
 
 
 class SdlFrame(frame.Frame):
-    def __init__(self, w, h, fps, title='Frame', scale=8, pad=4):
+    def __init__(self, w, h, fps, title='Frame', scale=8, pad=4, fontlib=None):
         """Creates a Frame with a given width and height.  Coordinates of the
         top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
         self.w = w
         self.h = h
+        self.timer = cctime.FrameTimer(fps)
+        self.scale = scale
+        self.pad = pad
+        self.fontlib = fontlib
+
         self.pw = w + pad*2  # width with padding
         self.ph = h + pad*2  # height with padding
-        self.pad = pad
-        self.timer = cctime.FrameTimer(fps)
         self.pixels = bytearray(b'\x60\x60\x60' * self.pw * self.ph)
         self.pixels_cptr = (c_char * len(self.pixels)).from_buffer(self.pixels)
-        self.scale = scale
         self.key_handlers = []
         self.clear()
 
@@ -158,12 +151,12 @@ class SdlFrame(frame.Frame):
                     si += 3
 
     def new_label(self, text, font_id):
-        return LabelFrame(text, font_id)
+        font = self.fontlib.get(font_id)
+        return LabelFrame(text, font)
 
 
 class LabelFrame(frame.Frame):
-    def __init__(self, text, font_id):
-        font = load_font(font_id)
+    def __init__(self, text, font):
         label = bitmap_label.Label(font, text=text)
         palette = b'\x00\x00\x00', b'\xff\xff\xff'
         if label.bitmap:

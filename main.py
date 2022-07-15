@@ -11,8 +11,11 @@ import sys
 #     @ENABLED: The software version is enabled.
 #     @VALID: The software version is completely downloaded and verified.
 
+# The current directory should never be changed from '/'.
+os.chdir('/')
+
 versions = []
-for name in os.listdir('/'):
+for name in os.listdir():
     try:
         assert name.startswith('v')
         base_name = name.split('.')[0]
@@ -31,14 +34,8 @@ if versions:
     print(f'\nRunning /{name} (version {latest}).\n')
     sys.path[:0] = [name]
     try:
-        import main
-        main.main()
+        import start
     except Exception as e:
-        try:
-            import traceback
-            traceback.print_exception(e.__class__, e, e.__traceback__)
-        except Exception as ee:
-            print(f'{repr(e)}: {e}')
         if len(versions) > 1:
             print(f'\nDisabling /{name} due to crash: {e}\n')
             try:
@@ -47,6 +44,6 @@ if versions:
                 print(f'{repr(ee)}: {ee}')
         else:
             print(f'\n/{name} is the last available version; not disabling.\n')
-        supervisor.reload()
+        raise
 else:
     print('\nNo valid, enabled versions found.\n')

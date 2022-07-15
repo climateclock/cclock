@@ -1,40 +1,32 @@
 import debug
 
 debug.mem('matrix_frame1')
-from adafruit_bitmap_font import bitmap_font
-debug.mem('matrix_frame2')
 from adafruit_display_text import bitmap_label
-debug.mem('matrix_frame3')
+debug.mem('matrix_frame2')
 import bitmaptools
-debug.mem('matrix_frame4')
+debug.mem('matrix_frame3')
 import board
-debug.mem('matrix_frame5')
+debug.mem('matrix_frame4')
 import cctime
-debug.mem('matrix_frame6')
+debug.mem('matrix_frame5')
 import displayio
-debug.mem('matrix_frame7')
+debug.mem('matrix_frame6')
 import frame
-debug.mem('matrix_frame8')
+debug.mem('matrix_frame7')
 import framebufferio
-debug.mem('matrix_frame9')
+debug.mem('matrix_frame8')
 import rgbmatrix
-debug.mem('matrix_frame10')
+debug.mem('matrix_frame9')
 from ulab import numpy as np
-debug.mem('matrix_frame11')
+debug.mem('matrix_frame10')
 
-FONTS = {}
 BIT_DEPTH = 5
 MIN_RGB_VALUE = 0x100 >> BIT_DEPTH
 
-def load_font(font_id):
-    if font_id not in FONTS:
-        FONTS[font_id] = bitmap_font.load_font(font_id + '.pcf')
-    return FONTS[font_id]
 
-
-def new_display_frame(w, h, depth):
+def new_display_frame(w, h, depth, fontlib):
     displayio.release_displays()
-    return MatrixFrame(w, h, depth, rgbmatrix.RGBMatrix(
+    return MatrixFrame(w, h, depth, fontlib, rgbmatrix.RGBMatrix(
         width=192, height=32, bit_depth=BIT_DEPTH,
         rgb_pins=[
             board.MTX_R1, board.MTX_G1, board.MTX_B1,
@@ -62,7 +54,7 @@ def apply_brightness(brightness, r, g, b):
 
 
 class MatrixFrame(frame.Frame):
-    def __init__(self, w, h, depth, matrix=None):
+    def __init__(self, w, h, depth, fontlib=None, matrix=None):
         """Creates a Frame with a given width and height.  Coordinates of the
         top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
         self.w = w
@@ -70,6 +62,7 @@ class MatrixFrame(frame.Frame):
         self.depth = depth
         self.bitmap = displayio.Bitmap(w, h, depth)
         self.display = None
+        self.fontlib = fontlib
         if matrix:
             self.display = framebufferio.FramebufferDisplay(
                 matrix, auto_refresh=False)
@@ -123,18 +116,18 @@ class MatrixFrame(frame.Frame):
             x, y, source.bitmap, x1=sx, y1=sy, x2=sx+w, y2=sy+h, write_value=cv)
 
     def new_label(self, text, font_id):
+        font = self.fontlib.get(font_id)
         if not self.error_label:
-            self.error_label = LabelFrame('[MemoryError] ', font_id)
+            self.error_label = LabelFrame('[MemoryError] ', font)
         try:
-            return LabelFrame(text, font_id)
+            return LabelFrame(text, font)
         except MemoryError as e:
             print(f'Failed to draw "{text}": {e}')
             return self.error_label
 
 
 class LabelFrame(frame.Frame):
-    def __init__(self, text, font_id):
-        font = load_font(font_id)
+    def __init__(self, text, font):
         label = bitmap_label.Label(font, text=text, save_text=False)
         self.bitmap = label.bitmap
         # label.bitmap can be None if there is no text to render
