@@ -300,8 +300,7 @@ class MenuMode(Mode):
             ('Exit', ('CLOCK_MODE', None), [])
         ])
         self.crumbs = []
-        self.top = 0
-        self.index = 0
+        self.top = self.index = self.offset = 0
         self.proceed(self.tree)
 
     def proceed(self, node):
@@ -311,15 +310,14 @@ class MenuMode(Mode):
             self.app.receive(*command_arg)
         else:
             self.crumbs.append((node, self.top, self.index))
-            self.top = 0
-            self.index = 0
+            self.top = self.index = self.offset = 0
             self.draw()
 
     def draw(self):
         (title, command, children), _, _ = self.crumbs[-1]
         self.frame.clear()
         label = self.frame.new_label(title, 'kairon-10')
-        self.frame.paste(1, 0, label, cv=self.cv)
+        self.frame.paste(1 - self.offset, 0, label, cv=self.cv)
         y = 0
         for index in range(self.top, self.top + 3):
             if index >= len(children):
@@ -354,12 +352,16 @@ class MenuMode(Mode):
                 command = 'BACK'
         if command == 'BACK':
             _, self.top, self.index = self.crumbs.pop()
+            self.offset = 0
             self.draw()
 
     def move_cursor(self, delta):
         (title, command, children), _, _ = self.crumbs[-1]
-        self.index = max(0, min(len(children) - 1, self.index + delta))
-        self.top = max(self.index - 2, min(self.index, self.top))
+        if children:
+            self.index = max(0, min(len(children) - 1, self.index + delta))
+            self.top = max(self.index - 2, min(self.index, self.top))
+        else:
+            self.offset = max(0, self.offset + delta * 12)
         self.draw()
 
 
