@@ -18,8 +18,8 @@ versions = []
 for name in os.listdir():
     try:
         assert name.startswith('v')
-        base_name = name.split('.')[0]
-        num = int(base_name[1:])
+        pack_name = name.split('.')[0]
+        num = int(pack_name[1:])
     except:
         continue
     try:

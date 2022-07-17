@@ -62,7 +62,7 @@ class UnixNetwork(Network):
         if self.socket:
             data = self.socket.recv(count)
             if len(data) == 0:
-                self.set_state(State.ONLINE)
+                self.close_step()
             return data
 
     def close_step(self):

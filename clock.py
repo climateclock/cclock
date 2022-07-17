@@ -14,7 +14,7 @@ import os
 debug.mem('clock6')
 from network import State
 debug.mem('clock7')
-import pack_fetcher
+from updater import SoftwareUpdater
 debug.mem('clock8')
 import sys
 
@@ -26,10 +26,8 @@ class App:
         self.frame = frame
         self.frame_counter = FrameCounter()
         self.prefs = Prefs(fs)
-        self.prefs.set(
-            'wifi_ssid', self.prefs.get('wifi_ssid', 'climateclock'))
-        self.prefs.set(
-            'wifi_password', self.prefs.get('wifi_password', 'climateclock'))
+
+        self.updater = SoftwareUpdater(fs, network, self.prefs)
 
         self.clock_mode = ClockMode(self, fs, network, defn, button_map)
         self.menu_mode = MenuMode(self, button_map, dial_map)
@@ -55,6 +53,7 @@ class App:
         debug.mem('step')
         self.brightness_reader.step(self.receive)
         self.mode.step()
+        self.updater.step()
 
     def receive(self, command, arg=None):
         print('[' + command + ('' if arg is None else ': ' + str(arg)) + ']')
@@ -124,18 +123,27 @@ class Prefs:
             self.prefs = json.load(self.fs.open('/prefs.json'))
         except Exception as e:
             print(f'Could not read prefs.json: {e}')
-            self.prefs = {}
+            self.prefs = {
+                'wifi_ssid': 'climateclock',
+                'wifi_password': 'climateclock',
+                'index_hostname': 'zestyping.github.io',
+                'index_path': '/cclock/packs.json'
+            }
+            self.save()
         self.get = self.prefs.get
 
     def set(self, name, value):
         if self.prefs.get(name) != value:
             self.prefs[name] = value
-            try:
-                with self.fs.open('/prefs.json.new', 'wt') as file:
-                    json.dump(self.prefs, file)
-                self.fs.rename('/prefs.json.new', '/prefs.json')
-            except OSError as e:
-                print(f'Could not write prefs.json: {e}')
+            self.save()
+
+    def save(self):
+        try:
+            with self.fs.open('/prefs.json.new', 'wt') as file:
+                json.dump(self.prefs, file)
+            self.fs.rename('/prefs.json.new', '/prefs.json')
+        except OSError as e:
+            print(f'Could not write prefs.json: {e}')
 
 
 class Mode:
@@ -161,7 +169,6 @@ class ClockMode(Mode):
         super().__init__(app)
         self.fs = fs
         self.network = network
-        self.fetcher = None
         self.set_defn(defn)
 
         self.reader = ButtonReader({
@@ -191,8 +198,6 @@ class ClockMode(Mode):
         self.reader.reset()
         self.frame.clear()
         now = cctime.monotonic()
-        self.pack_fetch_interval = 30 * 60  # wait 30 minutes between fetches
-        self.next_fetch = now + 3
         self.auto_advance_interval = 60
         self.next_advance = now + self.auto_advance_interval
 
@@ -206,38 +211,10 @@ class ClockMode(Mode):
         self.reader.step(self.app.receive)
         self.frame.send()
 
-        self.ota_step()
-
         if cctime.monotonic() > self.next_advance:
             self.next_advance += self.auto_advance_interval
             self.lifeline_module = self.lifeline_modules.next()
             self.frame.clear()
-
-    def ota_step(self):
-        if self.network.state == State.OFFLINE:
-            self.network.enable_step(
-                self.app.prefs.get('wifi_ssid'),
-                self.app.prefs.get('wifi_password')
-            )
-            self.fetcher = None
-        elif self.network.state == State.ONLINE:
-            self.network.connect_step('zestyping.github.io')
-            self.fetcher = None
-        if self.network.state == State.CONNECTED:
-            if not self.fetcher and cctime.monotonic() > self.next_fetch:
-                # TODO: instantiate PackFetcher just once
-                self.fetcher = pack_fetcher.PackFetcher(
-                    self.fs, self.network, 'zestyping.github.io', '/test.pk')
-                self.next_fetch += self.pack_fetch_interval
-            if self.fetcher:
-                try:
-                    self.fetcher.next_step()
-                except StopIteration:
-                    print('Fetch completed successfully!')
-                    self.fetcher = None
-                except Exception as e:
-                    print(f'Fetch aborted due to {e} ({repr(e)})')
-                    self.fetcher = None
 
     def receive(self, command, arg=None):
         if command == 'TOGGLE_CAPS':
@@ -275,6 +252,8 @@ class MenuMode(Mode):
         self.dial_reader.reset()
         self.frame.clear()
         wifi_ssid = self.app.prefs.get('wifi_ssid')
+        updater = self.app.updater
+        index_fetched = updater.index_fetched and updater.index_fetched.isoformat()
         software_version = sys.path[0]
         firmware_version = self.app.network.get_firmware_version()
         hardware_address = self.app.network.get_hardware_address()
@@ -290,11 +269,14 @@ class MenuMode(Mode):
                 ('60 seconds', ('SET_CYCLING', 60), []),
                 ('Back', ('BACK', None), [])
             ]),
-            ('System info', None,  [
-                ('Action Clock 4', None, []),
+            ('System info', None, [
+                (updater.index_name or 'Index not fetched yet', None, []),
                 (software_version, None, []),
-                ('ESP firmware: ' + firmware_version, None, []),
-                ('MAC ID: ' + hardware_address, None, []),
+                (f'Current index: {updater.index_updated}', None, []),
+                (f'Fetched at: {updater.index_fetched}', None, []),
+                (f'Time: {cctime.get_datetime().isoformat()}', None, []),
+                (f'ESP firmware: {firmware_version}', None, []),
+                (f'MAC ID: {hardware_address}', None, []),
                 ('Back', ('BACK', None), [])
             ]),
             ('Exit', ('CLOCK_MODE', None), [])
@@ -304,7 +286,6 @@ class MenuMode(Mode):
         self.proceed(self.tree)
 
     def proceed(self, node):
-        label = self.frame.new_label('Hello', 'kairon-10')
         title, command_arg, children = node
         if command_arg:
             self.app.receive(*command_arg)

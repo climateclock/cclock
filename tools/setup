@@ -38,3 +38,10 @@ fi
 cd Adafruit_CircuitPython_ESP32SPI
 git checkout 4.0.2
 cd ..
+
+if ! [ -d Adafruit_CircuitPython_Hashlib ]; then
+    git clone https://github.com/adafruit/Adafruit_CircuitPython_Hashlib
+fi
+cd Adafruit_CircuitPython_Hashlib
+git checkout 1.4.4
+cd ..
