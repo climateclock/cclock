@@ -28,6 +28,7 @@ class SoftwareUpdater:
         self.retry_after(UPDATE_INITIAL_DELAY)
 
     def retry_after(self, delay):
+        self.network.close_step()
         self.index_fetcher = None
         self.unpacker = None
         self.next_check = cctime.monotonic() + delay
@@ -79,6 +80,8 @@ class SoftwareUpdater:
                 write_enabled_flags(self.fs, self.index_packs)
                 self.retry_after(UPDATE_INTERVAL_AFTER_SUCCESS)
             else:
+                self.network.close_step()
+                self.index_fetcher = None
                 self.unpacker = Unpacker(self.fs, HttpFetcher(
                     self.network, self.prefs, self.index_hostname, url_path))
                 self.step = self.pack_fetch_step

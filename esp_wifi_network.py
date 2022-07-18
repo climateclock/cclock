@@ -137,8 +137,10 @@ class EspWifiNetwork(Network):
             self.set_state(State.ONLINE)
 
     def close_step(self):
-        self.esp.socket_close(self.socket)
-        self.set_state(State.ONLINE)
+        if self.esp and self.socket:
+            self.esp.socket_close(self.socket)
+            self.set_state(State.ONLINE)
+        self.socket = None
 
     def disable_step(self):
         if self.esp:
