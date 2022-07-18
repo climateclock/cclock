@@ -1,4 +1,5 @@
 import json
+import utils
 
 
 class Prefs:
@@ -7,7 +8,7 @@ class Prefs:
         try:
             self.prefs = json.load(self.fs.open('/prefs.json'))
         except Exception as e:
-            print(f'Could not read prefs.json: {e}')
+            utils.report_error(e, f'Could not read prefs.json')
             self.prefs = {
                 'wifi_ssid': 'climateclock',
                 'wifi_password': 'climateclock',
@@ -28,4 +29,4 @@ class Prefs:
                 json.dump(self.prefs, file)
             self.fs.rename('/prefs.json.new', '/prefs.json')
         except OSError as e:
-            print(f'Could not write prefs.json: {e}')
+            utils.report_error(e, f'Could not write prefs.json')

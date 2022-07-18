@@ -122,7 +122,7 @@ class MatrixFrame(frame.Frame):
         try:
             return LabelFrame(text, font)
         except MemoryError as e:
-            print(f'Failed to draw "{text}": {e}')
+            utils.report_error(e, f'Failed to draw "{text}"')
             return self.error_label
 
 

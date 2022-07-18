@@ -2,6 +2,7 @@ import cctime
 import json
 from http_fetcher import HttpFetcher
 from unpacker import Unpacker
+import utils
 
 
 UPDATE_INITIAL_DELAY = 2
@@ -28,7 +29,7 @@ class SoftwareUpdater:
         self.retry_after(UPDATE_INITIAL_DELAY)
 
     def retry_after(self, delay):
-        self.network.close_step()
+        self.network.disable_step()
         self.index_fetcher = None
         self.unpacker = None
         self.next_check = cctime.monotonic() + delay
@@ -54,7 +55,7 @@ class SoftwareUpdater:
                 self.index_file.close()
                 self.index_file = None
             if not isinstance(e, StopIteration):
-                print(f'Index fetch aborted: {e} ({repr(e)})')
+                utils.report_error(e, 'Index fetch aborted')
                 self.retry_after(UPDATE_INTERVAL_AFTER_FAILURE)
                 return
         # StopIteration means fetch was successfully completed
@@ -67,7 +68,7 @@ class SoftwareUpdater:
             self.index_updated = pack_index['updated']
             self.index_packs = pack_index['packs']
         except Exception as e:
-            print(f'Unreadable index file: {e} ({repr(e)})')
+            utils.report_error(e, 'Unreadable index file')
             self.retry_after(UPDATE_INTERVAL_AFTER_FAILURE)
             return
 
@@ -90,7 +91,7 @@ class SoftwareUpdater:
         try:
             done = self.unpacker.step()
         except Exception as e:
-            print(f'Fetch aborted due to {e} ({repr(e)})')
+            utils.report_error(e, 'Pack fetch aborted')
             self.retry_after(UPDATE_INTERVAL_AFTER_FAILURE)
         else:
             if done:

@@ -21,6 +21,15 @@ def to_str(arg):
     return str(arg)
 
 
+def report_error(e, message):
+    try:
+        import traceback
+        print(f'{message}: ', end='')
+        traceback.print_exception(e, e, e.__traceback__)
+    except:
+        print(f'{message}: {e} {repr(e)}')
+
+
 class Cycle:
     def __init__(self, *items):
         self.items = items

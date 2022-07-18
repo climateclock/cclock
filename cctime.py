@@ -38,7 +38,7 @@ def enable_rtc():
         time_source = DS3231(board.I2C())
         rtc.set_time_source(time_source)
     except Exception as e:
-        print(f'Could not find an attached DS3231 RTC: {e}')
+        utils.report_error(e, 'Could not find an attached DS3231 RTC')
 
 
 def set_rtc(y, l, d, h, m, s):

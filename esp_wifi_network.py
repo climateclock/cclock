@@ -4,6 +4,7 @@ import busio
 import cctime
 from digitalio import DigitalInOut, Direction
 from network import Network, State
+import utils
 from utils import to_bytes
 
 
@@ -108,7 +109,7 @@ class EspWifiNetwork(Network):
                 self.esp.socket_open(self.socket, hostname, port, mode)
                 self.socket_started = cctime.monotonic()
             except Exception as e:
-                print(f'Error! {e}')
+                utils.report_error(e, 'Failed to open socket')
 
         if self.esp.socket_connected(self.socket):
             print('Connected!')
@@ -143,6 +144,7 @@ class EspWifiNetwork(Network):
         self.socket = None
 
     def disable_step(self):
+        self.close_step()
         if self.esp:
             self.esp.deinit()
             self.esp = None
