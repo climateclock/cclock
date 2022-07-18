@@ -30,6 +30,7 @@ class HttpFetcher:
         return b''
 
     def request_read(self):
+        print('request_read')
         if self.network.state == State.CONNECTED:
             self.network.send_step(
                 b'GET ' + to_bytes(self.path) + b' HTTP/1.1\r\n' +
@@ -41,6 +42,7 @@ class HttpFetcher:
         return b''
 
     def http_status_read(self):
+        print('status_read')
         self.buffer.extend(self.network.receive_step(PACKET_LENGTH))
         crlf = self.buffer.find(b'\r\n')
         if crlf < 0:
@@ -52,6 +54,7 @@ class HttpFetcher:
         return self.read(True)
 
     def http_headers_read(self, skip_receive=False):
+        print('headers_read')
         if not skip_receive:
             self.buffer.extend(self.network.receive_step(PACKET_LENGTH))
         double_crlf = self.buffer.find(b'\r\n\r\n')
@@ -64,6 +67,7 @@ class HttpFetcher:
         return self.read()
 
     def content_read(self):
+        print('content_read', len(self.buffer))
         if len(self.buffer):
             chunk = self.buffer[:PACKET_LENGTH]
             self.buffer[:PACKET_LENGTH] = b''

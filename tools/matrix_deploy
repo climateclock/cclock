@@ -53,13 +53,8 @@ rm -rf $target/*
 echo 'Installing program modules...'
 cp *.py $target/
 
-echo 'Installing climateclock.json...'
-curl https://api.climateclock.world/v1/clock -o cache/climateclock.json
-mkdir -p $target/cache
-cp cache/climateclock.json $target/cache
-
 echo 'Installing fonts...'
-cp *.pcf $target
+cp *.pcf $target/
 
 echo 'Installing startup logic...'
 cp boot.py gpio.py main.py $target
