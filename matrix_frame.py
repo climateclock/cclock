@@ -20,7 +20,7 @@ utils.mem('matrix_frame9')
 from ulab import numpy as np
 utils.mem('matrix_frame10')
 
-BIT_DEPTH = 5
+BIT_DEPTH = 2
 MIN_RGB_VALUE = 0x100 >> BIT_DEPTH
 
 

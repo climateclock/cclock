@@ -9,8 +9,8 @@ class HttpFetcher:
     def __init__(self, network, prefs, hostname, path):
         self.network = network
         self.prefs = prefs
-        self.hostname = to_bytes(hostname)
-        self.path = to_bytes(path)
+        self.hostname = hostname
+        self.path = path
 
         self.buffer = bytearray()
         # Calling read() returns anywhere from zero to PACKET_LENGTH bytes; a
@@ -32,8 +32,8 @@ class HttpFetcher:
     def request_read(self):
         if self.network.state == State.CONNECTED:
             self.network.send_step(
-                b'GET ' + self.path + b' HTTP/1.1\r\n' +
-                b'Host: ' + self.hostname + b'\r\n' +
+                b'GET ' + to_bytes(self.path) + b' HTTP/1.1\r\n' +
+                b'Host: ' + to_bytes(self.hostname) + b'\r\n' +
                 b'Connection: Close\r\n' +
                 b'\r\n'
             )
