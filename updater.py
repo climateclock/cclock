@@ -5,19 +5,26 @@ from unpacker import Unpacker
 import utils
 
 
-UPDATE_INITIAL_DELAY = 2
-UPDATE_INTERVAL_AFTER_FAILURE = 10
-UPDATE_INTERVAL_AFTER_SUCCESS = 60
+INITIAL_DELAY = 2
+INTERVAL_AFTER_FAILURE = 10
+INTERVAL_AFTER_SUCCESS = 60
 
 
 class SoftwareUpdater:
-    def __init__(self, fs, network, prefs):
+    def __init__(self, fs, network, prefs, clock_mode):
         self.fs = fs
         self.network = network
         self.prefs = prefs
+        self.clock_mode = clock_mode
+
+        self.api_hostname = prefs.get('api_hostname')
+        self.api_path = prefs.get('api_path')
+        self.api_fetcher = None
+        self.api_file = None
+        self.api_fetched = None
+
         self.index_hostname = prefs.get('index_hostname')
         self.index_path = prefs.get('index_path')
-
         self.index_fetcher = None
         self.index_file = None
         self.index_name = None
@@ -26,10 +33,10 @@ class SoftwareUpdater:
         self.index_packs = None
         self.unpacker = None
 
-        self.retry_after(UPDATE_INITIAL_DELAY)
+        self.retry_after(INITIAL_DELAY)
 
     def retry_after(self, delay):
-        self.network.disable_step()
+        self.network.close_step()
         self.index_fetcher = None
         self.unpacker = None
         self.next_check = cctime.monotonic() + delay
@@ -37,16 +44,46 @@ class SoftwareUpdater:
 
     def wait_step(self):
         if cctime.monotonic() > self.next_check:
-            self.index_fetcher = HttpFetcher(
-                self.network, self.prefs, self.index_hostname, self.index_path)
-            self.step = self.index_fetch_step
+            self.api_fetcher = HttpFetcher(
+                self.network, self.prefs, self.api_hostname, self.api_path)
+            self.step = self.api_fetch_step
+
+    def api_fetch_step(self):
+        try:
+            data = self.api_fetcher.read()
+            if data:
+                if not self.api_file:
+                    self.api_file = self.fs.open('/cache/clock.json', 'wb')
+                self.api_file.write(data)
+            return
+        except Exception as e:
+            self.api_fetcher = None
+            if self.api_file:
+                self.api_file.close()
+                self.api_file = None
+            if not isinstance(e, StopIteration):
+                utils.report_error(e, 'API fetch aborted')
+                # Continue with software update anyway
+                self.index_fetcher = HttpFetcher(
+                    self.network, self.prefs, self.index_hostname, self.index_path)
+                self.step = self.index_fetch_step
+                return
+
+        # StopIteration means fetch was successfully completed
+        print(f'API file successfully fetched!')
+        self.api_fetched = cctime.get_datetime()
+        self.clock_mode.reload_definition()
+
+        self.index_fetcher = HttpFetcher(
+            self.network, self.prefs, self.index_hostname, self.index_path)
+        self.step = self.index_fetch_step
 
     def index_fetch_step(self):
         try:
             data = self.index_fetcher.read()
             if data:
                 if not self.index_file:
-                    self.index_file = self.fs.open('/packs.json', 'wb')
+                    self.index_file = self.fs.open('/cache/packs.json', 'wb')
                 self.index_file.write(data)
             return
         except Exception as e:
@@ -56,20 +93,20 @@ class SoftwareUpdater:
                 self.index_file = None
             if not isinstance(e, StopIteration):
                 utils.report_error(e, 'Index fetch aborted')
-                self.retry_after(UPDATE_INTERVAL_AFTER_FAILURE)
+                self.retry_after(INTERVAL_AFTER_FAILURE)
                 return
         # StopIteration means fetch was successfully completed
         print(f'Index file successfully fetched!')
         self.index_fetched = cctime.get_datetime()
         try:
-            with self.fs.open('/packs.json') as index_file:
+            with self.fs.open('/cache/packs.json') as index_file:
                 pack_index = json.load(index_file)
             self.index_name = pack_index['name']
             self.index_updated = pack_index['updated']
             self.index_packs = pack_index['packs']
         except Exception as e:
             utils.report_error(e, 'Unreadable index file')
-            self.retry_after(UPDATE_INTERVAL_AFTER_FAILURE)
+            self.retry_after(INTERVAL_AFTER_FAILURE)
             return
 
         version = get_latest_enabled_version(self.index_packs)
@@ -79,7 +116,7 @@ class SoftwareUpdater:
             if self.fs.isfile(dir_name + '/@VALID'):
                 print(f'{dir_name} already exists and is valid.')
                 write_enabled_flags(self.fs, self.index_packs)
-                self.retry_after(UPDATE_INTERVAL_AFTER_SUCCESS)
+                self.retry_after(INTERVAL_AFTER_SUCCESS)
             else:
                 self.index_fetcher = None
                 self.unpacker = Unpacker(self.fs, HttpFetcher(
@@ -91,11 +128,11 @@ class SoftwareUpdater:
             done = self.unpacker.step()
         except Exception as e:
             utils.report_error(e, 'Pack fetch aborted')
-            self.retry_after(UPDATE_INTERVAL_AFTER_FAILURE)
+            self.retry_after(INTERVAL_AFTER_FAILURE)
         else:
             if done:
                 write_enabled_flags(self.fs, self.index_packs)
-                self.retry_after(UPDATE_INTERVAL_AFTER_SUCCESS)
+                self.retry_after(INTERVAL_AFTER_SUCCESS)
 
 
 def get_latest_enabled_version(index_packs):
@@ -131,4 +168,3 @@ def write_enabled_flags(fs, index_packs):
                 fs.write(dir_name + '/@ENABLED', b'')
             else:
                 print('Disabled:', dir_name)
-

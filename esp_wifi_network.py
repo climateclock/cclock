@@ -136,6 +136,7 @@ class EspWifiNetwork(Network):
     def receive_step(self, count):
         if self.esp.socket_connected(self.socket):
             available = self.esp.socket_available(self.socket)
+            print('avail', available)
             if available:
                 return self.esp.socket_read(self.socket, count)
             else:

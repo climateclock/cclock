@@ -21,16 +21,14 @@ from utils import Cycle
 
 
 class App:
-    def __init__(self, fs, network, defn, frame, button_map, dial_map):
+    def __init__(self, fs, network, frame, button_map, dial_map):
         utils.mem('App.__init__')
         self.network = network
         self.frame = frame
         self.frame_counter = FrameCounter()
         self.prefs = Prefs(fs)
 
-        self.updater = SoftwareUpdater(fs, network, self.prefs)
-
-        self.clock_mode = ClockMode(self, fs, network, defn, button_map)
+        self.clock_mode = ClockMode(self, fs, network, button_map)
         self.menu_mode = MenuMode(self, button_map, dial_map)
         self.wifi_ssid_mode = PrefEntryMode(
             self, 'Wi-Fi network name:', 'wifi_ssid', button_map, dial_map)
@@ -38,9 +36,9 @@ class App:
             self, 'Wi-Fi password:', 'wifi_password', button_map, dial_map)
         self.mode = self.clock_mode
 
+        self.updater = SoftwareUpdater(fs, network, self.prefs, self.clock_mode)
         self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
         self.lang = self.langs.current()
-
         self.brightness_reader = DialReader(
             'BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
         utils.mem('App.__init__ done')
@@ -109,8 +107,7 @@ utils.mem('app12')
 
 def run(fs, network, frame, button_map, dial_map):
     cctime.enable_rtc()
-    data = ccapi.load(fs.open('/cache/climateclock.json'))
-    app = App(fs, network, data, frame, button_map, dial_map)
+    app = App(fs, network, frame, button_map, dial_map)
     app.start()
     while True:
         app.step()
