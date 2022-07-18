@@ -46,7 +46,7 @@ rm -rf $target/v999
 mkdir $target/v999
 cp *.py $target/v999
 
-if [ -z '$quick' ]; then
+if [ -z "$quick" ]; then
     echo 'Installing climateclock.json...'
     curl https://api.climateclock.world/v1/clock -o cache/climateclock.json
     mkdir -p $target/cache

@@ -37,18 +37,21 @@ class SoftwareUpdater:
         if cctime.monotonic() > self.next_check:
             self.index_fetcher = HttpFetcher(
                 self.network, self.prefs, self.index_hostname, self.index_path)
-            self.index_file = self.fs.open('/packs.json', 'wb')
             self.step = self.index_fetch_step
 
     def index_fetch_step(self):
         try:
             data = self.index_fetcher.read()
-            self.index_file.write(data)
+            if data:
+                if not self.index_file:
+                    self.index_file = self.fs.open('/packs.json', 'wb')
+                self.index_file.write(data)
             return
         except Exception as e:
             self.index_fetcher = None
-            self.index_file.close()
-            self.index_file = None
+            if self.index_file:
+                self.index_file.close()
+                self.index_file = None
             if not isinstance(e, StopIteration):
                 print(f'Index fetch aborted: {e} ({repr(e)})')
                 self.retry_after(UPDATE_INTERVAL_AFTER_FAILURE)
