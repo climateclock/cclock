@@ -4,18 +4,7 @@ import busio
 import cctime
 from digitalio import DigitalInOut, Direction
 from network import Network, State
-
-
-def to_bytes(arg):
-    if isinstance(arg, bytes):
-        return arg
-    return bytes(str(arg), 'ascii')
-
-
-def to_str(arg):
-    if isinstance(arg, bytes):
-        return str(arg, 'ascii')
-    return str(arg)
+from utils import to_bytes
 
 
 class EspWifi(adafruit_esp32spi.ESP_SPIcontrol):
