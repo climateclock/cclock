@@ -81,7 +81,6 @@ class SoftwareUpdater:
                 write_enabled_flags(self.fs, self.index_packs)
                 self.retry_after(UPDATE_INTERVAL_AFTER_SUCCESS)
             else:
-                self.network.close_step()
                 self.index_fetcher = None
                 self.unpacker = Unpacker(self.fs, HttpFetcher(
                     self.network, self.prefs, self.index_hostname, url_path))

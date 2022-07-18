@@ -83,7 +83,13 @@ class EspWifiNetwork(Network):
         elif self.wifi_started:
             # NOTE: Reading esp.status is only safe in certain states; it
             # cause a crash if wifi_set_passphrase hasn't been called yet.
-            esp_status = self.esp.status
+            try:
+                esp_status = self.esp.status
+            except Exception as e:
+                utils.report_error(e, 'Could not get ESP32 status; resetting')
+                self.esp.reset()
+                self.wifi_started = None
+                return
 
             if esp_status == 3:
                 self.set_state(State.ONLINE)

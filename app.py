@@ -22,7 +22,7 @@ from utils import Cycle
 
 class App:
     def __init__(self, fs, network, defn, frame, button_map, dial_map):
-        utils.mem('Clock.__init__')
+        utils.mem('App.__init__')
         self.network = network
         self.frame = frame
         self.frame_counter = FrameCounter()
@@ -43,7 +43,7 @@ class App:
 
         self.brightness_reader = DialReader(
             'BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
-        utils.mem('Clock.__init__ done')
+        utils.mem('App.__init__ done')
 
     def start(self):
         self.frame.set_brightness(self.brightness_reader.value)

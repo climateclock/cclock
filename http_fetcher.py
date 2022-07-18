@@ -71,4 +71,5 @@ class HttpFetcher:
         if self.network.state == State.CONNECTED:
             return self.network.receive_step(PACKET_LENGTH)
         else:
+            self.network.close_step()
             raise StopIteration
