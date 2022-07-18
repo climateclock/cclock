@@ -1,24 +1,24 @@
-import debug
+import utils
 
-debug.mem('matrix_frame1')
+utils.mem('matrix_frame1')
 from adafruit_display_text import bitmap_label
-debug.mem('matrix_frame2')
+utils.mem('matrix_frame2')
 import bitmaptools
-debug.mem('matrix_frame3')
+utils.mem('matrix_frame3')
 import board
-debug.mem('matrix_frame4')
+utils.mem('matrix_frame4')
 import cctime
-debug.mem('matrix_frame5')
+utils.mem('matrix_frame5')
 import displayio
-debug.mem('matrix_frame6')
+utils.mem('matrix_frame6')
 import frame
-debug.mem('matrix_frame7')
+utils.mem('matrix_frame7')
 import framebufferio
-debug.mem('matrix_frame8')
+utils.mem('matrix_frame8')
 import rgbmatrix
-debug.mem('matrix_frame9')
+utils.mem('matrix_frame9')
 from ulab import numpy as np
-debug.mem('matrix_frame10')
+utils.mem('matrix_frame10')
 
 BIT_DEPTH = 5
 MIN_RGB_VALUE = 0x100 >> BIT_DEPTH

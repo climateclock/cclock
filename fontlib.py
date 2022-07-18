@@ -1,10 +1,10 @@
-import debug
+import utils
 
-debug.mem('fontlib1')
+utils.mem('fontlib1')
 from adafruit_bitmap_font import pcf
-debug.mem('fontlib2')
+utils.mem('fontlib2')
 import displayio
-debug.mem('fontlib3')
+utils.mem('fontlib3')
 
 
 class FontLibrary:

@@ -5,7 +5,7 @@ from ssl import create_default_context as create_ssl_context
 
 
 class UnixNetwork(Network):
-    def __init__(self, ssid, password, wifi_connect_delay=1, debug=False):
+    def __init__(self, ssid, password, wifi_connect_delay=1):
         self.ssid = ssid
         self.password = password
         self.initialized = False
@@ -14,7 +14,6 @@ class UnixNetwork(Network):
         self.wifi_connect_delay = wifi_connect_delay
         self.wifi_connect_time = None
         self.socket = None
-        self.debug = debug
         self.set_state(State.OFFLINE)
 
     def get_firmware_version(self):
@@ -25,8 +24,7 @@ class UnixNetwork(Network):
 
     def set_state(self, new_state):
         self.state = new_state
-        if self.debug:
-            print(f'Network is now {self.state}.')
+        print(f'Network is now {self.state}.')
 
     def enable_step(self, ssid, password):
         if not self.initialized:

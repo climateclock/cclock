@@ -3,12 +3,12 @@
 See: https://docs.climateclock.world/climate-clock-docs/climate-clock-api
 """
 
-import debug
-debug.mem('ccapi1')
+import utils
+utils.mem('ccapi1')
 import cctime
-debug.mem('ccapi2')
+utils.mem('ccapi2')
 import math
-debug.mem('ccapi3')
+utils.mem('ccapi3')
 
 
 def try_isoformat_to_datetime(data, key):
@@ -22,7 +22,7 @@ def sorted_longest_first(labels):
     return sorted(labels, key=lambda label: -len(label))
 
 
-debug.mem('ccapi4')
+utils.mem('ccapi4')
 
 
 class SlotRepr:
@@ -145,7 +145,7 @@ class Media(Module):
     pass  # TBD
 
 
-debug.mem('ccapi5')
+utils.mem('ccapi5')
 
 
 class ClockDefinition(SlotRepr):
@@ -197,4 +197,4 @@ def fetch():
     return load_url("https://api.climateclock.world/v1/clock")
 
 
-debug.mem('ccapi6')
+utils.mem('ccapi6')
