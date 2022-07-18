@@ -50,10 +50,10 @@ class MenuMode(Mode):
             ]),
             ('System info', None, [
                 (updater.index_name or 'Climate Clock', None, []),
-                (software_version, None, []),
-                (f'Current index: {updater.index_updated}', None, []),
-                (f'Fetched at: {updater.index_fetched}', None, []),
+                (f'Version: {software_version}', None, []),
                 (f'Time: {cctime.get_datetime().isoformat()}', None, []),
+                (f'Index version: {updater.index_updated}', None, []),
+                (f'Index fetched: {updater.index_fetched}', None, []),
                 (f'ESP firmware: {firmware_version}', None, []),
                 (f'MAC ID: {hardware_address}', None, []),
                 ('Back', ('BACK', None), [])
