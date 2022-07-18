@@ -38,9 +38,8 @@ class ClockMode(Mode):
     def start(self):
         self.reader.reset()
         self.frame.clear()
-        now = cctime.monotonic()
-        self.auto_advance_interval = 60
-        self.next_advance = now + self.auto_advance_interval
+        sec = self.app.prefs.get('auto_cycling_sec')
+        self.next_advance = sec and cctime.monotonic() + sec
 
     def step(self):
         ccui.render_deadline_module(
@@ -52,8 +51,10 @@ class ClockMode(Mode):
         self.reader.step(self.app.receive)
         self.frame.send()
 
-        if cctime.monotonic() > self.next_advance:
-            self.next_advance += self.auto_advance_interval
+        if self.next_advance and cctime.monotonic() > self.next_advance:
+            sec = self.app.prefs.get('auto_cycling_sec')
+            if sec:
+                self.next_advance += sec
             self.lifeline_module = self.lifeline_modules.next()
             self.frame.clear()
 

@@ -36,13 +36,15 @@ class MenuMode(Mode):
         software_version = sys.path[0]
         firmware_version = self.app.network.get_firmware_version()
         hardware_address = self.app.network.get_hardware_address()
+        sec = self.app.prefs.get('auto_cycling_sec')
+        auto_cycling = sec and f'{sec} seconds' or 'Off'
         self.tree = ('Settings', None, [
             ('Wi-Fi setup', None, [
                 ('Network: ' + wifi_ssid, ('WIFI_SSID_MODE', None), []),
                 ('Password', ('WIFI_PASSWORD_MODE', None), []),
                 ('Back', ('BACK', None), [])
             ]),
-            ('Auto cycling', None, [
+            (f'Auto cycling: {auto_cycling}', None, [
                 ('Off', ('SET_CYCLING', 0), []),
                 ('15 seconds', ('SET_CYCLING', 15), []),
                 ('60 seconds', ('SET_CYCLING', 60), []),
@@ -104,6 +106,9 @@ class MenuMode(Mode):
             self.move_cursor(-1)
         if command == 'NEXT_OPTION':
             self.move_cursor(1)
+        if command == 'SET_CYCLING':
+            self.app.prefs.set('auto_cycling_sec', arg)
+            self.app.receive('MENU_MODE')  # reformat the menu strings
         if command == 'PROCEED':
             (title, command_arg, children), _, _ = self.crumbs[-1]
             if children:
