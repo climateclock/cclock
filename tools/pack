@@ -10,6 +10,7 @@ def pack(source_dir, pack_name, pack_file):
         [os.path.join(path.lstrip('./'), file) for file in files]
         for path, dirs, files in os.walk('.')
     ), [])
+    file_list.sort()
     digest = md5()
     for path in file_list:
         digest.update(to_bytes(path))
