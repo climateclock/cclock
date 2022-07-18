@@ -1,0 +1,71 @@
+#!/bin/bash -e
+
+# NOTE: Only one specific v0 should ever make it out into the real world.
+# All subsequent versions are modifications on top of v0, so v0 must be
+# stable or it will change the interpretation of all other versions.
+#
+# TODO: This deployment script should deploy only a git-tagged v0 in
+# /Volumes/CIRCUITPY, then deploy the current version exactly as it would
+# be installed by the software update mechanism.
+
+cd $(dirname "$0")
+cd ..
+
+module="$1"
+module=${module%.py}
+target=/Volumes/CIRCUITPY
+unalias -a
+
+echo 'Checking syntax...'
+python3 <<EOF || exit 1
+import os
+from app import run
+for name in os.listdir():
+    if name.endswith('.py'):
+        compile(open(name).read(), name, 'exec')
+EOF
+
+if [ ! -d "$target" ]; then
+    echo "No drive found at $target.  Is a CircuitPython device connected?"
+    exit 1
+fi
+
+if ! touch "$target/test"; then
+    echo "$target appears to be in read-only mode."
+    exit 1
+fi
+
+echo
+echo "This will wipe the attached MatrixPortal device and perform a factory"
+echo "reset, with the current Climate Clock codebase deployed as v0."
+echo
+echo -n "Proceed? "
+read confirm
+echo
+
+if ! [[ $confirm = y* ]]; then
+    exit 1
+fi
+
+echo 'Wiping the flash disk...'
+rm -rf $target/*
+
+echo 'Installing program modules...'
+cp *.py $target/
+
+echo 'Installing climateclock.json...'
+curl https://api.climateclock.world/v1/clock -o cache/climateclock.json
+mkdir -p $target/cache
+cp cache/climateclock.json $target/cache
+
+echo 'Installing fonts...'
+cp *.pcf $target
+
+echo 'Installing startup logic...'
+cp boot.py gpio.py main.py $target
+
+mkdir $target/v0
+touch $target/v0/@VALID
+touch $target/v0/@ENABLED
+sync
+echo 'All done!'

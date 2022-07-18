@@ -3,31 +3,37 @@
 from hashlib import md5
 import os
 import sys
+import tempfile
 
 def pack(source_dir, pack_name, pack_file):
+    current_dir = os.getcwd()
     os.chdir(source_dir)
-    file_list = sum((
-        [os.path.join(path.lstrip('./'), file) for file in files]
-        for path, dirs, files in os.walk('.')
-    ), [])
-    file_list.sort()
-    digest = md5()
-    for path in file_list:
-        digest.update(to_bytes(path))
-        digest.update(open(path, 'rb').read())
-    pack_hash = digest.hexdigest()
+    try:
+        file_list = sum((
+            [os.path.join(path.lstrip('./'), file) for file in files]
+            for path, dirs, files in os.walk('.')
+        ), [])
+        file_list.sort()
+        digest = md5()
+        for path in file_list:
+            digest.update(to_bytes(path))
+            digest.update(open(path, 'rb').read())
+        pack_hash = digest.hexdigest()
 
-    write_magic(pack_file, 1)
-    write_block(pack_file, 'pn', to_bytes(pack_name))
-    write_block(pack_file, 'ph', to_bytes(pack_hash))
-    for path in file_list:
-        write_block(pack_file, 'fn', path)
-        with open(path, 'rb') as source_file:
-            content = source_file.read(65535)
-            if len(content) == 0:
-                break
-            write_block(pack_file, 'fc', content)
-    write_block(pack_file, 'pe', b'')
+        write_magic(pack_file, 1)
+        write_block(pack_file, 'pn', to_bytes(pack_name))
+        write_block(pack_file, 'ph', to_bytes(pack_hash))
+        for path in file_list:
+            write_block(pack_file, 'fn', path)
+            with open(path, 'rb') as source_file:
+                content = source_file.read(65535)
+                if len(content) == 0:
+                    break
+                write_block(pack_file, 'fc', content)
+        write_block(pack_file, 'pe', b'')
+        return pack_hash
+    finally:
+        os.chdir(current_dir)
 
 def to_bytes(arg):
     if isinstance(arg, bytes):
@@ -50,8 +56,12 @@ def write_block(file, block_type, content):
     file.write(to_bytes(content))
 
 def main(source_dir, pack_name):
-    with os.fdopen(1, 'wb') as binary_stdout:
-        pack(source_dir, pack_name, binary_stdout)
+    fd, temp_path = tempfile.mkstemp()
+    with os.fdopen(fd, 'wb') as file:
+        pack_hash = pack(source_dir, pack_name, file)
+    pack_filename = f'{pack_name}.{pack_hash}.pk'
+    os.rename(temp_path, pack_filename)
+    print(f'Wrote {pack_filename}.')
 
 if __name__ == '__main__':
     main(*sys.argv[1:])
