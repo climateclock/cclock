@@ -2,7 +2,7 @@
 
 CircuitPython implementation of the Climate Clock.
 
-This codebase is known as "Action Clock v4."
+This codebase is known as "Action Clock 4."
 
 ## Overview
 
@@ -46,7 +46,7 @@ of the Adafruit libraries built-in, to conserve RAM.  To install the firmware:
 
 Once you have a `CIRCUITPY` volume visible, run:
 
-    tools/matrix_run clock
+    tools/matrix_run app
 
 to copy all the software files to the MatrixPortal.
 
@@ -79,7 +79,7 @@ to set up your Python virtual environment and install dependencies.
 
 To run the clock in a window on your computer:
 
-    tools/sdl_run clock
+    tools/sdl_run app
 
 This will substitute your computer's filesystem, network, and display, but
 otherwise run the same code that runs in production, so you can test and
@@ -95,7 +95,7 @@ makes it non-writable over the USB cable.
 To enable writing over USB, press the reset button once and then hold
 down either of the other two buttons until the status light turns red.
 The red light indicates that the board is now writable, so you can
-run `tools/matrix_run clock` again to copy any of your local edits over
+run `tools/matrix_run app` again to copy any of your local edits over
 to the board.  The status light can be red or purple; the mnemonic is:
 
   - Red means you can wRite (or think of a red recording light)
@@ -138,9 +138,10 @@ currently under development.  A software update package is a single file
 
 If you'd like to make your own software update package for the clock to
 download, run `tools/pack` with a directory path as the first argument
-and a package name (such as "cclock") as the second argument; for example:
+and a package name (a "v" followed by a version number, such as "v17")
+as the second argument; for example:
 
-    tools/pack /tmp/folder/ cclock > cclock.pk
+    tools/pack /tmp/folder/ v17 > v17.pk
 
 Then make the resulting `cclock.pk` file available for download at
 a HTTPS URL, put the hostname in the `connect_step()` call, and
@@ -190,12 +191,12 @@ which will appear in a window on your computer, or like this:
 
 which will run the same module on an attached MatrixPortal board.
 
-`clock.py` is the Action Clock implementation.  You can run it in a window
+`app.py` is the Action Clock implementation.  You can run it in a window
 on your computer with:
 
-    tools/sdl_run clock
+    tools/sdl_run app
 
 or run it on an attached MatrixPortal with:
 
-    tools/matrix_run clock
+    tools/matrix_run app
 
