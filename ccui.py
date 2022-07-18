@@ -8,7 +8,7 @@ except:
     import adafruit_datetime as datetime
 
 
-TEST_MODE = True
+TEST_MODE = False
 
 
 def calc_deadline(module, now):
@@ -132,8 +132,6 @@ def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
     if not headline_label:
         item = module.items[i]
         text = f'{item.headline} ({item.source}) \xb7 '
-        if upper:
-            text = text.upper()
         headline_width = frame.new_label(text, 'kairon-16').w
 
         text_with_trail = text
@@ -141,8 +139,6 @@ def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
             i = (i + 1) % n
             item = module.items[i]
             trail = f'{item.headline} ({item.source}) \xb7 '
-            if upper:
-                trail = trail.upper()
             text_with_trail += trail
             headline_label = frame.new_label(text_with_trail, 'kairon-16')
             if headline_label.w >= headline_width + DISPLAY_WIDTH:
