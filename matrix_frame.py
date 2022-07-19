@@ -20,6 +20,10 @@ utils.mem('matrix_frame9')
 from ulab import numpy as np
 utils.mem('matrix_frame10')
 
+# TODO: BIT_DEPTH should normally be set to 5.  It is set to 2 in order to
+# conserve memory and avoid MemoryErrors.  Once memory issues are fixed,
+# this should be changged back to 5 to get good colour rendering and better
+# brightness control.
 BIT_DEPTH = 2
 MIN_RGB_VALUE = 0x100 >> BIT_DEPTH
 

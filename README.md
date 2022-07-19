@@ -46,9 +46,18 @@ of the Adafruit libraries built-in, to conserve RAM.  To install the firmware:
 
 Once you have a `CIRCUITPY` volume visible, run:
 
+    tools/matrix_deploy
+
+to wipe the MatrixPortal and do the equivalent of a "factory reset"; the
+current code will be deployed as version 0 and preferences will be wiped.
+
+Alternatively, during development, you can run:
+
     tools/matrix_run app
 
-to copy all the software files to the MatrixPortal.
+to deploy the code in the working directory as version 999, without
+resetting anything else on the MatrixPortal.  This is a quicker way to
+write small code changes during development.
 
 The clock should then automatically restart and run the installed software.
 If necessary, you can press the reset button once to restart.
