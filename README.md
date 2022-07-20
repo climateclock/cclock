@@ -179,6 +179,19 @@ run the latest enabled version.  Thus, when the `enabled` flag is flipped
 to `false`, it has the effect of retracting a published version and
 causing Action Clocks in the field to downgrade to a previous version.
 
+When we talk about v0, we are referring to the contents of the root
+directory of the flash drive on a factory-installed Action Clock.
+Each pack file is an overlay over v0, NOT over the preceding version.
+Specifically, each Python module (`*.py`) and each font file (`*.pcf`)
+overrides the file of the same name in the root directory of the flash
+drive.  Therefore, once the first Action Clock is released, v0 must be
+set in stone; the root directory must never be changed henceforth, in
+order to ensure that every subsequent version has a consistent meaning on
+every deployed Action Clock.  (Of course, a future version might improve
+the software update mechanism to allow for a different policy.  For now,
+the use of v0 as a base layer, upon which all other versions are overlaid,
+is merely a simple space-saving measure.)
+
 The steps for publishing a new software update are as follows:
 
   - Run `tools/pack` with a directory path as the first argument and
