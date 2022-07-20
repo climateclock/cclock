@@ -5,9 +5,9 @@ from unpacker import Unpacker
 import utils
 
 
-INITIAL_DELAY = 2
-INTERVAL_AFTER_FAILURE = 10
-INTERVAL_AFTER_SUCCESS = 60
+INITIAL_DELAY = 2  # wait this long after booting up
+INTERVAL_AFTER_FAILURE = 15  # try again after 15 seconds
+INTERVAL_AFTER_SUCCESS = 30 * 60  # recheck for updates every half hour
 
 
 class SoftwareUpdater:
