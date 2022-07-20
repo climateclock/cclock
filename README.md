@@ -140,7 +140,7 @@ reset button to restart the board.
 
 ### Software update
 
-An Action Clock will perioridcally try to connect to Wi-Fi and check for
+An Action Clock will periodically try to connect to Wi-Fi and check for
 newer versions of its software.  First, it will fetch an "index file",
 which is a JSON file listing the available software versions.
 
