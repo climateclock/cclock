@@ -3,6 +3,7 @@ from ccinput import ButtonReader, Press
 import cctime
 import ccui
 from mode import Mode
+from updater import SoftwareUpdater
 import utils
 from utils import Cycle
 
@@ -13,6 +14,7 @@ class ClockMode(Mode):
         self.fs = fs
         self.network = network
 
+        self.updater = SoftwareUpdater(fs, network, app.prefs, self)
         self.deadline = None
         self.lifeline = None
 
@@ -55,6 +57,13 @@ class ClockMode(Mode):
         self.next_advance = sec and cctime.monotonic() + sec
 
     def step(self):
+        if self.next_advance and cctime.monotonic() > self.next_advance:
+            sec = self.app.prefs.get('auto_cycling_sec')
+            if sec:
+                self.next_advance += sec
+            self.lifeline = self.lifelines.next()
+            self.frame.clear()
+
         if not self.deadline:
             label = self.frame.new_label('Loading...', 'kairon-10')
             self.frame.paste(1, 0, label, cv=self.frame.pack(255, 255, 255))
@@ -68,13 +77,7 @@ class ClockMode(Mode):
                 self.lifeline_cv, self.app.lang, self.force_caps)
         self.reader.step(self.app.receive)
         self.frame.send()
-
-        if self.next_advance and cctime.monotonic() > self.next_advance:
-            sec = self.app.prefs.get('auto_cycling_sec')
-            if sec:
-                self.next_advance += sec
-            self.lifeline = self.lifelines.next()
-            self.frame.clear()
+        self.updater.step()
 
     def receive(self, command, arg=None):
         if command == 'TOGGLE_CAPS':

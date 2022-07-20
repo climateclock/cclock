@@ -15,8 +15,6 @@ from pref_entry_mode import PrefEntryMode
 utils.mem('app7')
 from prefs import Prefs
 utils.mem('app8')
-from updater import SoftwareUpdater
-utils.mem('app9')
 from utils import Cycle
 
 
@@ -36,7 +34,6 @@ class App:
             self, 'Wi-Fi password:', 'wifi_password', button_map, dial_map)
         self.mode = self.clock_mode
 
-        self.updater = SoftwareUpdater(fs, network, self.prefs, self.clock_mode)
         self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
         self.lang = self.langs.current()
         self.brightness_reader = DialReader(
@@ -52,7 +49,6 @@ class App:
         utils.mem('step')
         self.brightness_reader.step(self.receive)
         self.mode.step()
-        self.updater.step()
 
     def receive(self, command, arg=None):
         print('[' + command + ('' if arg is None else ': ' + str(arg)) + ']')

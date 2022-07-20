@@ -31,7 +31,7 @@ class MenuMode(Mode):
         self.dial_reader.reset()
         self.frame.clear()
         wifi_ssid = self.app.prefs.get('wifi_ssid')
-        updater = self.app.updater
+        updater = self.app.clock_mode.updater
         index_updated = updater.index_updated or 'None'
         index_fetched = (updater.index_fetched and
             updater.index_fetched.isoformat() or 'Not yet')
