@@ -100,6 +100,7 @@ class MenuMode(Mode):
             if index == self.index:
                 self.frame.paste(58, y, self.cursor_label, cv=self.cursor_cv)
             y += 11
+        self.frame.send()
 
     def step(self):
         self.reader.step(self.app.receive)

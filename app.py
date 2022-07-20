@@ -29,9 +29,9 @@ class App:
         self.clock_mode = ClockMode(self, fs, network, button_map)
         self.menu_mode = MenuMode(self, button_map, dial_map)
         self.wifi_ssid_mode = PrefEntryMode(
-            self, 'Wi-Fi network name:', 'wifi_ssid', button_map, dial_map)
+            self, 'Wi-Fi network name', 'wifi_ssid', button_map, dial_map)
         self.wifi_password_mode = PrefEntryMode(
-            self, 'Wi-Fi password:', 'wifi_password', button_map, dial_map)
+            self, 'Wi-Fi password', 'wifi_password', button_map, dial_map)
         self.mode = self.clock_mode
 
         self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
