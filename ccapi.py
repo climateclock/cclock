@@ -1,4 +1,4 @@
-"""Client for the Climate Clock API.  Main entry points: load(), load_url().
+"""Client for the Climate Clock API.  Main entry point is load().
 
 See: https://docs.climateclock.world/climate-clock-docs/climate-clock-api
 """
@@ -7,8 +7,10 @@ import utils
 utils.mem('ccapi1')
 import cctime
 utils.mem('ccapi2')
-import math
+import json
 utils.mem('ccapi3')
+import math
+utils.mem('ccapi4')
 
 
 def try_isoformat_to_datetime(data, key):
@@ -182,19 +184,7 @@ def parse_css_color(color):
 
 
 def load(file):
-    import json
-
     return ClockDefinition().load(json.load(file)["data"])
-
-
-def load_url(url):
-    import requests
-
-    return ClockDefinition().load(requests.get(url).json()["data"])
-
-
-def fetch():
-    return load_url("https://api.climateclock.world/v1/clock")
 
 
 utils.mem('ccapi6')
