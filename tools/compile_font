@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+
+import os
+import subprocess
+import sys
+import tempfile
+
+
+def optimize_bdf(infile, outfile):
+    num_comments = 0
+
+    properties_section = False
+    required_properties = ['FONT_ASCENT', 'FONT_DESCENT', 'CHARSET_REGISTRY', 'CHARSET_ENCODING']
+    present_properties = set()
+
+    char_name = 'unknown'
+
+    for lineno, line in enumerate(infile.readlines()):
+        words = line.split()
+        key = words[0]
+
+        if key == 'COMMENT':
+            num_comments += 1
+            if num_comments > 2:
+                continue
+
+        if key == 'ENDPROPERTIES':
+            properties_section = False
+            for key in required_properties:
+                if key not in present_properties:
+                    raise ValueError(f'{key} property is missing')
+        if properties_section:
+            present_properties.add(key)
+            if key not in required_properties:
+                continue
+        if key == 'STARTPROPERTIES':
+            line = 'STARTPROPERTIES 4\n'
+            properties_section = True
+
+        if key == 'STARTCHAR':
+            char_name = words[1]
+            continue
+        if key == 'ENCODING':
+            try:
+                enc = int(words[1])
+                assert enc > 0
+            except:
+                raise ValueError(f'Invalid ENCODING for {char_name} on line {lineno}')
+            char_enc = '%04x' % enc if enc > 255 else '%02x' % enc
+            outfile.write(f'STARTCHAR {char_enc}\n')
+            char_repr = '\\u%04x %r' % (enc, chr(enc))
+
+        if key == 'DWIDTH':
+            try:
+                dwidth = int(words[1])
+                assert dwidth > 0
+            except:
+                raise ValueError(f'Invalid DWIDTH for {char_name} on line {lineno}')
+        if key == 'BBX':
+            description = f'{char_repr} ({char_name}) on line {lineno}'
+            try:
+                width, height, left, bottom = map(int, words[1:])
+            except:
+                raise ValueError(f'Invalid BBX for {description}')
+            if left < 0:
+                raise ValueError(f'Negative BBX left edge for {description}')
+            if width > dwidth:
+                raise ValueError(f'BBX width {width} exceeds DWIDTH {dwidth} for {description}')
+            if left > dwidth:
+                raise ValueError(f'BBX left edge {left} exceeds DWIDTH {dwidth} for {description}')
+            if left > 1:
+                print(f'Note: BBX left edge {left} exceeds 1 for {description}')
+
+        outfile.write(line)
+
+
+def compile_pcf(bdf_path, pcf_path):
+    try:
+        with open(pcf_path, 'wb') as file:
+            file.write(subprocess.check_output(['bdftopcf', bdf_path]))
+    except FileNotFoundError:
+        print('Could not find the bdftopcf program; please install it.')
+
+
+def main(bdf_path):
+    fd, temp_path = tempfile.mkstemp()
+
+    try:
+        with open(bdf_path) as infile, os.fdopen(fd, 'w') as outfile:
+            optimize_bdf(infile, outfile)
+    except ValueError as e:
+        print(f'Bad BDF file: {e.args[0]}')
+        sys.exit(1)
+
+    base_path = os.path.basename(bdf_path)
+    if base_path.endswith('.bdf'):
+        base_path = base_path[:-4]
+    pcf_path = base_path + '.pcf'
+    compile_pcf(temp_path, pcf_path)
+    print(f'Compiled {bdf_path} to {pcf_path}.')
+
+
+if __name__ == '__main__':
+    args = sys.argv[1:]
+    if len(args) != 1:
+        print(f'Usage: {sys.argv[0]} filename.bdf')
+        sys.exit(1)
+    main(*args)
