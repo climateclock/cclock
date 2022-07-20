@@ -2,21 +2,24 @@ import json
 import utils
 
 
+DEFAULTS = {
+    'wifi_ssid': 'climateclock',
+    'wifi_password': 'climateclock',
+    'api_hostname': 'api.climateclock.world',
+    'api_path': '/v1/clock',
+    'index_hostname': 'zestyping.github.io',
+    'index_path': '/cclock/packs.json'
+}
+
+
 class Prefs:
     def __init__(self, fs):
         self.fs = fs
+        self.prefs = DEFAULTS.copy()
         try:
-            self.prefs = json.load(self.fs.open('/prefs.json'))
+            self.prefs.update(json.load(self.fs.open('/prefs.json')))
         except Exception as e:
             utils.report_error(e, f'Could not read prefs.json')
-            self.prefs = {
-                'wifi_ssid': 'climateclock',
-                'wifi_password': 'climateclock',
-                'api_hostname': 'api.climateclock.world',
-                'api_path': '/v1/clock',
-                'index_hostname': 'zestyping.github.io',
-                'index_path': '/cclock/packs.json'
-            }
             self.save()
         self.get = self.prefs.get
 
