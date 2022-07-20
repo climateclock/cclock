@@ -38,14 +38,23 @@ class EspWifi(adafruit_esp32spi.ESP_SPIcontrol):
         self._ready.deinit()
         self._reset.deinit()
 
+    def safely_get_status(self):
+        try:
+            # NOTE: Reading esp.status is only safe in certain states.
+            return self.status
+        except Exception as e:
+            utils.report_error(e, 'Could not get ESP32 status; resetting')
+            self.reset()
+            return None
+
 
 class EspWifiNetwork(Network):
     def __init__(self, debug=False):
         self.spi = None
         self.esp = None
-        self.socket = None
         self.debug = debug
         self.wifi_started = None
+        self.socket = None
         self.socket_started = None
         self.set_state(State.OFFLINE)
 
@@ -72,6 +81,8 @@ class EspWifiNetwork(Network):
             self.spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
             self.esp = EspWifi(self.spi, esp32_cs, esp32_ready, esp32_reset)
             self.esp._debug = self.debug
+            self.wifi_started = None
+            self.socket = None
 
         elif not self.wifi_started:
             if self.esp.is_ready():
@@ -81,28 +92,19 @@ class EspWifiNetwork(Network):
                 self.wifi_started = cctime.monotonic()
 
         elif self.wifi_started:
-            # NOTE: Reading esp.status is only safe in certain states; it
-            # cause a crash if wifi_set_passphrase hasn't been called yet.
-            try:
-                esp_status = self.esp.status
-            except Exception as e:
-                utils.report_error(e, 'Could not get ESP32 status; resetting')
-                self.esp.reset()
-                self.wifi_started = None
-                return
+            esp_status = self.esp.safely_get_status()
 
             if esp_status == 3:
                 self.set_state(State.ONLINE)
 
-            elif esp_status == 4:
+            if esp_status == 4:
                 print(f'Failed to join Wi-Fi network {repr(ssid)}.')
                 self.wifi_started = None
 
-            elif cctime.monotonic() > self.wifi_started + 15:
+            if not esp_status or cctime.monotonic() > self.wifi_started + 15:
                 print('Could not join Wi-Fi network after 15 seconds; resetting.')
                 self.esp.reset()
                 self.wifi_started = None
-
 
     def connect_step(self, hostname, port=None, ssl=True):
         if self.socket is None:
@@ -116,16 +118,19 @@ class EspWifiNetwork(Network):
                 self.socket_started = cctime.monotonic()
             except Exception as e:
                 utils.report_error(e, 'Failed to open socket')
+                self.disable_step()
 
-        if self.esp.socket_connected(self.socket):
+        elif self.esp.socket_connected(self.socket):
             print('Connected!')
             self.set_state(State.CONNECTED)
 
-        else:
-            if cctime.monotonic() > self.socket_started + 15:
-                print('No connection after 15 seconds; retrying.')
-                self.esp.socket_close(self.socket)
-                self.socket = None
+        elif self.socket_started and cctime.monotonic() > self.socket_started + 15:
+            print('No connection after 15 seconds; retrying.')
+            self.close_step()
+
+        elif self.esp.safely_get_status() != 3:
+            print('Wi-Fi network lost.')
+            self.disable_step()
 
     def send_step(self, data):
         if self.esp.socket_connected(self.socket):
@@ -143,12 +148,21 @@ class EspWifiNetwork(Network):
                 return b''
         else:
             self.set_state(State.ONLINE)
+            return b''
 
     def close_step(self):
         if self.esp and self.socket:
-            self.esp.socket_close(self.socket)
-            self.set_state(State.ONLINE)
+            try:
+                self.esp.socket_close(self.socket)
+                print('Closed socket.')
+            except Exception as e:
+                utils.report_error(e, 'Failed to close socket')
         self.socket = None
+        self.socket_started = None
+        if self.esp and self.esp.safely_get_status() == 3:
+            self.set_state(State.ONLINE)
+        else:
+            self.set_state(State.OFFLINE)
 
     def disable_step(self):
         self.close_step()
@@ -158,4 +172,5 @@ class EspWifiNetwork(Network):
         if self.spi:
             self.spi.deinit()
             self.spi = None
+        print('Disabled Wi-Fi.')
         self.set_state(State.OFFLINE)

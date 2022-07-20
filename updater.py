@@ -63,6 +63,7 @@ class SoftwareUpdater:
                 self.api_file = None
             if not isinstance(e, StopIteration):
                 utils.report_error(e, 'API fetch aborted')
+                self.network.close_step()
                 # Continue with software update anyway
                 self.index_fetcher = HttpFetcher(
                     self.network, self.prefs, self.index_hostname, self.index_path)

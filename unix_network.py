@@ -45,6 +45,7 @@ class UnixNetwork(Network):
 
     def connect_step(self, hostname, port=None, ssl=True):
         port = port or (443 if ssl else 80)
+        print(f'Connecting to', hostname, 'port', port)
         sock = socket.create_connection((hostname, port))
         if ssl:
             context = create_ssl_context()
