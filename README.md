@@ -138,23 +138,79 @@ in a text editor, edit the network's SSID and password, and save the file.
 Eject the `/Volumes/CIRCUITPY` drive from your computer, then press the
 reset button to restart the board.
 
-### Software update (under development)
+### Software update
 
-The functionality to download software update packages over Wi-Fi is
-currently under development.  A software update package is a single file
-(with extension `.pk`) in a custom "pack" format, which is created using
-`tools/pack`.
+An Action Clock will perioridcally try to connect to Wi-Fi and check for
+newer versions of its software.  First, it will fetch an "index file",
+which is a JSON file listing the available software versions.
 
-If you'd like to make your own software update package for the clock to
-download, run `tools/pack` with a directory path as the first argument
-and a package name (a "v" followed by a version number, such as "v17")
-as the second argument; for example:
+The index file is conventionally named `packs.json` and looks like this:
 
-    tools/pack /tmp/folder/ v17 > v17.pk
+    {
+      "name": "Action Clock by climateclock.world",
+      "updated": "2022-07-17T18:51:03Z",
+      "packs": {
+        "v1": {
+          "path": "/cclock/v1.f4a09eb4651480f7a20a2849544f80e2.pk",
+          "hash": "f4a09eb4651480f7a20a2849544f80e2",
+          "published": "2022-07-17T18:49:20Z",
+          "enabled": true
+        },
+        "v2": {
+          "path": "/cclock/v2.e5be85c68ae680dd2b8fe001e4d82798.pk",
+          "hash": "e5be85c68ae680dd2b8fe001e4d82798",
+          "published": "2022-07-18T07:29:37Z",
+          "enabled": true
+        },
+        "v3": {
+          "path": "/cclock/v3.eacbbf89c33d9be378a8c655a160194d.pk",
+          "hash": "eacbbf89c33d9be378a8c655a160194d",
+          "published": "2022-07-18T17:50:55Z",
+          "enabled": true
+        }
+      }
+    }
 
-Then make the resulting `cclock.pk` file available for download at
-a HTTPS URL, put the hostname in the `connect_step()` call, and
-put the hostname and path of the URL in the `PackFetcher()` call.
+Each entry is identified by a version name (always a "v" followed by an
+integer) and refers to a software update file (with extension `.pk`)
+in a custom "pack" format, which is created using `tools/pack`.  Each
+entry also has an `enabled` flag; the Action Clock will always try to
+run the latest enabled version.  Thus, when the `enabled` flag is flipped
+to `false`, it has the effect of retracting a published version and
+causing Action Clocks in the field to downgrade to a previous version.
+
+The steps for publishing a new software update are as follows:
+
+  - Run `tools/pack` with a directory path as the first argument and
+    a version name (a "v" followed by a version number, such as "v17")
+    as the second argument; for example:
+
+        tools/pack /tmp/folder v17
+
+    A file with a name like `v17.d41d8cd98f00b204e9800998ecf8427e.pk'
+    will be created, containing all the files in the specified folder.
+    The string of 32 hex digits is the MD5 hash of the folder contents.
+
+  - Publish the new `.pk` file at an HTTPS URL on the official update
+    server.
+
+  - Add an entry to the index file under the `"packs"` key, whose key
+    is the version name, and whose value is an object containing the
+    keys: `"path"` (the URL path to your pack file), `"hash" (the
+    32-digit hash in the file name), and `"enabled"` (set to `true`).
+
+  - Publish the new index file on the official update server.
+
+In the current system, index files and pack files must reside on the
+same HTTPS server; the index file specifies just the path to a pack file,
+not a complete URL.
+
+The "official update server" has not been designated yet; it is configured
+in `prefs.json` as the `index_hostname` entry.  For development, it defaults
+to `zestyping.github.io`.  If you are working on this feature, you can set
+`index_hostname` to point to your own server by editing `prefs.json` on the
+Action Clock's flash drive.
+
 
 ### Building firmware
 
