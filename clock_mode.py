@@ -17,6 +17,9 @@ class ClockMode(Mode):
         self.updater = SoftwareUpdater(fs, network, app.prefs, self)
         self.deadline = None
         self.lifeline = None
+        self.message_module = ccapi.Newsfeed()
+        self.message_module.type = 'newsfeed'
+        self.message_module.items = [ccapi.NewsfeedItem()]
 
         self.reload_definition()
 
@@ -41,8 +44,9 @@ class ClockMode(Mode):
             with self.fs.open('/cache/clock.json') as api_file:
                 defn = ccapi.load(api_file)
                 self.deadline = defn.module_dict['carbon_deadline_1']
-                self.lifelines = Cycle(
-                    *[m for m in defn.modules if m.flavor == 'lifeline'])
+                modules = [self.message_module]
+                modules += [m for m in defn.modules if m.flavor == 'lifeline']
+                self.lifelines = Cycle(*modules)
                 self.lifeline = self.lifelines.current()
                 display = defn.config.display
                 self.deadline_cv = self.frame.pack(*display.deadline.primary)
@@ -55,6 +59,11 @@ class ClockMode(Mode):
         self.frame.clear()
         sec = self.app.prefs.get('auto_cycling_sec')
         self.next_advance = sec and cctime.monotonic() + sec
+
+        ccui.reset_newsfeed()
+        item = self.message_module.items[0]
+        item.headline = self.app.prefs.get('custom_message')
+        item.source = ''
 
     def step(self):
         if self.next_advance and cctime.monotonic() > self.next_advance:

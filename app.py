@@ -32,6 +32,8 @@ class App:
             self, 'Wi-Fi network name', 'wifi_ssid', button_map, dial_map)
         self.wifi_password_mode = PrefEntryMode(
             self, 'Wi-Fi password', 'wifi_password', button_map, dial_map)
+        self.custom_message_mode = PrefEntryMode(
+            self, 'Custom message', 'custom_message', button_map, dial_map)
         self.mode = self.clock_mode
 
         self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
@@ -66,6 +68,8 @@ class App:
             self.set_mode(self.wifi_ssid_mode)
         if command == 'WIFI_PASSWORD_MODE':
             self.set_mode(self.wifi_password_mode)
+        if command == 'CUSTOM_MESSAGE_MODE':
+            self.set_mode(self.custom_message_mode)
         self.mode.receive(command, arg)
 
     def set_mode(self, mode):

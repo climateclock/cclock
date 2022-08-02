@@ -117,6 +117,10 @@ class NewsfeedItem(SlotRepr):
         self.summary = data.get("summary") or ""
         return self
 
+    def format(self):
+        return (f'{self.headline} ({self.source})'
+            if self.source else self.headline)
+
 
 class Value(Module):
     __slots__ = "initial", "ref_datetime", "growth", "rate", "resolution", "unit_labels"

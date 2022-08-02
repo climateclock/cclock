@@ -115,30 +115,51 @@ def render_value_module(frame, y, module, cv, lang='en', upper=False):
 
 
 DISPLAY_WIDTH = 192
+last_newsfeed_module = None
 newsfeed_x = DISPLAY_WIDTH
 newsfeed_index = 0
 headline_label = None
 headline_width = None
+
+
+def reset_newsfeed():
+    global last_newsfeed_module
+    last_newsfeed_module = None
+
 
 def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
     global newsfeed_x
     global newsfeed_index
     global headline_label
     global headline_width
+    global last_newsfeed_module
+
+    if module != last_newsfeed_module:
+        headline_label = None
+        last_newsfeed_module = module
 
     i = newsfeed_index
     n = len(module.items)
+    item = module.items[i % n]
+
+    if n == 1:
+        if not headline_label:
+            headline_label = frame.new_label(item.format(), 'kairon-16')
+        if headline_label.w <= DISPLAY_WIDTH:
+            # There is only one headline and it fits entirely; do not scroll.
+            frame.paste(0, y, headline_label, cv=cv)
+            return
+        headline_label = None
 
     if not headline_label:
-        item = module.items[i]
-        text = f'{item.headline} ({item.source}) \xb7 '
+        text = item.format() + ' \xb7 '
         headline_width = frame.new_label(text, 'kairon-16').w
 
         text_with_trail = text
         for attempt in range(3):
             i = (i + 1) % n
             item = module.items[i]
-            trail = f'{item.headline} ({item.source}) \xb7 '
+            trail = item.format() + ' \xb7 '
             text_with_trail += trail
             headline_label = frame.new_label(text_with_trail, 'kairon-16')
             if headline_label.w >= headline_width + DISPLAY_WIDTH:

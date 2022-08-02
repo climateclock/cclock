@@ -54,6 +54,7 @@ class MenuMode(Mode):
                 ('60 seconds', None, 'SET_CYCLING', 60, []),
                 ('Back', None, 'BACK', None, [])
             ]),
+            ('Custom message', None, 'CUSTOM_MESSAGE_MODE', None, []),
             ('System info', None, None, None, [
                 (updater.index_name or 'Climate Clock', None, None, None, []),
                 (f'Version', software_version, None, None, []),
