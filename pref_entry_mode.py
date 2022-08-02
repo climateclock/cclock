@@ -10,6 +10,7 @@ ASCII_TEXT_ENTRY_MENU = [
     ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
     ('123', None, UP_ARROW + '1234567890'),
     (',.!?', None, UP_ARROW + ',.;:!?-\'"@#$%^&*+=_~/\\()[]<>{}'),
+    ('\u2423', 'SPACE', ''),
     ('\b', 'BACKSPACE', ''),
     ('\x0b', 'CLEAR', ''),  # we're using Ctrl-K as the clear character
     ('\r', 'ACCEPT', '')
@@ -23,6 +24,7 @@ DISPLAY_TEXT_ENTRY_MENU = [
     ('àáâ', None, UP_ARROW + 'àáâãäåæçèéêëìíîïðµñòóôõöøßùúûüýÿþ'),
     ('+−123', None, UP_ARROW + '+−1234567890²³₂₃₄'),
     ('-\',.!?', None, UP_ARROW + '-\',.;:!?¡¿"‘’“”@#$%^&*=_~/\\()[]<>«»{}'),
+    ('\u2423', 'SPACE', ''),
     ('\b', 'BACKSPACE', ''),
     ('\x0b', 'CLEAR', ''),
     ('\r', 'ACCEPT', '')
@@ -77,32 +79,37 @@ class PrefEntryMode(Mode):
         self.frame.send()
 
     def draw(self):
+        # Rows 0 to 9: pref_title and text being edited
+        # Row 10: underline cursor for text being edited
+        # Rows 11 to 20: group labels
+        # Row 21: underline cursor for selected group (okay to reuse row 21,
+        #     as this cursor never shows at the same time as character list)
+        # Rows 21 to 30: characters in the selected group
+        # Row 31: underline cursor for the selected character
         self.frame.clear()
         label = self.frame.new_label(self.pref_title + ': ', FONT)
         self.frame.paste(0, 0, label, cv=self.cv)
         text_label = self.frame.new_label(self.text, FONT)
         self.frame.paste(label.w, 0, text_label, cv=self.cursor_cv)
-        self.frame.fill(label.w + text_label.w, 9, 5, 1, cv=self.cursor_cv)
+        self.frame.fill(label.w + text_label.w, 10, 5, 1, cv=self.cursor_cv)
         x = 5
         for i, option in enumerate(self.menu):
             title, command, chars = option
             label = self.frame.new_label(title, FONT)
-            if i == self.menu_index:
-                if self.menu_selected:
-                    self.frame.paste(x, 10, label, cv=self.cursor_cv)
+            if self.menu_selected and i == self.menu_index:
+                self.frame.paste(x, 11, label, cv=self.cursor_cv)
 
-                    chars_label = self.frame.new_label(chars, FONT)
-                    self.frame.paste(5, 21, chars_label, cv=self.cv)
+                chars_label = self.frame.new_label(chars, FONT)
+                self.frame.paste(5, 21, chars_label, cv=self.cv)
 
-                    ci = self.char_indexes[self.menu_index]
-                    left = self.frame.new_label(chars[:ci], FONT).w
-                    w = self.frame.new_label(chars[ci], FONT).w
-                    self.frame.fill(5 + left, 31, w - 1, 1, cv=self.cursor_cv)
-                else:
-                    self.frame.paste(x, 10, label, cv=self.cv)
-                    self.frame.fill(x, 20, label.w - 1, 1, cv=self.cursor_cv)
+                ci = self.char_indexes[self.menu_index]
+                left = self.frame.new_label(chars[:ci], FONT).w
+                w = self.frame.new_label(chars[ci], FONT).w
+                self.frame.fill(5 + left, 31, w - 1, 1, cv=self.cursor_cv)
             else:
-                self.frame.paste(x, 10, label, cv=self.cv)
+                self.frame.paste(x, 11, label, cv=self.cv)
+                if i == self.menu_index:
+                    self.frame.fill(x, 21, label.w - 1, 1, cv=self.cursor_cv)
             x += label.w + 4
         self.frame.send()
 
@@ -133,6 +140,8 @@ class PrefEntryMode(Mode):
 
         if command == 'BACK':
             self.menu_selected = False
+        if command == 'SPACE':
+            self.text += ' '
         if command == 'BACKSPACE':
             print('%r' % self.text)
             self.text = self.text[:-1]
