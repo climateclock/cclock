@@ -1,0 +1,14 @@
+#!/usr/bin/env python -i
+
+import os
+import sys
+
+command = sys.argv[0]
+os.chdir(os.path.dirname(command))
+os.chdir('..')
+
+sys.path.append('.')
+sys.path.append('stubs')
+for name in os.listdir('.'):
+    if name.startswith('Adafruit_CircuitPython'):
+        sys.path.append(name)
