@@ -1,9 +1,10 @@
 import cctime
 from ctypes import byref, c_char, c_void_p
+from displayio import Bitmap
+import draw_text
 import frame
 from sdl2 import *
 import time
-from adafruit_display_text import bitmap_label
 
 
 class SdlButton:
@@ -157,13 +158,9 @@ class SdlFrame(frame.Frame):
 
 class LabelFrame(frame.Frame):
     def __init__(self, text, font):
-        label = bitmap_label.Label(font, text=text)
+        self.w = draw_text.measure(text, font)
+        self.h = font.get_bounding_box()[1]
+        bitmap = Bitmap(self.w, self.h, 2)
+        draw_text.draw(text, font, bitmap)
         palette = b'\x00\x00\x00', b'\xff\xff\xff'
-        if label.bitmap:
-            self.w = label.bitmap.width
-            self.h = label.bitmap.height
-            self.pixels = b''.join(palette[p] for p in label.bitmap)
-        else:
-            # label.bitmap can be None if there is no text to render
-            self.w = self.h = 0
-            self.pixels = b''
+        self.pixels = b''.join(palette[p] for p in bitmap)
