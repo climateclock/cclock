@@ -24,7 +24,7 @@ utils.mem('matrix_frame10')
 # conserve memory and avoid MemoryErrors.  Once memory issues are fixed,
 # this should be changged back to 5 to get good colour rendering and better
 # brightness control.
-BIT_DEPTH = 2
+BIT_DEPTH = 3
 MIN_RGB_VALUE = 0x100 >> BIT_DEPTH
 
 
@@ -113,11 +113,10 @@ class MatrixFrame(frame.Frame):
         bitmaptools.fill_region(self.bitmap, x, y, x + w, y + h, cv)
 
     def paste(self, x, y, source, sx=None, sy=None, w=None, h=None, cv=None):
-        if source.w == 0 or source.h == 0:
-            return
-        x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
-        self.bitmap.blit(
-            x, y, source.bitmap, x1=sx, y1=sy, x2=sx+w, y2=sy+h, write_value=cv)
+        sr = (sx or 0) + (w or source.w)
+        sb = (sy or 0) + (h or source.h)
+        self.bitmap.freeblit(
+            x, y, source.bitmap, sx, sy, sr, sb, write_value=cv)
 
     def new_label(self, text, font_id):
         font = self.fontlib.get(font_id)
