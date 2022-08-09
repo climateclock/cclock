@@ -73,9 +73,9 @@ class ClockMode(Mode):
             self.lifeline = self.lifelines.next()
             self.frame.clear()
 
+        self.frame.clear()
         if not self.deadline:
-            label = self.frame.new_label('Loading...', 'kairon-10')
-            self.frame.paste(1, 0, label, cv=self.frame.pack(255, 255, 255))
+            self.frame.print(1, 0, 'Loading...', 'kairon-10', self.deadline_cv)
         if self.deadline:
             ccui.render_deadline_module(
                 self.frame, 0, self.deadline,

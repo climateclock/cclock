@@ -35,8 +35,9 @@ def to_bigint(f, scale):
     return scaled // (1<<22)
 
 
-def format_value(module, now):
-    elapsed_ms = int((now - module.ref_datetime).total_seconds() * 1000)
+def format_value(module, now_time_ms):
+    ref_time_ms = int(cctime.to_time(module.ref_datetime) * 1000)
+    elapsed_ms = now_time_ms - ref_time_ms
     if module.growth == 'linear':
         scale = module.scale * 10000000  # 22 bits = about 7 decimal places
         decimals = module.decimals + 7
@@ -99,7 +100,7 @@ def render_value_module(frame, y, module, cv, lang='en', upper=False):
             text = text.upper()
         text_label = frame.new_label(text, 'kairon-10')
     else:
-        value_text = format_value(module, cctime.get_datetime())
+        value_text = format_value(module, cctime.get_time_ms())
         for label_text in module.labels:
             label_w = frame.measure(label_text, 'kairon-10')
             for unit_text in module.unit_labels:

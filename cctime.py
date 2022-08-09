@@ -15,6 +15,7 @@ except:
 EPOCH = datetime.datetime(1970, 1, 1)
 fake_time = None
 time_source = None
+ref_time_ms = None
 
 
 def monotonic():
@@ -55,10 +56,18 @@ def monotonic():
 
 
 def get_time():
-    """Returns the current time in seconds since 1970-01-01 00:00:00 UTC."""
+    """Returns the current time in seconds since 1970-01-01 00:00 UTC."""
     if fake_time:
         return fake_time
     return time.time()
+
+
+def get_time_ms():
+    """Returns the current time in milliseconds since 1970-01-01 00:00 UTC."""
+    global ref_time_ms
+    if not ref_time_ms:
+        ref_time_ms = int(time.time() * 1000) - int(time.monotonic() * 1000)
+    return ref_time_ms + int(time.monotonic() * 1000)
 
 
 def get_datetime():
@@ -69,6 +78,10 @@ def get_datetime():
         # In CircuitPython, time.gmtime and datetime.utcfromtimestamp are
         # missing; there are no time zones and all datetimes are in UTC.
         return datetime.datetime.fromtimestamp(get_time())
+
+
+def to_time(dt):
+    return (dt - EPOCH).total_seconds()
 
 
 def set_fake_time(t):
