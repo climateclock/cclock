@@ -19,3 +19,4 @@ def draw(text, font, bitmap, x=0, y=0, cv=1):
                 dest_value=cv
             )
         x += glyph.shift_x
+    return x

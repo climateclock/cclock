@@ -163,6 +163,7 @@ class SdlFrame(frame.Frame):
         font = self.fontlib.get(font_id)
         label = LabelFrame(text, font)
         self.paste(x, y, label, cv=cv)
+        return x + label.w
 
     def new_label(self, text, font_id):
         font = self.fontlib.get(font_id)

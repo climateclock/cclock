@@ -69,7 +69,8 @@ class PrefEntryMode(Mode):
         label = self.frame.new_label(self.pref_title, FONT)
         self.frame.paste(1, 0, label, cv=self.cv)
         self.text = self.app.prefs.get(self.pref_name)
-        self.draw()
+        self.draw_field()
+        self.draw_menu()
 
     def step(self):
         self.reader.step(self.app.receive)
@@ -78,40 +79,44 @@ class PrefEntryMode(Mode):
         # in order for sdl_frame to detect events; fix this leaky abstraction.
         self.frame.send()
 
-    def draw(self):
-        # Rows 0 to 9: pref_title and text being edited
-        # Row 10: underline cursor for text being edited
-        # Rows 11 to 20: group labels
-        # Row 21: underline cursor for selected group (okay to reuse row 21,
-        #     as this cursor never shows at the same time as character list)
-        # Rows 21 to 30: characters in the selected group
-        # Row 31: underline cursor for the selected character
-        self.frame.clear()
-        label = self.frame.new_label(self.pref_title + ': ', FONT)
-        self.frame.paste(0, 0, label, cv=self.cv)
-        text_label = self.frame.new_label(self.text, FONT)
-        self.frame.paste(label.w, 0, text_label, cv=self.cursor_cv)
-        self.frame.fill(label.w + text_label.w, 10, 5, 1, cv=self.cursor_cv)
+    # Rows 0 to 9: pref_title and text being edited
+    # Row 10: underline cursor for text being edited
+    # Rows 11 to 20: group labels
+    # Row 21: underline cursor for selected group (okay to reuse row 21,
+    #     as this cursor never shows at the same time as character list)
+    # Rows 21 to 30: characters in the selected group
+    # Row 31: underline cursor for the selected character
+
+    def draw_field(self):
+        self.frame.clear(0, 0, None, 11)
+        x = self.frame.print(0, 0, self.pref_title + ': ', FONT, cv=self.cv)
+        x = self.frame.print(x, 0, self.text, FONT, cv=self.cursor_cv)
+        self.frame.fill(x, 10, 5, 1, cv=self.cursor_cv)
+
+    def draw_menu(self):
+        self.frame.clear(0, 11)
         x = 5
         for i, option in enumerate(self.menu):
-            title, command, chars = option
-            label = self.frame.new_label(title, FONT)
+            label, command, chars = option
+
             if self.menu_selected and i == self.menu_index:
-                self.frame.paste(x, 11, label, cv=self.cursor_cv)
-
-                chars_label = self.frame.new_label(chars, FONT)
-                self.frame.paste(5, 21, chars_label, cv=self.cv)
-
-                ci = self.char_indexes[self.menu_index]
-                left = self.frame.new_label(chars[:ci], FONT).w
-                w = self.frame.new_label(chars[ci], FONT).w
-                self.frame.fill(5 + left, 31, w - 1, 1, cv=self.cursor_cv)
+                x = self.frame.print(x, 11, label, FONT, cv=self.cursor_cv)
+                self.frame.print(5, 21, chars, FONT, cv=self.cv)
+                self.draw_char_cursor()
             else:
-                self.frame.paste(x, 11, label, cv=self.cv)
+                nx = self.frame.print(x, 11, label, FONT, cv=self.cv)
                 if i == self.menu_index:
-                    self.frame.fill(x, 21, label.w - 1, 1, cv=self.cursor_cv)
-            x += label.w + 4
-        self.frame.send()
+                    self.frame.fill(x, 21, nx - x - 1, 1, cv=self.cursor_cv)
+                x = nx
+            x += 4
+
+    def draw_char_cursor(self):
+        label, command, chars = self.menu[self.menu_index]
+        ci = self.char_indexes[self.menu_index]
+        left = self.frame.measure(chars[:ci], FONT)
+        w = self.frame.measure(chars[ci], FONT)
+        self.frame.clear(0, 31)
+        self.frame.fill(5 + left, 31, w - 1, 1, cv=self.cursor_cv)
 
     def receive(self, command, arg=None):
         if self.menu_selected:
@@ -127,38 +132,44 @@ class PrefEntryMode(Mode):
             move_cursor(1)
 
         if command == 'PROCEED':
-            title, command, chars = self.menu[self.menu_index]
+            label, command, chars = self.menu[self.menu_index]
             if self.menu_selected:
                 ci = self.char_indexes[self.menu_index]
                 if ci == 0:
                     self.menu_selected = False
                 else:
                     self.text += chars[ci]
+                    self.draw_field()
             elif not command:
                 self.menu_selected = True
+            self.draw_menu()
             # Fall through to handle the new value of command
 
         if command == 'BACK':
             self.menu_selected = False
+            self.draw_menu()
         if command == 'SPACE':
             self.text += ' '
+            self.draw_field()
         if command == 'BACKSPACE':
             print('%r' % self.text)
             self.text = self.text[:-1]
             print('-> %r' % self.text)
+            self.draw_field()
         if command == 'CLEAR':
             self.text = ''
+            self.draw_field()
 
         if command == 'ACCEPT':
             self.app.prefs.set(self.pref_name, self.text)
             self.app.receive('MENU_MODE')
-        else:
-            self.draw()
 
     def move_menu_cursor(self, delta):
         self.menu_index = max(0, min(len(self.menu) - 1, self.menu_index + delta))
+        self.draw_menu()
 
     def move_char_cursor(self, delta):
-        title, command, chars = self.menu[self.menu_index]
+        label, command, chars = self.menu[self.menu_index]
         ci = self.char_indexes[self.menu_index]
         self.char_indexes[self.menu_index] = max(0, min(len(chars) - 1, ci + delta))
+        self.draw_char_cursor()

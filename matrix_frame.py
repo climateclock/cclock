@@ -119,7 +119,7 @@ class MatrixFrame(frame.Frame):
 
     def print(self, x, y, text, font_id, cv=1):
         font = self.fontlib.get(font_id)
-        draw_text.draw(text, font, self.bitmap, x, y, cv)
+        return draw_text.draw(text, font, self.bitmap, x, y, cv)
 
     def new_label(self, text, font_id):
         font = self.fontlib.get(font_id)
