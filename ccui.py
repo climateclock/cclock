@@ -100,18 +100,18 @@ def render_value_module(frame, y, module, cv, lang='en', upper=False):
         text_label = frame.new_label(text, 'kairon-10')
     else:
         value_text = format_value(module, cctime.get_datetime())
-        for text in module.labels:
-            text_label = frame.new_label(text, 'kairon-10')
+        for label_text in module.labels:
+            label_w = frame.measure(label_text, 'kairon-10')
             for unit_text in module.unit_labels:
-                value_label = frame.new_label(value_text + unit_text, 'kairon-16')
-                if value_label.w + text_label.w < frame.w:
+                value_w = frame.measure(value_text + unit_text, 'kairon-16')
+                if value_w + label_w < frame.w:
                     break
-            if value_label.w + text_label.w < frame.w:
+            if value_w + label_w < frame.w:
                 break
     x = 1
-    frame.paste(x, y, value_label, cv=cv)
-    x += value_label.w
-    frame.paste(x + 4, y + 5, text_label, cv=cv)
+    frame.print(x, y, value_text + unit_text, 'kairon-16', cv=cv)
+    x += value_w
+    frame.print(x + 4, y + 5, label_text, 'kairon-10', cv=cv)
 
 
 DISPLAY_WIDTH = 192

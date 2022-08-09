@@ -155,7 +155,7 @@ class SdlFrame(frame.Frame):
                     i += 3
                     si += 3
 
-    def measure(self, text, font):
+    def measure(self, text, font_id):
         font = self.fontlib.get(font_id)
         return draw_text.measure(text, font)
 

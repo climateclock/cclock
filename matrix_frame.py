@@ -113,7 +113,7 @@ class MatrixFrame(frame.Frame):
     def paste(self, x, y, source, sx=0, sy=0, w=None, h=None, bg=None, cv=None):
         self.bitmap.freeblit(x, y, source.bitmap, sx, sy, w, h, bg, cv)
 
-    def measure(self, text, font):
+    def measure(self, text, font_id):
         font = self.fontlib.get(font_id)
         return draw_text.measure(text, font)
 
