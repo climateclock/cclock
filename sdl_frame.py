@@ -135,21 +135,34 @@ class SdlFrame(frame.Frame):
                 start = self.get_offset(x, y)
                 self.pixels[start:start + w * 3] = row
 
-    def paste(self, x, y, source, sx=None, sy=None, w=None, h=None, cv=None):
+    def paste(self, x, y, source, sx=0, sy=0, w=None, h=None, bg=None, cv=None):
         if source.w == 0 or source.h == 0:
             return
         x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
         for dy in range(h):
             i = self.get_offset(x, y + dy)
             si = (sx + (sy + dy) * source.w) * 3
-            if cv is None:
+            if bg is None and cv is None:
                 self.pixels[i:i + w * 3] = source.pixels[si:si + w * 3]
             else:
                 for dx in range(w):
-                    is_zero = source.pixels[si:si + 3] == b'\x00\x00\x00'
-                    self.pixels[i:i + 3] = b'\x00\x00\x00' if is_zero else cv
+                    value = source.pixels[si:si + 3]
+                    if value == bg:
+                        continue
+                    if cv is not None and value != b'\x00\x00\x00':
+                        value = cv
+                    self.pixels[i:i + 3] = value
                     i += 3
                     si += 3
+
+    def measure(self, text, font):
+        font = self.fontlib.get(font_id)
+        return draw_text.measure(text, font)
+
+    def print(self, x, y, text, font_id, cv=1):
+        font = self.fontlib.get(font_id)
+        label = LabelFrame(text, font)
+        self.paste(x, y, label, cv=cv)
 
     def new_label(self, text, font_id):
         font = self.fontlib.get(font_id)

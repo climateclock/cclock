@@ -71,7 +71,7 @@ def render_deadline_module(frame, y, module, cv, lang='en', upper=False):
         text = f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}'
     if upper:
         text = text.upper()
-    frame.paste(1, y, frame.new_label(text, 'kairon-16'), cv=cv)
+    frame.print(1, y, text, 'kairon-16', cv=cv)
 
 
 def render_lifeline_module(frame, y, module, cv, lang='en', upper=False):
@@ -153,7 +153,7 @@ def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
 
     if not headline_label:
         text = item.format() + ' \xb7 '
-        headline_width = frame.new_label(text, 'kairon-16').w
+        headline_width = frame.measure(text, 'kairon-16')
 
         text_with_trail = text
         for attempt in range(3):

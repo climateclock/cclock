@@ -97,11 +97,11 @@ class EspWifiNetwork(Network):
             if esp_status == 3:
                 self.set_state(State.ONLINE)
 
-            if esp_status == 4:
+            elif esp_status == 4:
                 print(f'Failed to join Wi-Fi network {repr(ssid)}.')
                 self.wifi_started = None
 
-            if not esp_status or cctime.monotonic() > self.wifi_started + 15:
+            elif not esp_status or cctime.monotonic() > self.wifi_started + 15:
                 print('Could not join Wi-Fi network after 15 seconds; resetting.')
                 self.esp.reset()
                 self.wifi_started = None

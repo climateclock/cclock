@@ -3,22 +3,21 @@ import utils
 utils.mem('matrix_frame1')
 from adafruit_display_text import bitmap_label
 utils.mem('matrix_frame2')
-import bitmaptools
-utils.mem('matrix_frame3')
 import board
-utils.mem('matrix_frame4')
+utils.mem('matrix_frame3')
 import cctime
-utils.mem('matrix_frame5')
+utils.mem('matrix_frame4')
 import displayio
-utils.mem('matrix_frame6')
+utils.mem('matrix_frame5')
+import draw_text
 import frame
-utils.mem('matrix_frame7')
+utils.mem('matrix_frame6')
 import framebufferio
-utils.mem('matrix_frame8')
+utils.mem('matrix_frame7')
 import rgbmatrix
-utils.mem('matrix_frame9')
+utils.mem('matrix_frame8')
 from ulab import numpy as np
-utils.mem('matrix_frame10')
+utils.mem('matrix_frame9')
 
 # TODO: BIT_DEPTH should normally be set to 5.  It is set to 2 in order to
 # conserve memory and avoid MemoryErrors.  Once memory issues are fixed,
@@ -109,14 +108,18 @@ class MatrixFrame(frame.Frame):
         self.bitmap[x, y] = cv
 
     def fill(self, x, y, w, h, cv):
-        x, y, w, h = frame.clamp_rect(x, y, w, h, self.w, self.h)
-        bitmaptools.fill_region(self.bitmap, x, y, x + w, y + h, cv)
+        self.bitmap.fill(cv, x, y, x + w, y + h)
 
-    def paste(self, x, y, source, sx=None, sy=None, w=None, h=None, cv=None):
-        sr = (sx or 0) + (w or source.w)
-        sb = (sy or 0) + (h or source.h)
-        self.bitmap.freeblit(
-            x, y, source.bitmap, sx, sy, sr, sb, write_value=cv)
+    def paste(self, x, y, source, sx=0, sy=0, w=None, h=None, bg=None, cv=None):
+        self.bitmap.freeblit(x, y, source.bitmap, sx, sy, w, h, bg, cv)
+
+    def measure(self, text, font):
+        font = self.fontlib.get(font_id)
+        return draw_text.measure(text, font)
+
+    def print(self, x, y, text, font_id, cv=1):
+        font = self.fontlib.get(font_id)
+        draw_text.draw(text, font, self.bitmap, x, y, cv)
 
     def new_label(self, text, font_id):
         font = self.fontlib.get(font_id)

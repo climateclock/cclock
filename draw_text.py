@@ -16,6 +16,6 @@ def draw(text, font, bitmap, x=0, y=0, cv=1):
                 x + glyph.dx,
                 y + baseline - glyph.height - glyph.dy,
                 glyph.bitmap,
-                write_value=cv
+                dest_value=cv
             )
         x += glyph.shift_x

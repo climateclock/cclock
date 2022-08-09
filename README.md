@@ -232,7 +232,9 @@ The MatrixPortal firmware is already included in this repo as
 For the record, though, here's how you build the firmware:
 
     git clone https://github.com/zestyping/circuitpython
-    cd circuitpython/ports/atmel-samd
+    cd circuitpython
+    git checkout cclock
+    cd ports/atmel-samd
     make -j8 V=1 BOARD=matrixportal_m4_cclock
 
 ### Implementation notes

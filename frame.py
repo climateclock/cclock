@@ -45,17 +45,20 @@ class Frame:
 
     def fill(self, x, y, w, h, cv):
         """Sets the colour of all pixels in the rectangle from (x, y) to
-        (x + w - 1), (y + h - 1), inclusive, to cv.  Both w and h must be
-        positive.  No exception is raised when any part of the rectangle is
-        out of range; pixels in range are filled and the rest are ignored."""
+        (x + w - 1), (y + h - 1), inclusive, to cv.  No exception is raised
+        when any part of the rectangle is out of range; pixels in range are
+        filled and the rest are ignored."""
         raise NotImplementedError
 
-    def paste(self, x, y, source, sx=None, sy=None, w=None, h=None):
+    def paste(self, x, y, source, sx=0, sy=0, w=None, h=None, bg=None, cv=None):
         """Copies a rectangle of w x h pixels from a source frame into this
         frame, with the top-left corner at (sx, sy) in the source corresponding
         to the top-left corner at (x, y) in this frame.  No exception is raised
         when some pixels are out of range; all the pixels that would land in
-        this frame are pasted and the rest are ignored."""
+        this frame are pasted and the rest are ignored.  If bg is specified,
+        pixels with this value in the source are considered background pixels
+        and are not written to this frame.  If cv is specified, all nonzero
+        pixel values in the source are written as cv in this frame."""
         raise NotImplementedError
 
     def new_label(self, text, font_id):
