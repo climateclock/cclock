@@ -9,7 +9,7 @@ DEFAULTS = {
     'api_path': '/v1/clock',
     'index_hostname': 'zestyping.github.io',
     'index_path': '/cclock/packs.json',
-    'custom_message': 'Time left before 1.5\u2009\u00b0C rise',
+    'custom_message': 'Time left before 1.5\u00b0C rise',
 }
 
 

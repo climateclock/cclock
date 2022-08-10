@@ -23,7 +23,7 @@ utils.mem('matrix_frame9')
 # conserve memory and avoid MemoryErrors.  Once memory issues are fixed,
 # this should be changged back to 5 to get good colour rendering and better
 # brightness control.
-BIT_DEPTH = 3
+BIT_DEPTH = 2
 MIN_RGB_VALUE = 0x100 >> BIT_DEPTH
 
 
