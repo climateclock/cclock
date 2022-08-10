@@ -4,13 +4,14 @@ from mode import Mode
 from network import State
 import sys
 
+FONT = 'kairon-10'
+
 
 class MenuMode(Mode):
     def __init__(self, app, button_map, dial_map):
         super().__init__(app)
         self.cv = self.frame.pack(0x80, 0x80, 0x80)
         self.cursor_cv = self.frame.pack(0x00, 0xff, 0x00)
-        self.cursor_label = self.frame.new_label('>', 'kairon-10')
 
         self.reader = ButtonReader({
             button_map['UP']: {
@@ -90,8 +91,7 @@ class MenuMode(Mode):
         self.frame.clear()
         if value and not children:
             title += ': ' + value
-        label = self.frame.new_label(title, 'kairon-10')
-        self.frame.paste(1 - self.offset, 0, label, cv=self.cv)
+        self.frame.print(1 - self.offset, 0, title, FONT, cv=self.cv)
         y = 0
         for index in range(self.top, self.top + 3):
             if index >= len(children):
@@ -99,10 +99,9 @@ class MenuMode(Mode):
             child_title, child_value, _, _, _ = children[index]
             if child_value:
                 child_title += ': ' + child_value
-            label = self.frame.new_label(child_title, 'kairon-10')
-            self.frame.paste(64, y, label, cv=self.cv)
+            self.frame.print(64, y, child_title, FONT, cv=self.cv)
             if index == self.index:
-                self.frame.paste(58, y, self.cursor_label, cv=self.cursor_cv)
+                self.frame.print(58, y, '>', FONT, cv=self.cursor_cv)
             y += 11
         self.frame.send()
 

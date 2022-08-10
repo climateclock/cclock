@@ -18,5 +18,5 @@ def draw(text, font, bitmap, x=0, y=0, cv=1):
                 glyph.bitmap,
                 dest_value=cv
             )
-        x += glyph.shift_x
+            x += glyph.shift_x
     return x

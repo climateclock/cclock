@@ -66,8 +66,7 @@ class PrefEntryMode(Mode):
         self.dial_reader.reset()
         self.frame.clear()
 
-        label = self.frame.new_label(self.pref_title, FONT)
-        self.frame.paste(1, 0, label, cv=self.cv)
+        self.frame.print(1, 0, self.pref_title, FONT, cv=self.cv)
         self.text = self.app.prefs.get(self.pref_name)
         self.draw_field()
         self.draw_menu()

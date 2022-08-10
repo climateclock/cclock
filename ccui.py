@@ -86,7 +86,6 @@ def render_value_module(frame, y, module, cv, lang='en', upper=False):
     if TEST_MODE:
         value_text = '43.5'
         unit_text = 'M km²'
-        value_label = frame.new_label(value_text + unit_text, 'kairon-16')
         # Just testing various languages for now.
         texts = {
           'de': 'geshütztes indigenes Land',
@@ -95,10 +94,9 @@ def render_value_module(frame, y, module, cv, lang='en', upper=False):
           'fr': 'terre indigène protégée',
           'is': 'friðlýst frumbyggjaland'
         }
-        text = texts.get(lang, texts['en'])
+        label_text = texts.get(lang, texts['en'])
         if upper:
-            text = text.upper()
-        text_label = frame.new_label(text, 'kairon-10')
+            label_text = label_text.upper()
     else:
         value_text = format_value(module, cctime.get_time_ms())
         for label_text in module.labels:
@@ -110,8 +108,7 @@ def render_value_module(frame, y, module, cv, lang='en', upper=False):
             if value_w + label_w < frame.w:
                 break
     x = 1
-    frame.print(x, y, value_text + unit_text, 'kairon-16', cv=cv)
-    x += value_w
+    x = frame.print(x, y, value_text + unit_text, 'kairon-16', cv=cv)
     frame.print(x + 4, y + 5, label_text, 'kairon-10', cv=cv)
 
 
