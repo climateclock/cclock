@@ -1,6 +1,7 @@
 from ccinput import ButtonReader, DialReader, Press
 import cctime
 from mode import Mode
+from network import State
 import sys
 
 
@@ -30,6 +31,7 @@ class MenuMode(Mode):
         self.reader.reset()
         self.dial_reader.reset()
         self.frame.clear()
+        status = 'Offline' if self.app.network.state == State.OFFLINE else 'Online'
         wifi_ssid = self.app.prefs.get('wifi_ssid')
         updater = self.app.clock_mode.updater
         index_updated = updater.index_updated or 'None'
@@ -44,6 +46,7 @@ class MenuMode(Mode):
         # Each node has the form (title, value, command, arg, children).
         self.tree = ('Settings', None, None, None, [
             ('Wi-Fi setup', None, None, None, [
+                ('Status: ' + status, None, None, None, []),
                 ('Network', wifi_ssid, 'WIFI_SSID_MODE', None, []),
                 ('Password', None, 'WIFI_PASSWORD_MODE', None, []),
                 ('Back', None, 'BACK', None, [])
