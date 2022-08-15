@@ -98,7 +98,7 @@ def render_value_module(frame, y, module, cv, lang='en', upper=False):
         if upper:
             label_text = label_text.upper()
     else:
-        value_text = format_value(module, cctime.get_time_ms())
+        value_text = format_value(module, cctime.get_millis())
         for label_text in module.labels:
             label_w = frame.measure(label_text, 'kairon-10')
             for unit_text in module.unit_labels:

@@ -60,6 +60,9 @@ class ClockMode(Mode):
         sec = self.app.prefs.get('auto_cycling_sec')
         self.next_advance = sec and cctime.monotonic() + sec
 
+        self.updates_paused_until_millis = cctime.try_isoformat_to_millis(
+            self.app.prefs, 'updates_paused_until')
+
         ccui.reset_newsfeed()
         item = self.message_module.items[0]
         item.headline = self.app.prefs.get('custom_message')
@@ -87,7 +90,9 @@ class ClockMode(Mode):
                 self.lifeline_cv, self.app.lang, self.force_caps)
         self.reader.step(self.app.receive)
         self.frame.send()
-        self.updater.step()
+
+        if cctime.get_millis() > (self.updates_paused_until_millis or 0):
+            self.updater.step()
 
     def receive(self, command, arg=None):
         if command == 'TOGGLE_CAPS':

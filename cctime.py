@@ -62,7 +62,7 @@ def get_time():
     return time.time()
 
 
-def get_time_ms():
+def get_millis():
     """Returns the current time in milliseconds since 1970-01-01 00:00 UTC."""
     global ref_time_ms
     if not ref_time_ms:
@@ -72,16 +72,24 @@ def get_time_ms():
 
 def get_datetime():
     """Returns the current time as a datetime in UTC."""
+    return millis_to_datetime(get_millis())
+
+
+def millis_to_datetime(ms):
     if hasattr(time, 'gmtime'):
-        return datetime.datetime.utcfromtimestamp(get_time())
+        return datetime.datetime.utcfromtimestamp(ms//1000)
     else:
         # In CircuitPython, time.gmtime and datetime.utcfromtimestamp are
         # missing; there are no time zones and all datetimes are in UTC.
-        return datetime.datetime.fromtimestamp(get_time())
+        return datetime.datetime.fromtimestamp(ms//1000)
 
 
 def to_time(dt):
     return (dt - EPOCH).total_seconds()
+
+
+def to_millis(dt):
+    return int((dt - EPOCH).total_seconds() * 1000)
 
 
 def set_fake_time(t):
@@ -118,6 +126,14 @@ def isoformat_to_datetime(s):
 def isoformat_to_date(s):
     """Parses a string in the form yyyy-mm-ddThh:mm:ss into a date."""
     return isoformat_to_datetime(s).date()
+
+
+def try_isoformat_to_millis(data, key):
+    value = data.get(key)
+    try:
+        return to_millis(isoformat_to_datetime(value))
+    except Exception as e:
+        print('Invalid timestamp for %r: %r' % (key, value))
 
 
 utils.mem('cctime5')

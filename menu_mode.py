@@ -43,6 +43,11 @@ class MenuMode(Mode):
         esp_hardware_address = self.app.network.get_hardware_address()
         sec = self.app.prefs.get('auto_cycling_sec')
         auto_cycling = sec and f'{sec} seconds' or 'Off'
+        upu_millis = cctime.try_isoformat_to_millis(
+            self.app.prefs, 'updates_paused_until')
+        upu_min = upu_millis and int((upu_millis - cctime.get_millis())/1000/60)
+        auto_update = (upu_millis and
+            f'Paused {upu_min//60} h {upu_min % 60} min' or 'On')
 
         # Each node has the form (title, value, command, arg, children).
         self.tree = ('Settings', None, None, None, [
@@ -56,6 +61,12 @@ class MenuMode(Mode):
                 ('Off', None, 'SET_CYCLING', 0, []),
                 ('15 seconds', None, 'SET_CYCLING', 15, []),
                 ('60 seconds', None, 'SET_CYCLING', 60, []),
+                ('Back', None, 'BACK', None, [])
+            ]),
+            (f'Auto update', auto_update, None, None, [
+                ('On', None, 'SET_UPDATES_PAUSED', None, []),
+                ('Pause for 4 hours', None, 'SET_UPDATES_PAUSED', 4*3600*1000, []),
+                ('Pause for 24 hours', None, 'SET_UPDATES_PAUSED', 24*3600*1000, []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Custom message', None, 'CUSTOM_MESSAGE_MODE', None, []),
@@ -122,6 +133,14 @@ class MenuMode(Mode):
             self.move_cursor(1)
         if command == 'SET_CYCLING':
             self.app.prefs.set('auto_cycling_sec', arg)
+            self.app.receive('MENU_MODE')  # reformat the menu strings
+        if command == 'SET_UPDATES_PAUSED':
+            if arg:
+                deadline_ms = cctime.get_millis() + arg
+                self.app.prefs.set('updates_paused_until',
+                    cctime.millis_to_datetime(deadline_ms).isoformat())
+            else:
+                self.app.prefs.set('updates_paused_until', None)
             self.app.receive('MENU_MODE')  # reformat the menu strings
         if command == 'PROCEED':
             title, value, command, arg, children = self.node
