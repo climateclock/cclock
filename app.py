@@ -19,12 +19,12 @@ from utils import Cycle
 
 
 class App:
-    def __init__(self, fs, network, frame, button_map, dial_map):
+    def __init__(self, prefs, network, frame, fs, button_map, dial_map):
         utils.mem('App.__init__')
+        self.prefs = prefs
         self.network = network
         self.frame = frame
         self.frame_counter = FrameCounter()
-        self.prefs = Prefs(fs)
 
         self.clock_mode = ClockMode(self, fs, network, button_map, dial_map)
         self.menu_mode = MenuMode(self, button_map, dial_map)
@@ -105,9 +105,9 @@ class FrameCounter:
 utils.mem('app12')
 
 
-def run(fs, network, frame, button_map, dial_map):
+def run(prefs, network, frame, fs, button_map, dial_map):
     cctime.enable_rtc()
-    app = App(fs, network, frame, button_map, dial_map)
+    app = App(prefs, network, frame, fs, button_map, dial_map)
     app.start()
     while True:
         app.step()

@@ -5,14 +5,18 @@ utils.mem('start1')
 from fs import FileSystem
 fs = FileSystem('/')
 utils.mem('start2')
+from prefs import Prefs
+prefs = Prefs(fs)
+utils.mem('start3')
 from fontlib import FontLibrary
 fontlib = FontLibrary(fs, [sys.path[0], '/'])
-utils.mem('start3')
+utils.mem('start4')
 
 import matrix_frame
-utils.mem('start4')
-frame = matrix_frame.new_display_frame(192, 32, 16, fontlib)
 utils.mem('start5')
+frame = matrix_frame.new_display_frame(
+    192, 32, 16, fontlib, prefs.get('rgb_pins'), prefs.get('addr_pins'))
+utils.mem('start6')
 
 import board, gpio
 utils.mem('start5')
@@ -31,9 +35,10 @@ utils.mem('start8')
 from app import run
 utils.mem('start9')
 run(
-    fs,
+    prefs,
     network,
     frame,
+    fs,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )

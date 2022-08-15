@@ -27,17 +27,12 @@ BIT_DEPTH = 2
 MIN_RGB_VALUE = 0x100 >> BIT_DEPTH
 
 
-def new_display_frame(w, h, depth, fontlib):
+def new_display_frame(w, h, depth, fontlib, rgb_pins, addr_pins):
     displayio.release_displays()
     return MatrixFrame(w, h, depth, fontlib, rgbmatrix.RGBMatrix(
         width=192, height=32, bit_depth=BIT_DEPTH,
-        rgb_pins=[
-            board.MTX_R1, board.MTX_G1, board.MTX_B1,
-            board.MTX_R2, board.MTX_G2, board.MTX_B2
-        ],
-        addr_pins=[
-            board.MTX_ADDRA, board.MTX_ADDRB, board.MTX_ADDRC, board.MTX_ADDRD
-        ],
+        rgb_pins=[getattr(board, name) for name in rgb_pins.split()],
+        addr_pins=[getattr(board, name) for name in addr_pins.split()],
         clock_pin=board.MTX_CLK,
         latch_pin=board.MTX_LAT,
         output_enable_pin=board.MTX_OE
