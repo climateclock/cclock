@@ -5,9 +5,10 @@ from unpacker import Unpacker
 import utils
 
 
-INITIAL_DELAY = 2  # wait this long after booting up
-INTERVAL_AFTER_FAILURE = 15  # try again after 15 seconds
-INTERVAL_AFTER_SUCCESS = 30 * 60  # recheck for updates every half hour
+# All durations are measured in milliseconds.
+INITIAL_DELAY = 2000  # wait this long after booting up
+INTERVAL_AFTER_FAILURE = 15000  # try again after 15 seconds
+INTERVAL_AFTER_SUCCESS = 30 * 60 * 1000  # recheck for updates every half hour
 
 
 class SoftwareUpdater:
@@ -39,11 +40,11 @@ class SoftwareUpdater:
         self.network.close_step()
         self.index_fetcher = None
         self.unpacker = None
-        self.next_check = cctime.monotonic() + delay
+        self.next_check = cctime.get_millis() + delay
         self.step = self.wait_step
 
     def wait_step(self):
-        if cctime.monotonic() > self.next_check:
+        if cctime.get_millis() > self.next_check:
             self.api_fetcher = HttpFetcher(
                 self.network, self.prefs, self.api_hostname, self.api_path)
             self.step = self.api_fetch_step

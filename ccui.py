@@ -12,7 +12,7 @@ TEST_MODE = False
 
 
 def calc_deadline(module, now):
-    deadline = module.ref_datetime
+    deadline = cctime.millis_to_datetime(module.ref_millis)
     next_anniversary = deadline.replace(year=now.year)
     if next_anniversary < now:
         next_anniversary = deadline.replace(year=now.year + 1)
@@ -35,16 +35,15 @@ def to_bigint(f, scale):
     return scaled // (1<<22)
 
 
-def format_value(module, now_time_ms):
-    ref_time_ms = int(cctime.to_time(module.ref_datetime) * 1000)
-    elapsed_ms = now_time_ms - ref_time_ms
+def format_value(module, now_millis):
+    elapsed = now_millis - module.ref_millis
     if module.growth == 'linear':
         scale = module.scale * 10000000  # 22 bits = about 7 decimal places
         decimals = module.decimals + 7
 
         scaled_initial = to_bigint(module.initial, scale)
         scaled_rate = to_bigint(module.rate, scale)
-        scaled_value = scaled_initial + scaled_rate * elapsed_ms // 1000
+        scaled_value = scaled_initial + scaled_rate * elapsed // 1000
         str_value = str(scaled_value)
         if len(str_value) > decimals:
             whole_part = str_value[:-decimals]

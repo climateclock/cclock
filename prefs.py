@@ -10,6 +10,7 @@ DEFAULTS = {
     'index_hostname': 'zestyping.github.io',
     'index_path': '/cclock/packs.json',
     'custom_message': 'Time left before 1.5\u00b0C rise',
+    'auto_cycling': None,
     'updates_paused_until': None
 }
 

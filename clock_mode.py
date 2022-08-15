@@ -57,8 +57,8 @@ class ClockMode(Mode):
     def start(self):
         self.reader.reset()
         self.frame.clear()
-        sec = self.app.prefs.get('auto_cycling_sec')
-        self.next_advance = sec and cctime.monotonic() + sec
+        auto_cycling = self.app.prefs.get('auto_cycling')
+        self.next_advance = auto_cycling and cctime.get_millis() + auto_cycling
 
         self.updates_paused_until_millis = cctime.try_isoformat_to_millis(
             self.app.prefs, 'updates_paused_until')
@@ -69,10 +69,12 @@ class ClockMode(Mode):
         item.source = ''
 
     def step(self):
-        if self.next_advance and cctime.monotonic() > self.next_advance:
-            sec = self.app.prefs.get('auto_cycling_sec')
-            if sec:
-                self.next_advance += sec
+        if self.next_advance and cctime.get_millis() > self.next_advance:
+            auto_cycling = self.app.prefs.get('auto_cycling')
+            if auto_cycling:
+                self.next_advance += auto_cycling
+            else:
+                self.next_advance = None
             self.lifeline = self.lifelines.next()
             self.frame.clear()
 

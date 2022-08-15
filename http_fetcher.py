@@ -2,9 +2,9 @@ import cctime
 from network import State
 from utils import to_bytes
 
-# If the remote server has stopped sending data for this many seconds, assume
-# the HTTP response is finished.
-SILENCE_TIMEOUT = 10
+# If the remote server has stopped sending data for this many milliseconds,
+# assume the HTTP response is finished.
+SILENCE_TIMEOUT = 10000
 
 # To limit memory use, we read this many bytes from the network at a time.
 PACKET_LENGTH = 1500 - 20 - 20  # 1500 - IP header (20) - TCP header (20)
@@ -24,7 +24,7 @@ class HttpFetcher:
         self.read = self.connect_read
 
     def check_silence_timeout(self, is_silent):
-        now = cctime.monotonic()
+        now = cctime.get_millis()
         if is_silent:
             if self.silence_started:
                 silence = int(now - self.silence_started)

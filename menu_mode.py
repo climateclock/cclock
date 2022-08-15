@@ -41,8 +41,8 @@ class MenuMode(Mode):
         software_version = sys.path[0]
         esp_firmware_version = self.app.network.get_firmware_version()
         esp_hardware_address = self.app.network.get_hardware_address()
-        sec = self.app.prefs.get('auto_cycling_sec')
-        auto_cycling = sec and f'{sec} seconds' or 'Off'
+        cycling_millis = self.app.prefs.get('auto_cycling')
+        auto_cycling = cycling_millis and f'{cycling_millis//1000} seconds' or 'Off'
         upu_millis = cctime.try_isoformat_to_millis(
             self.app.prefs, 'updates_paused_until')
         upu_min = upu_millis and int((upu_millis - cctime.get_millis())/1000/60)
@@ -59,8 +59,8 @@ class MenuMode(Mode):
             ]),
             (f'Auto cycling', auto_cycling, None, None, [
                 ('Off', None, 'SET_CYCLING', 0, []),
-                ('15 seconds', None, 'SET_CYCLING', 15, []),
-                ('60 seconds', None, 'SET_CYCLING', 60, []),
+                ('15 seconds', None, 'SET_CYCLING', 15000, []),
+                ('60 seconds', None, 'SET_CYCLING', 60000, []),
                 ('Back', None, 'BACK', None, [])
             ]),
             (f'Auto update', auto_update, None, None, [
@@ -132,13 +132,13 @@ class MenuMode(Mode):
         if command == 'NEXT_OPTION':
             self.move_cursor(1)
         if command == 'SET_CYCLING':
-            self.app.prefs.set('auto_cycling_sec', arg)
+            self.app.prefs.set('auto_cycling', arg)
             self.app.receive('MENU_MODE')  # reformat the menu strings
         if command == 'SET_UPDATES_PAUSED':
             if arg:
-                deadline_ms = cctime.get_millis() + arg
+                deadline = cctime.get_millis() + arg
                 self.app.prefs.set('updates_paused_until',
-                    cctime.millis_to_datetime(deadline_ms).isoformat())
+                    cctime.millis_to_datetime(deadline).isoformat())
             else:
                 self.app.prefs.set('updates_paused_until', None)
             self.app.receive('MENU_MODE')  # reformat the menu strings

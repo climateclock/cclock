@@ -13,13 +13,6 @@ import math
 utils.mem('ccapi4')
 
 
-def try_isoformat_to_datetime(data, key):
-    try:
-        return cctime.isoformat_to_datetime(data.get(key))
-    except Exception as e:
-        utils.report_error(e, f'Invalid timestamp in field "{key}"')
-
-
 def sorted_longest_first(labels):
     return sorted(labels, key=lambda label: -len(label))
 
@@ -75,8 +68,8 @@ class Module(SlotRepr):
         self.type = data.get("type")
         self.flavor = data.get("flavor")
         self.description = data.get("description") or ""
-        self.update_time = data.get(
-            "update_time", cctime.get_time() + data.get("update_interval_seconds", 3600)
+        self.update_time = data.get("update_time",
+            cctime.get_millis() + data.get("update_interval_seconds", 3600)*1000
         )
         # Sort labels in order from longest to shortest
         self.labels = sorted_longest_first(data.get("labels") or [])
@@ -89,7 +82,7 @@ class Timer(Module):
 
     def load(self, data):
         Module.load(self, data)
-        self.ref_datetime = try_isoformat_to_datetime(data, "timestamp")
+        self.ref_millis = cctime.try_isoformat_to_millis(data, "timestamp")
         return self
 
 
@@ -100,16 +93,16 @@ class Newsfeed(Module):
         Module.load(self, data)
         self.items = list(reversed(sorted(
             [NewsfeedItem().load(item) for item in data.get("newsfeed", [])],
-            key=lambda item: item.pub_datetime,
+            key=lambda item: item.pub_millis,
         )))
         return self
 
 
 class NewsfeedItem(SlotRepr):
-    __slots__ = "pub_datetime", "headline", "headline_original", "source", "link", "summary"
+    __slots__ = "pub_millis", "headline", "headline_original", "source", "link", "summary"
 
     def load(self, data):
-        self.pub_datetime = try_isoformat_to_datetime(data, "date")
+        self.pub_millis = cctime.try_isoformat_to_millis(data, "date")
         self.headline = data.get("headline") or ""
         self.headline_original = data.get("headline_original") or ""
         self.source = data.get("source") or ""
@@ -128,7 +121,7 @@ class Value(Module):
     def load(self, data):
         Module.load(self, data)
         self.initial = data.get("initial") or 0
-        self.ref_datetime = try_isoformat_to_datetime(data, "timestamp")
+        self.ref_millis = cctime.try_isoformat_to_millis(data, "timestamp")
         self.growth = data.get("growth") or "linear"
         self.rate = data.get("rate") or 0
         self.resolution = data.get("resolution") or 1

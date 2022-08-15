@@ -13,16 +13,9 @@ except:
     utils.mem('cctime4')
 
 EPOCH = datetime.datetime(1970, 1, 1)
-fake_time = None
+fake_millis = None
+ref_millis = None
 time_source = None
-ref_time_ms = None
-
-
-def monotonic():
-    """Returns a monotonically increasing floating-point number of seconds."""
-    if fake_time:
-        return fake_time
-    return time.monotonic()
 
 
 def enable_rtc():
@@ -48,26 +41,14 @@ def set_rtc(y, l, d, h, m, s):
         time_source.datetime = time.struct_time((y, l, d, h, m, s, 0, -1, -1))
 
 
-def monotonic():
-    """Returns a monotonically increasing floating-point number of seconds."""
-    if fake_time:
-        return fake_time
-    return time.monotonic()
-
-
-def get_time():
-    """Returns the current time in seconds since 1970-01-01 00:00 UTC."""
-    if fake_time:
-        return fake_time
-    return time.time()
-
-
 def get_millis():
     """Returns the current time in milliseconds since 1970-01-01 00:00 UTC."""
-    global ref_time_ms
-    if not ref_time_ms:
-        ref_time_ms = int(time.time() * 1000) - int(time.monotonic() * 1000)
-    return ref_time_ms + int(time.monotonic() * 1000)
+    if fake_millis:
+        return fake_millis
+    global ref_millis
+    if not ref_millis:
+        ref_millis = int(time.time() * 1000) - int(time.monotonic() * 1000)
+    return ref_millis + int(time.monotonic() * 1000)
 
 
 def get_datetime():
@@ -84,38 +65,32 @@ def millis_to_datetime(ms):
         return datetime.datetime.fromtimestamp(ms//1000)
 
 
-def to_time(dt):
-    return (dt - EPOCH).total_seconds()
-
-
-def to_millis(dt):
+def datetime_to_millis(dt):
     return int((dt - EPOCH).total_seconds() * 1000)
 
 
-def set_fake_time(t):
-    """Sets the time for testing.  To use the real time, set_fake_time(None)."""
-    global fake_time
-    fake_time = t
+def set_fake_millis(ms):
+    """Sets the time for testing.  To use the real time, set_fake_millis(None)."""
+    global fake_millis
+    fake_millis = ms
 
 
-def sleep(t):
+def sleep_millis(ms):
     """Advances the time by the given amount, sleeping if necessary."""
-    if fake_time:
-        set_fake_time(fake_time + t)
+    if fake_millis:
+        set_fake_millis(fake_millis + ms)
     else:
-        time.sleep(t)
+        time.sleep(ms/1000)
 
 
-def wait_until(t):
+def wait_until_millis(ms):
     """Advances the time to the given time or later, sleeping if necessary."""
-    if fake_time:
-        set_fake_time(t)
-        return t
+    if fake_millis:
+        set_fake_millis(ms)
     else:
-        now = get_time()
-        if t > now:
-            time.sleep(t - now)
-        return now
+        now = get_millis()
+        if ms > now:
+            time.sleep(ms - now)
 
 
 def isoformat_to_datetime(s):
@@ -123,15 +98,10 @@ def isoformat_to_datetime(s):
     return datetime.datetime.fromisoformat(s[:19])  # ignore time zone offset
 
 
-def isoformat_to_date(s):
-    """Parses a string in the form yyyy-mm-ddThh:mm:ss into a date."""
-    return isoformat_to_datetime(s).date()
-
-
 def try_isoformat_to_millis(data, key):
     value = data.get(key)
     try:
-        return to_millis(isoformat_to_datetime(value))
+        return datetime_to_millis(isoformat_to_datetime(value))
     except Exception as e:
         print('Invalid timestamp for %r: %r' % (key, value))
 
@@ -142,11 +112,13 @@ utils.mem('cctime5')
 class FrameTimer:
     def __init__(self, fps):
         self.next = 0
-        self.interval = 1/fps
+        self.interval = int(1000/fps)
 
     def wait(self):
         """Waits until the next frame display time."""
-        self.next = wait_until(self.next) + self.interval
+        next = self.next + self.interval
+        wait_until_millis(self.next)
+        self.next = next
 
 
 utils.mem('cctime6')

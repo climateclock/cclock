@@ -20,15 +20,15 @@ class EspWifi(adafruit_esp32spi.ESP_SPIcontrol):
             self._gpio0.value = True  # not bootload mode
         self._cs.value = True
         self._reset.value = False
-        cctime.sleep(0.01)  # reset
+        cctime.sleep_millis(10)  # reset
         self._reset.value = True
         if self._gpio0:
             self._gpio0.direction = Direction.INPUT
-        self.reset_started = cctime.monotonic()
+        self.reset_started = cctime.get_millis()
 
     def is_ready(self):
         if self.reset_started:
-            if cctime.monotonic() < self.reset_started + 0.75:
+            if cctime.get_millis() < self.reset_started + 750:
                 return False
             self.reset_started = None
         return not self._ready.value
@@ -89,7 +89,7 @@ class EspWifiNetwork(Network):
                 print(f'Joining Wi-Fi network {repr(ssid)}.')
                 # NOTE: ssid and password must be bytes, not str!
                 self.esp.wifi_set_passphrase(to_bytes(ssid), to_bytes(password))
-                self.wifi_started = cctime.monotonic()
+                self.wifi_started = cctime.get_millis()
 
         elif self.wifi_started:
             esp_status = self.esp.safely_get_status()
@@ -101,7 +101,7 @@ class EspWifiNetwork(Network):
                 print(f'Failed to join Wi-Fi network {repr(ssid)}.')
                 self.wifi_started = None
 
-            elif not esp_status or cctime.monotonic() > self.wifi_started + 15:
+            elif not esp_status or cctime.get_millis() > self.wifi_started + 15000:
                 print('Could not join Wi-Fi network after 15 seconds; resetting.')
                 self.esp.reset()
                 self.wifi_started = None
@@ -115,7 +115,7 @@ class EspWifiNetwork(Network):
             try:
                 # NOTE: hostname must be str, not bytes!
                 self.esp.socket_open(self.socket, hostname, port, mode)
-                self.socket_started = cctime.monotonic()
+                self.socket_started = cctime.get_millis()
             except Exception as e:
                 utils.report_error(e, 'Failed to open socket')
                 self.disable_step()
@@ -124,7 +124,7 @@ class EspWifiNetwork(Network):
             print('Connected!')
             self.set_state(State.CONNECTED)
 
-        elif self.socket_started and cctime.monotonic() > self.socket_started + 15:
+        elif self.socket_started and cctime.get_millis() > self.socket_started + 15000:
             print('No connection after 15 seconds; retrying.')
             self.close_step()
 

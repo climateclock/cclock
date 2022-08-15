@@ -81,25 +81,25 @@ class App:
 
 class FrameCounter:
     def __init__(self):
-        self.start = cctime.monotonic()
+        self.start = cctime.get_millis()
         self.frame_count = 0
         self.fps = 0
         self.last_tick = self.start
-        self.next_report = self.start + 10
+        self.next_report = self.start + 10000
 
     def tick(self):
         print('.', end='')
-        now = cctime.monotonic()
-        duration = now - self.last_tick
-        if duration > 0:
-            last_fps = 1.0/duration
+        now = cctime.get_millis()
+        elapsed = now - self.last_tick
+        if elapsed > 0:
+            last_fps = 1000.0/elapsed
             self.fps = 0.9 * self.fps + 0.1 * last_fps
         self.frame_count += 1
         self.last_tick = now
 
         if now > self.next_report:
             print(f'uptime: {now - self.start:.1f} s / {self.fps:.1f} fps')
-            self.next_report += 10
+            self.next_report += 10000
 
 
 utils.mem('app12')

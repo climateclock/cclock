@@ -10,11 +10,12 @@ class Press:
     DOUBLE = 'DOUBLE'
     REPEAT = 'REPEAT'
 
-    DEBOUNCE_PERIOD = 0.01
-    CHORD_PERIOD = 0.1
-    MULTICLICK_INTERVAL = 0.15
-    REPEAT_INTERVAL = 0.15
-    LONG_PERIOD = 0.5
+    # All durations are in milliseconds.
+    DEBOUNCE_PERIOD = 10
+    CHORD_PERIOD = 100
+    MULTICLICK_INTERVAL = 150
+    REPEAT_INTERVAL = 150
+    LONG_PERIOD = 500
 
 
 class ButtonReader:
@@ -43,7 +44,7 @@ class ButtonReader:
 
         if hasattr(sys.stdout, 'flush'):
             sys.stdout.flush()
-        now = cctime.monotonic()
+        now = cctime.get_millis()
         for button, commands in self.map.items():
             if self.debounce_started[button]:
                 if now < self.debounce_started[button] + Press.DEBOUNCE_PERIOD:
