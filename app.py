@@ -26,7 +26,7 @@ class App:
         self.frame_counter = FrameCounter()
         self.prefs = Prefs(fs)
 
-        self.clock_mode = ClockMode(self, fs, network, button_map)
+        self.clock_mode = ClockMode(self, fs, network, button_map, dial_map)
         self.menu_mode = MenuMode(self, button_map, dial_map)
         self.wifi_ssid_mode = PrefEntryMode(
             self, 'Wi-Fi network name', 'wifi_ssid', button_map, dial_map)

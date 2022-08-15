@@ -1,5 +1,5 @@
 import ccapi
-from ccinput import ButtonReader, Press
+from ccinput import ButtonReader, DialReader, Press
 import cctime
 import ccui
 from mode import Mode
@@ -9,7 +9,7 @@ from utils import Cycle
 
 
 class ClockMode(Mode):
-    def __init__(self, app, fs, network, button_map):
+    def __init__(self, app, fs, network, button_map, dial_map):
         super().__init__(app)
         self.fs = fs
         self.network = network
@@ -37,6 +37,7 @@ class ClockMode(Mode):
                 Press.SHORT: 'MENU_MODE',
             }
         })
+        self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
         self.force_caps = False
 
     def reload_definition(self):
@@ -56,6 +57,7 @@ class ClockMode(Mode):
 
     def start(self):
         self.reader.reset()
+        self.dial_reader.reset()
         self.frame.clear()
         auto_cycling = self.app.prefs.get('auto_cycling')
         self.next_advance = auto_cycling and cctime.get_millis() + auto_cycling
@@ -91,6 +93,7 @@ class ClockMode(Mode):
                 self.frame, 16, self.lifeline,
                 self.lifeline_cv, self.app.lang, self.force_caps)
         self.reader.step(self.app.receive)
+        self.dial_reader.step(self.app.receive)
         self.frame.send()
 
         if cctime.get_millis() > (self.updates_paused_until_millis or 0):
@@ -102,4 +105,11 @@ class ClockMode(Mode):
             self.frame.clear()
         if command == 'NEXT_LIFELINE':
             self.lifeline = self.lifelines.next()
+            self.frame.clear()
+        if command == 'SELECTOR':
+            delta, value = arg
+            if delta > 0:
+                self.lifeline = self.lifelines.next()
+            else:
+                self.lifeline = self.lifelines.previous()
             self.frame.clear()

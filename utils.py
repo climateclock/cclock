@@ -41,3 +41,7 @@ class Cycle:
     def next(self):
         self.index = (self.index + 1) % len(self.items)
         return self.items[self.index]
+
+    def previous(self):
+        self.index = (self.index + len(self.items) - 1) % len(self.items)
+        return self.items[self.index]
