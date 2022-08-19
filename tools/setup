@@ -8,6 +8,22 @@ if ! [ -d env ]; then
 fi
 pip3 install -U -r requirements.txt
 
+if ! [ -x env/bin/mpy-cross ]; then
+    if [ $(uname) = Linux ]; then
+        curl -o env/bin/mpy-cross https://adafruit-circuit-python.s3.amazonaws.com/bin/mpy-cross/mpy-cross.static-amd64-linux-7.3.1
+        chmod 755 env/bin/mpy-cross
+    elif [ $(uname) = Darwin ]; then
+        curl -o env/bin/mpy-cross https://adafruit-circuit-python.s3.amazonaws.com/bin/mpy-cross/mpy-cross-macos-bigsur-7.3.1-arm64
+        chmod 755 env/bin/mpy-cross
+    else
+        echo "Please find and install 'mpy-cross' for your platform."
+        echo "Be sure to get a version compatible with CircuitPython 7.3.1."
+        echo
+        echo "https://adafruit-circuit-python.s3.amazonaws.com/index.html?prefix=bin/mpy-cross/"
+        exit 1
+    fi
+fi
+
 bundle_name=adafruit-circuitpython-bundle-7.x-mpy-20220315
 if ! [ -d cache/lib ]; then
     mkdir cache

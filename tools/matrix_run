@@ -47,7 +47,11 @@ fi
 echo 'Installing program modules...'
 rm -rf $target/v999
 mkdir $target/v999
-cp *.py $target/v999
+for file in *.py; do
+  name=${file%.py}
+  mpy-cross "$name.py"
+  mv "$name.mpy" $target/v999
+done
 
 if [ -z "$quick" ]; then
     echo 'Installing fonts...'
@@ -57,6 +61,10 @@ fi
 echo 'Installing startup logic...'
 rm -f $target/code.py
 cp boot.py gpio.py main.py $target
+
+echo 'Installing initial copy of clock.json...'
+mkdir $target/cache
+curl -s -o $target/cache/clock.json https://api.climateclock.world/v1/clock
 
 touch $target/v999/@VALID
 touch $target/v999/@ENABLED

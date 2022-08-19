@@ -51,13 +51,22 @@ echo 'Wiping the flash disk...'
 rm -rf $target/*
 
 echo 'Installing program modules...'
-cp *.py $target/
+for file in *.py; do
+  if [ $file = boot.py ] || [ $file = main.py ]; then
+    cp $file $target
+  else
+    name=${file%.py}
+    mpy-cross "$name.py"
+    mv "$name.mpy" $target/
+  fi
+done
 
 echo 'Installing fonts...'
 cp *.pcf $target/
 
-echo 'Installing startup logic...'
-cp boot.py gpio.py main.py $target
+echo 'Installing initial copy of clock.json...'
+mkdir $target/cache
+curl -s -o $target/cache/clock.json https://api.climateclock.world/v1/clock
 
 mkdir $target/v0
 touch $target/v0/@VALID
