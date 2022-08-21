@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+def scan_imports(module):
+    filename = module + '.py'
+    imports = set()
+    if os.path.isfile(filename):
+        for line in open(filename).readlines():
+            words = line.replace(',', ' ').split()
+            if words:
+                if words[0] == 'import':
+                    for word in words[1:]:
+                        if word == 'as':
+                            break
+                        imports.add(word)
+                if words[0] == 'from':
+                    imports.add(words[1])
+    return sorted(imports)
+
+
+def find_imports(module, deps={}):
+    deps[module] = scan_imports(module)
+    for child in deps[module]:
+        if child not in deps:
+            find_imports(child, deps)
+
+
+def find_leaves(deps):
+    for module, children in deps.items():
+        if not children:
+            return module
+
+
+def sorted_imports(module):
+    """Returns the dependencies of the given module, topologically sorted
+    so that each module's imports come before the module itself."""
+    imports = []
+    deps = {}
+    find_imports(module, deps)
+    while deps:
+        leaves = [module for module in deps if not deps[module]]
+        imports += sorted(leaves)
+        for leaf in leaves:
+            del deps[leaf]
+            for children in deps.values():
+                if leaf in children:
+                    children.remove(leaf)
+    return imports
+
+
+if __name__ == '__main__':
+    for arg in sys.argv[1:]:
+        print(' '.join(sorted_imports(arg)))

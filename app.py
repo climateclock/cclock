@@ -1,26 +1,16 @@
-import utils
-
-utils.mem('app1')
 import ccapi
-utils.mem('app2')
 import cctime
-utils.mem('app3')
 from ccinput import DialReader
-utils.mem('app4')
 from clock_mode import ClockMode
-utils.mem('app5')
+import gc
 from menu_mode import MenuMode
-utils.mem('app6')
 from pref_entry_mode import PrefEntryMode
-utils.mem('app7')
 from prefs import Prefs
-utils.mem('app8')
 from utils import Cycle
 
 
 class App:
     def __init__(self, prefs, network, frame, fs, button_map, dial_map):
-        utils.mem('App.__init__')
         self.prefs = prefs
         self.network = network
         self.frame = frame
@@ -40,15 +30,15 @@ class App:
         self.lang = self.langs.current()
         self.brightness_reader = DialReader(
             'BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
-        utils.mem('App.__init__ done')
 
     def start(self):
         self.frame.set_brightness(self.brightness_reader.value)
         self.mode.start()
 
     def step(self):
+        gc.collect()
+        print(gc.mem_free())
         self.frame_counter.tick()
-        utils.mem('step')
         self.brightness_reader.step(self.receive)
         self.mode.step()
 
@@ -100,9 +90,6 @@ class FrameCounter:
         if now > self.next_report:
             print(f'uptime: {now - self.start:.1f} s / {self.fps:.1f} fps')
             self.next_report += 10000
-
-
-utils.mem('app12')
 
 
 def run(prefs, network, frame, fs, button_map, dial_map):

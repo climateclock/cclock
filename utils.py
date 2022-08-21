@@ -3,11 +3,32 @@ import gc
 def mem(*args):
     pass
 
+
 if hasattr(gc, 'mem_free'):
     def mem(label):
         gc.collect()
         print(label, gc.mem_free())
+        return
+        free = gc.mem_free()
+        contig = find_contig()
+        gc.collect()
+        print(label, 'free:', free, gc.mem_free(), 'contig:', contig)
 
+    def find_contig():
+        hi = 40000
+        lo = 0
+        while hi > lo + 1:
+            md = (hi + lo)//2
+            i = 0
+            del i
+            try:
+                gc.collect()
+                i = [0] * md
+            except MemoryError:
+                hi = md - 1
+            else:
+                lo = md
+        return lo*4
 
 def to_bytes(arg):
     if isinstance(arg, bytes):

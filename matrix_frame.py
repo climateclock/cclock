@@ -1,21 +1,12 @@
-import utils
-
-utils.mem('matrix_frame1')
 from adafruit_display_text import bitmap_label
-utils.mem('matrix_frame2')
 import board
-utils.mem('matrix_frame3')
 import cctime
-utils.mem('matrix_frame4')
 import displayio
-utils.mem('matrix_frame5')
 import draw_text
 import frame
-utils.mem('matrix_frame6')
 import framebufferio
-utils.mem('matrix_frame7')
 import rgbmatrix
-utils.mem('matrix_frame8')
+import utils
 
 # TODO: BIT_DEPTH should normally be set to 5.  It is set to 2 in order to
 # conserve memory and avoid MemoryErrors.  Once memory issues are fixed,

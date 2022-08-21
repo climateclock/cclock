@@ -1,16 +1,11 @@
 """Time-handling functions that work in both Python and CircuitPython."""
 
-import utils
-
-utils.mem('cctime1')
-import time
-utils.mem('cctime2')
 try:
-    import datetime
-    utils.mem('cctime3')
-except:
     import adafruit_datetime as datetime
-    utils.mem('cctime4')
+except:
+    datetime = __import__('datetime')
+import time
+import utils
 
 EPOCH = datetime.datetime(1970, 1, 1)
 fake_millis = None
@@ -106,9 +101,6 @@ def try_isoformat_to_millis(data, key):
         print('Invalid timestamp for %r: %r' % (key, value))
 
 
-utils.mem('cctime5')
-
-
 class FrameTimer:
     def __init__(self, fps):
         self.next = 0
@@ -119,6 +111,3 @@ class FrameTimer:
         next = self.next + self.interval
         wait_until_millis(self.next)
         self.next = next
-
-
-utils.mem('cctime6')

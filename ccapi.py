@@ -3,21 +3,8 @@
 See: https://docs.climateclock.world/climate-clock-docs/climate-clock-api
 """
 
-import utils
-utils.mem('ccapi1')
 import cctime
-utils.mem('ccapi2')
 import json
-utils.mem('ccapi3')
-import math
-utils.mem('ccapi4')
-
-
-def sorted_longest_first(labels):
-    return sorted(labels, key=lambda label: -len(label))
-
-
-utils.mem('ccapi4')
 
 
 class SlotRepr:
@@ -144,7 +131,8 @@ class Media(Module):
     pass  # TBD
 
 
-utils.mem('ccapi5')
+def sorted_longest_first(labels):
+    return sorted(labels, key=lambda label: -len(label))
 
 
 class ClockDefinition(SlotRepr):
@@ -182,6 +170,3 @@ def parse_css_color(color):
 
 def load(file):
     return ClockDefinition().load(json.load(file)["data"])
-
-
-utils.mem('ccapi6')

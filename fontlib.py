@@ -1,10 +1,5 @@
-import utils
-
-utils.mem('fontlib1')
 from adafruit_bitmap_font import pcf
-utils.mem('fontlib2')
 import displayio
-utils.mem('fontlib3')
 
 
 class FontLibrary:

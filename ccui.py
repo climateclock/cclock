@@ -3,9 +3,9 @@
 import cctime
 import math
 try:
-    import datetime
-except:
     import adafruit_datetime as datetime
+except:
+    datetime = __import__('datetime')
 
 
 TEST_MODE = False

@@ -51,15 +51,38 @@ echo 'Wiping the flash disk...'
 rm -rf $target/*
 
 echo 'Installing program modules...'
+rm -f *.mpy
 for file in *.py; do
   if [ $file = boot.py ] || [ $file = main.py ]; then
     cp $file $target
   else
     name=${file%.py}
     mpy-cross "$name.py"
-    mv "$name.mpy" $target/
+    cp "$name.mpy" $target/
   fi
 done
+
+echo 'Scanning for imports...'
+cat <<EOF > /tmp/imports.py
+import time
+time.sleep(2)
+import gc
+gc.collect()
+print('before', gc.mem_free())
+before = after = 0
+EOF
+for module in $(tools/sort_imports start); do
+    echo "gc.collect(); before = gc.mem_free(); import $module; after = gc.mem_free(); print('$module:', before - after)" >> /tmp/imports.py
+done
+cat <<EOF >> /tmp/imports.py
+gc.collect()
+print('after', gc.mem_free())
+EOF
+cat /tmp/imports.py start.py > /tmp/start.py
+mpy-cross /tmp/start.py
+cp /tmp/start.mpy $target/
+
+rm -f *.mpy # /tmp/imports.py /tmp/start.py /tmp/start.mpy
 
 echo 'Installing fonts...'
 cp *.pcf $target/

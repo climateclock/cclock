@@ -1,7 +1,7 @@
 try:
-    from hashlib import md5
-except:
     from adafruit_hashlib import md5
+except:
+    md5 = __import__('hashlib').md5
 from utils import to_str
 
 
