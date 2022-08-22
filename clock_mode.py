@@ -5,23 +5,28 @@ import ccui
 from mode import Mode
 from updater import SoftwareUpdater
 import utils
-from utils import Cycle
+from utils import Cycle, mem
 
 
 class ClockMode(Mode):
     def __init__(self, app, fs, network, button_map, dial_map):
+        mem('pre-ClockMode.__init__')
         super().__init__(app)
         self.fs = fs
         self.network = network
 
         self.updater = SoftwareUpdater(fs, network, app.prefs, self)
+        mem('SoftwareUpdater')
         self.deadline = None
         self.lifeline = None
         self.message_module = ccapi.Newsfeed()
+        mem('Newsfeed')
         self.message_module.type = 'newsfeed'
         self.message_module.items = [ccapi.NewsfeedItem()]
+        mem('NewsfeedItems')
 
         self.reload_definition()
+        mem('reload_definition')
 
         self.reader = ButtonReader({
             button_map['UP']: {
@@ -37,7 +42,9 @@ class ClockMode(Mode):
                 Press.SHORT: 'MENU_MODE',
             }
         })
+        mem('ButtonReader')
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
+        mem('DialReader')
         self.force_caps = False
 
     def reload_definition(self):

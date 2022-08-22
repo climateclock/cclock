@@ -6,30 +6,37 @@ import gc
 from menu_mode import MenuMode
 from pref_entry_mode import PrefEntryMode
 from prefs import Prefs
-from utils import Cycle
+from utils import Cycle, mem
 
 
 class App:
     def __init__(self, prefs, network, frame, fs, button_map, dial_map):
+        mem('pre-App.__init__')
         self.prefs = prefs
         self.network = network
         self.frame = frame
         self.frame_counter = FrameCounter()
 
         self.clock_mode = ClockMode(self, fs, network, button_map, dial_map)
+        mem('ClockMode')
         self.menu_mode = MenuMode(self, button_map, dial_map)
+        mem('MenuMode')
         self.wifi_ssid_mode = PrefEntryMode(
             self, 'Wi-Fi network name', 'wifi_ssid', button_map, dial_map)
+        mem('PrefEntryMode')
         self.wifi_password_mode = PrefEntryMode(
             self, 'Wi-Fi password', 'wifi_password', button_map, dial_map)
+        mem('PrefEntryMode')
         self.custom_message_mode = PrefEntryMode(
             self, 'Custom message', 'custom_message', button_map, dial_map)
+        mem('PrefEntryMode')
         self.mode = self.clock_mode
 
         self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
         self.lang = self.langs.current()
         self.brightness_reader = DialReader(
             'BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
+        mem('App.__init__')
 
     def start(self):
         self.frame.set_brightness(self.brightness_reader.value)

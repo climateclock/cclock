@@ -67,16 +67,17 @@ cat <<EOF > /tmp/imports.py
 import time
 time.sleep(2)
 import gc
+import micropython
 gc.collect()
-print('before', gc.mem_free())
+print(f'pre-imports,{gc.mem_free()}')
 before = after = 0
 EOF
 for module in $(tools/sort_imports start); do
-    echo "gc.collect(); before = gc.mem_free(); import $module; after = gc.mem_free(); print('$module:', before - after)" >> /tmp/imports.py
+  echo "gc.collect(); before = gc.mem_free(); import $module; after = gc.mem_free(); print(f'$module,{before - after}'); micropython.mem_info(1)" >> /tmp/imports.py
 done
 cat <<EOF >> /tmp/imports.py
 gc.collect()
-print('after', gc.mem_free())
+print(f'post-imports,{gc.mem_free()}')
 EOF
 cat /tmp/imports.py start.py > /tmp/start.py
 mpy-cross /tmp/start.py

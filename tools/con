@@ -10,7 +10,7 @@ while true; do
     sleep 0.4
   done
   device=/dev/tty.usb*
-  screen $device 115200
+  screen -L $device 115200
   if ! [ -c $device ]; then
     echo -n "$device vanished; waiting for it to reappear.."
   else
