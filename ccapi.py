@@ -4,161 +4,153 @@ See: https://docs.climateclock.world/climate-clock-docs/climate-clock-api
 """
 
 import cctime
+import gc
 import json
+from collections import namedtuple
 
 
-class SlotRepr:
-    def __repr__(self):
-        cls, slots = self.__class__, []
-        while cls:
-            slots[:0] = getattr(cls, '__slots__', [])
-            cls = cls.__bases__ and cls.__bases__[0]
-        return "%s(%s)" % (
-            self.__class__.__name__,
-            ", ".join(f"{key}={repr(getattr(self, key))}" for key in slots)
-        )
+Config = namedtuple('Config', ('device_id', 'module_ids', 'display'))
+Display = namedtuple('Display', ('deadline', 'lifeline', 'neutral'))
+Palette = namedtuple('Palette', ('primary', 'secondary'))
+Item = namedtuple('Item', ('pub_millis', 'headline', 'headline_original', 'source', 'link', 'summary'))
+Timer = namedtuple('Timer', ('type', 'flavor', 'description', 'update_time', 'labels', 'lang', 'ref_millis'))
+Newsfeed = namedtuple('Newsfeed', ('type', 'flavor', 'description', 'update_time', 'labels', 'lang', 'items'))
+Value = namedtuple('Value', ('type', 'flavor', 'description', 'update_time', 'labels', 'lang', 'initial', 'ref_millis', 'growth', 'rate', 'resolution', 'unit_labels', 'decimals', 'scale'))
+Defn = namedtuple('Defn', ('config', 'module_dict', 'modules'))
 
 
-class Config(SlotRepr):
-    __slots__ = "device_id", "module_ids", "display"
-
-    def load(self, data):
-        self.device_id = data.get("device")
-        self.module_ids = data.get("modules")
-        self.display = Display().load(data.get("display") or {})
-        return self
-
-
-class Display(SlotRepr):
-    __slots__ = "deadline", "lifeline", "neutral"
-
-    def load(self, data):
-        self.deadline = Palette().load(data.get("deadline") or {})
-        self.lifeline = Palette().load(data.get("lifeline") or {})
-        self.neutral = Palette().load(data.get("neutral") or {})
-        return self
+def load_config(data):
+    gc.collect()
+    return Config(
+        data.get("device"),
+        data.get("modules"),
+        load_display(data.get("display") or {})
+    )
 
 
-class Palette(SlotRepr):
-    __slots__ = "primary", "secondary"
+def load_display(data):
+    gc.collect()
+    return Display(
+        load_palette(data.get("deadline") or {}),
+        load_palette(data.get("lifeline") or {}),
+        load_palette(data.get("neutral") or {})
+    )
 
-    def load(self, data):
-        self.primary = parse_css_color(data.get("color_primary") or None)
-        self.secondary = parse_css_color(data.get("color_secondary") or None)
-        return self
+
+def load_palette(data):
+    gc.collect()
+    return Palette(
+        parse_css_color(data.get("color_primary") or None),
+        parse_css_color(data.get("color_secondary") or None)
+    )
 
 
-class Module(SlotRepr):
-    __slots__ = "type", "flavor", "description", "update_time", "labels", "lang"
-
-    def load(self, data):
-        self.type = data.get("type")
-        self.flavor = data.get("flavor")
-        self.description = data.get("description") or ""
-        self.update_time = data.get("update_time",
+def load_module(data):
+    gc.collect()
+    return (
+        data.get("type"),
+        data.get("flavor"),
+        data.get("description") or "",
+        data.get("update_time",
             cctime.get_millis() + data.get("update_interval_seconds", 3600)*1000
-        )
+        ),
         # Sort labels in order from longest to shortest
-        self.labels = sorted_longest_first(data.get("labels") or [])
-        self.lang = data.get("lang") or "en"
-        return self
+        sorted_longest_first(data.get("labels") or []),
+        data.get("lang") or "en"
+    )
 
 
-class Timer(Module):
-    __slots__ = ("ref_millis",)
-
-    def load(self, data):
-        Module.load(self, data)
-        self.ref_millis = cctime.try_isoformat_to_millis(data, "timestamp")
-        return self
-
-
-class Newsfeed(Module):
-    __slots__ = ("items",)
-
-    def load(self, data):
-        Module.load(self, data)
-        self.items = list(reversed(sorted(
-            [NewsfeedItem().load(item) for item in data.get("newsfeed", [])],
-            key=lambda item: item.pub_millis,
-        )))
-        return self
+def load_timer(data):
+    gc.collect()
+    return Timer(*(
+        load_module(data) + 
+        (cctime.try_isoformat_to_millis(data, "timestamp"),)
+    ))
 
 
-class NewsfeedItem(SlotRepr):
-    __slots__ = "pub_millis", "headline", "headline_original", "source", "link", "summary"
-
-    def load(self, data):
-        self.pub_millis = cctime.try_isoformat_to_millis(data, "date")
-        self.headline = data.get("headline") or ""
-        self.headline_original = data.get("headline_original") or ""
-        self.source = data.get("source") or ""
-        self.link = data.get("link") or ""
-        self.summary = data.get("summary") or ""
-        return self
-
-    def format(self):
-        return (f'{self.headline} ({self.source})'
-            if self.source else self.headline)
+def load_newsfeed(data):
+    gc.collect()
+    return Newsfeed(*(
+        load_module(data) +
+        (list(reversed(sorted(
+            [load_newsfeed_item(item) for item in data.get("newsfeed", [])]
+        ))),)
+    ))
 
 
-class Value(Module):
-    __slots__ = "initial", "ref_millis", "growth", "rate", "resolution", "unit_labels"
-
-    def load(self, data):
-        Module.load(self, data)
-        self.initial = data.get("initial") or 0
-        self.ref_millis = cctime.try_isoformat_to_millis(data, "timestamp")
-        self.growth = data.get("growth") or "linear"
-        self.rate = data.get("rate") or 0
-        self.resolution = data.get("resolution") or 1
-        self.unit_labels = sorted_longest_first(data.get("unit_labels") or [])
-
-        # Convert the resolution field to some useful values.
-        res, decimals, scale = self.resolution, 0, 1
-        while res < 0.9:  # allow for precision error in CircuitPython floats
-            res, decimals, scale = res * 10, decimals + 1, scale * 10
-        self.decimals = decimals  # number of decimal places
-        self.scale = scale  # scaling factor as a bigint
-        return self
+def load_newsfeed_item(data):
+    gc.collect()
+    return Item(
+        cctime.try_isoformat_to_millis(data, "date"),
+        data.get("headline") or "",
+        data.get("headline_original") or "",
+        data.get("source") or "",
+        data.get("link") or "",
+        data.get("summary") or "",
+    )
 
 
-class Chart(Module):
-    pass  # TBD
+def format_newsfeed_item(item):
+    gc.collect()
+    return f'{item.headline} ({item.source})' if item.source else item.headline
 
 
-class Media(Module):
-    pass  # TBD
+def load_value(data):
+    resolution = data.get("resolution") or 1
+    # Convert the resolution field to some useful values.
+    res, decimals, scale = resolution, 0, 1
+    while res < 0.9:  # allow for precision error in CircuitPython floats
+        res, decimals, scale = res * 10, decimals + 1, scale * 10
+
+    return Value(*(
+        load_module(data) + (
+            data.get("initial") or 0,
+            cctime.try_isoformat_to_millis(data, "timestamp"),
+            data.get("growth") or "linear",
+            data.get("rate") or 0,
+            data.get("resolution") or 1,
+            sorted_longest_first(data.get("unit_labels") or []),
+            decimals,  # number of decimal places
+            scale  # scaling factor as a bigint
+        )
+    ))
+
+
+def load_chart(data):
+    return load_module(data)  # TBD
+
+
+def load_media(data):
+    return load_module(data)  # TBD
 
 
 def sorted_longest_first(labels):
     return sorted(labels, key=lambda label: -len(label))
 
 
-class ClockDefinition(SlotRepr):
-    __slots__ = "config", "module_dict", "modules"
-
-    MODULE_CLASSES = {
-        "timer": Timer,
-        "newsfeed": Newsfeed,
-        "value": Value,
-        "chart": Chart,
-        "media": Media,
-    }
-
-    def load(self, data):
-        self.config = Config().load(data.get("config", {}))
-        self.module_dict = {
-            module_id: self.MODULE_CLASSES[value["type"]]().load(value)
-            for module_id, value in data.get("modules", {}).items()
-        }
-        self.modules = [
-            self.module_dict[module_id] for module_id in self.config.module_ids
-        ]
-        return self
+def load_clock_definition(data):
+    gc.collect()
+    config = load_config(data.get("config", {}))
+    gc.collect()
+    module_dict = {}
+    for module_id, value in data.get("modules", {}).items():
+        if value["type"] == "timer":
+            module = load_timer(value)
+        elif value["type"] == "newsfeed":
+            module = load_newsfeed(value)
+        elif value["type"] == "value":
+            module = load_value(value)
+        gc.collect()
+        module_dict[module_id] = module
+    return Defn(
+        config,
+        module_dict,
+        [module_dict[module_id] for module_id in config[1]]
+    )
 
 
 def parse_css_color(color):
+    gc.collect()
     if color:
         color = color.replace("#", "")
         if len(color) == 6:
@@ -169,4 +161,4 @@ def parse_css_color(color):
 
 
 def load(file):
-    return ClockDefinition().load(json.load(file)["data"])
+    return load_clock_definition(json.load(file)["data"])

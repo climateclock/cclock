@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Extracts the log of the last Python interpreter session from a screenlog file.
+
+tail +$(grep -n '^Adafruit CircuitPython ' screenlog.0 | tail -1 | sed -E -e 's/:.*//') screenlog.0 | sed \
+-e 's/\[K//g' \
+-e 's/\[[0-9]*D//g' \
+-e 's/[^]\{16\}\{16\}//g' \
+-e 's/[^]\{8\}\{8\}//g' \
+-e 's/[^]\{4\}\{4\}//g' \
+-e 's/[^]\{2\}\{2\}//g' \
+-e 's/[^]\{1\}\{1\}//g'

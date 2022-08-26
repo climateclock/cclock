@@ -1,5 +1,6 @@
 """Functions for formatting and constructing the Climate Clock display."""
 
+import ccapi
 import cctime
 import math
 try:
@@ -141,7 +142,7 @@ def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
 
     if n == 1:
         if not headline_label:
-            headline_label = frame.new_label(item.format(), 'kairon-16')
+            headline_label = frame.new_label(ccapi.format_newsfeed_item(item), 'kairon-16')
         if headline_label.w <= DISPLAY_WIDTH:
             # There is only one headline and it fits entirely; do not scroll.
             frame.paste(0, y, headline_label, cv=cv)
@@ -149,14 +150,14 @@ def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
         headline_label = None
 
     if not headline_label:
-        text = item.format() + ' \xb7 '
+        text = ccapi.format_newsfeed_item(item) + ' \xb7 '
         headline_width = frame.measure(text, 'kairon-16')
 
         text_with_trail = text
         for attempt in range(3):
             i = (i + 1) % n
             item = module.items[i]
-            trail = item.format() + ' \xb7 '
+            trail = ccapi.format_newsfeed_item(item) + ' \xb7 '
             text_with_trail += trail
             headline_label = frame.new_label(text_with_trail, 'kairon-16')
             if headline_label.w >= headline_width + DISPLAY_WIDTH:

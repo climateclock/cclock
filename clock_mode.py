@@ -19,11 +19,10 @@ class ClockMode(Mode):
         mem('SoftwareUpdater')
         self.deadline = None
         self.lifeline = None
-        self.message_module = ccapi.Newsfeed()
+        self.message_module = ccapi.Newsfeed(
+            'newsfeed', '', '', '', '', '', []
+        )
         mem('Newsfeed')
-        self.message_module.type = 'newsfeed'
-        self.message_module.items = [ccapi.NewsfeedItem()]
-        mem('NewsfeedItems')
 
         self.reload_definition()
         mem('reload_definition')
@@ -73,9 +72,9 @@ class ClockMode(Mode):
             self.app.prefs, 'updates_paused_until')
 
         ccui.reset_newsfeed()
-        item = self.message_module.items[0]
-        item.headline = self.app.prefs.get('custom_message')
-        item.source = ''
+        self.message_module.items[:] = [
+            ccapi.Item(0, self.app.prefs.get('custom_message'), '', '', '', '')
+        ]
 
     def step(self):
         if self.next_advance and cctime.get_millis() > self.next_advance:
