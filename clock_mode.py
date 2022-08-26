@@ -19,7 +19,7 @@ class ClockMode(Mode):
         mem('SoftwareUpdater')
         self.deadline = None
         self.lifeline = None
-        self.message_module = ccapi.Newsfeed('newsfeed', '', '', '', [])
+        self.message_module = ccapi.Newsfeed('newsfeed', '', [], [])
         mem('Newsfeed')
 
         self.reload_definition()

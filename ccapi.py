@@ -13,10 +13,14 @@ Config = namedtuple('Config', ('device_id', 'module_ids', 'display'))
 Display = namedtuple('Display', ('deadline', 'lifeline', 'neutral'))
 Palette = namedtuple('Palette', ('primary', 'secondary'))
 Item = namedtuple('Item', ('pub_millis', 'headline', 'source'))
-Timer = namedtuple('Timer', ('type', 'flavor', 'labels', 'lang', 'ref_millis'))
-Newsfeed = namedtuple('Newsfeed', ('type', 'flavor', 'labels', 'lang', 'items'))
-Value = namedtuple('Value', ('type', 'flavor', 'labels', 'lang', 'initial', 'ref_millis', 'growth', 'rate', 'unit_labels', 'decimals', 'scale'))
+Timer = namedtuple('Timer', ('type', 'flavor', 'labels', 'ref_millis'))
+Newsfeed = namedtuple('Newsfeed', ('type', 'flavor', 'labels', 'items'))
+Value = namedtuple('Value', ('type', 'flavor', 'labels', 'initial', 'ref_millis', 'growth', 'rate', 'unit_labels', 'decimals', 'scale'))
 Defn = namedtuple('Defn', ('config', 'module_dict', 'modules'))
+
+
+def sorted_by_length(labels):
+    return sorted(labels or [], key=lambda label: -len(label))
 
 
 def load_config(data):
@@ -45,46 +49,42 @@ def load_palette(data):
     )
 
 
-def load_module(data):
+def parse_css_color(color):
     gc.collect()
-    return (
-        data.get("type"),
-        data.get("flavor"),
-        sorted(data.get("labels") or [], key=lambda label: -len(label)),
-        data.get("lang") or "en"
-    )
+    color = (color or "").replace("#", "")
+    if len(color) == 6:
+        return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
 
 
 def load_timer(data):
     gc.collect()
-    return Timer(*(
-        load_module(data) + 
-        (cctime.try_isoformat_to_millis(data, "timestamp"),)
-    ))
+    return Timer(
+        data.get("type"),
+        data.get("flavor"),
+        sorted_by_length(data.get("labels")),
+        cctime.try_isoformat_to_millis(data, "timestamp")
+    )
 
 
 def load_newsfeed(data):
     gc.collect()
-    return Newsfeed(*(
-        load_module(data) +
-        (list(reversed(sorted(
-            [load_newsfeed_item(item) for item in data.get("newsfeed", [])]
-        ))),)
-    ))
+    return Newsfeed(
+        data.get("type"),
+        data.get("flavor"),
+        sorted_by_length(data.get("labels")),
+        list(reversed(sorted(
+            [load_item(item) for item in data.get("newsfeed", [])]
+        )))
+    )
 
 
-def load_newsfeed_item(data):
+def load_item(data):
     gc.collect()
     return Item(
         cctime.try_isoformat_to_millis(data, "date"),
         data.get("headline") or "",
         data.get("source") or "",
     )
-
-
-def format_newsfeed_item(item):
-    gc.collect()
-    return f'{item.headline} ({item.source})' if item.source else item.headline
 
 
 def load_value(data):
@@ -95,20 +95,21 @@ def load_value(data):
     while res < 0.9:  # allow for precision error in CircuitPython floats
         res, decimals, scale = res * 10, decimals + 1, scale * 10
 
-    return Value(*(
-        load_module(data) + (
-            data.get("initial") or 0,
-            cctime.try_isoformat_to_millis(data, "timestamp"),
-            data.get("growth") or "linear",
-            data.get("rate") or 0,
-            sorted(data.get("unit_labels") or [], key=lambda label: -len(label)),
-            decimals,  # number of decimal places
-            scale  # scaling factor as a bigint
-        )
-    ))
+    return Value(
+        data.get("type"),
+        data.get("flavor"),
+        sorted_by_length(data.get("labels")),
+        data.get("initial") or 0,
+        cctime.try_isoformat_to_millis(data, "timestamp"),
+        data.get("growth") or "linear",
+        data.get("rate") or 0,
+        sorted_by_length(data.get("unit_labels")),
+        decimals,  # number of decimal places
+        scale  # scaling factor as a bigint
+    )
 
 
-def load_clock_definition(data):
+def load_defn(data):
     gc.collect()
     config = load_config(data.get("config", {}))
     gc.collect()
@@ -129,12 +130,5 @@ def load_clock_definition(data):
     )
 
 
-def parse_css_color(color):
-    gc.collect()
-    color = (color or "").replace("#", "")
-    if len(color) == 6:
-        return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
-
-
 def load(file):
-    return load_clock_definition(json.load(file)["data"])
+    return load_defn(json.load(file)["data"])
