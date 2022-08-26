@@ -12,10 +12,10 @@ from collections import namedtuple
 Config = namedtuple('Config', ('device_id', 'module_ids', 'display'))
 Display = namedtuple('Display', ('deadline', 'lifeline', 'neutral'))
 Palette = namedtuple('Palette', ('primary', 'secondary'))
-Item = namedtuple('Item', ('pub_millis', 'headline', 'headline_original', 'source', 'link', 'summary'))
-Timer = namedtuple('Timer', ('type', 'flavor', 'description', 'update_time', 'labels', 'lang', 'ref_millis'))
-Newsfeed = namedtuple('Newsfeed', ('type', 'flavor', 'description', 'update_time', 'labels', 'lang', 'items'))
-Value = namedtuple('Value', ('type', 'flavor', 'description', 'update_time', 'labels', 'lang', 'initial', 'ref_millis', 'growth', 'rate', 'resolution', 'unit_labels', 'decimals', 'scale'))
+Item = namedtuple('Item', ('pub_millis', 'headline', 'source'))
+Timer = namedtuple('Timer', ('type', 'flavor', 'labels', 'lang', 'ref_millis'))
+Newsfeed = namedtuple('Newsfeed', ('type', 'flavor', 'labels', 'lang', 'items'))
+Value = namedtuple('Value', ('type', 'flavor', 'labels', 'lang', 'initial', 'ref_millis', 'growth', 'rate', 'unit_labels', 'decimals', 'scale'))
 Defn = namedtuple('Defn', ('config', 'module_dict', 'modules'))
 
 
@@ -50,10 +50,6 @@ def load_module(data):
     return (
         data.get("type"),
         data.get("flavor"),
-        data.get("description") or "",
-        data.get("update_time",
-            cctime.get_millis() + data.get("update_interval_seconds", 3600)*1000
-        ),
         # Sort labels in order from longest to shortest
         sorted_longest_first(data.get("labels") or []),
         data.get("lang") or "en"
@@ -83,10 +79,7 @@ def load_newsfeed_item(data):
     return Item(
         cctime.try_isoformat_to_millis(data, "date"),
         data.get("headline") or "",
-        data.get("headline_original") or "",
         data.get("source") or "",
-        data.get("link") or "",
-        data.get("summary") or "",
     )
 
 
@@ -96,9 +89,10 @@ def format_newsfeed_item(item):
 
 
 def load_value(data):
-    resolution = data.get("resolution") or 1
+    res = data.get("resolution") or 1
+    decimals = 0
+    scale = 1
     # Convert the resolution field to some useful values.
-    res, decimals, scale = resolution, 0, 1
     while res < 0.9:  # allow for precision error in CircuitPython floats
         res, decimals, scale = res * 10, decimals + 1, scale * 10
 
@@ -108,7 +102,6 @@ def load_value(data):
             cctime.try_isoformat_to_millis(data, "timestamp"),
             data.get("growth") or "linear",
             data.get("rate") or 0,
-            data.get("resolution") or 1,
             sorted_longest_first(data.get("unit_labels") or []),
             decimals,  # number of decimal places
             scale  # scaling factor as a bigint
