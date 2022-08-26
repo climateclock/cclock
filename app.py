@@ -44,7 +44,8 @@ class App:
 
     def step(self):
         gc.collect()
-        print(gc.mem_free())
+        if hasattr(gc, 'mem_free'):
+            print(gc.mem_free())
         self.frame_counter.tick()
         self.brightness_reader.step(self.receive)
         self.mode.step()

@@ -99,15 +99,3 @@ def try_isoformat_to_millis(data, key):
         return datetime_to_millis(isoformat_to_datetime(value))
     except Exception as e:
         print('Invalid timestamp for %r: %r' % (key, value))
-
-
-class FrameTimer:
-    def __init__(self, fps):
-        self.next = 0
-        self.interval = int(1000/fps)
-
-    def wait(self):
-        """Waits until the next frame display time."""
-        next = self.next + self.interval
-        wait_until_millis(self.next)
-        self.next = next

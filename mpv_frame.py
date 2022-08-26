@@ -3,6 +3,19 @@ import frame
 import subprocess
 import time
 
+
+class FrameTimer:
+    def __init__(self, fps):
+        self.next = 0
+        self.interval = int(1000/fps)
+
+    def wait(self):
+        """Waits until the next frame display time."""
+        next = self.next + self.interval
+        cctime.wait_until_millis(self.next)
+        self.next = next
+
+
 class MpvFrame(frame.Frame):
     """A Frame implementation that uses the mpv video player for display."""
 
@@ -11,7 +24,7 @@ class MpvFrame(frame.Frame):
         top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
         self.w = w
         self.h = h
-        self.timer = cctime.FrameTimer(fps)
+        self.timer = FrameTimer(fps)
         self.pixels = bytearray(b'\x00\x00\x00' * w * h)
         self.process = subprocess.Popen([
             'mpv',
