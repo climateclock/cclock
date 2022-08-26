@@ -50,8 +50,7 @@ def load_module(data):
     return (
         data.get("type"),
         data.get("flavor"),
-        # Sort labels in order from longest to shortest
-        sorted_longest_first(data.get("labels") or []),
+        sorted(data.get("labels") or [], key=lambda label: -len(label)),
         data.get("lang") or "en"
     )
 
@@ -102,23 +101,11 @@ def load_value(data):
             cctime.try_isoformat_to_millis(data, "timestamp"),
             data.get("growth") or "linear",
             data.get("rate") or 0,
-            sorted_longest_first(data.get("unit_labels") or []),
+            sorted(data.get("unit_labels") or [], key=lambda label: -len(label)),
             decimals,  # number of decimal places
             scale  # scaling factor as a bigint
         )
     ))
-
-
-def load_chart(data):
-    return load_module(data)  # TBD
-
-
-def load_media(data):
-    return load_module(data)  # TBD
-
-
-def sorted_longest_first(labels):
-    return sorted(labels, key=lambda label: -len(label))
 
 
 def load_clock_definition(data):
@@ -144,13 +131,9 @@ def load_clock_definition(data):
 
 def parse_css_color(color):
     gc.collect()
-    if color:
-        color = color.replace("#", "")
-        if len(color) == 6:
-            return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
-        if len(color) == 3:
-            r, g, b = color
-            return int(r + r, 16), int(g + g, 16), int(b + b, 16)
+    color = (color or "").replace("#", "")
+    if len(color) == 6:
+        return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
 
 
 def load(file):
