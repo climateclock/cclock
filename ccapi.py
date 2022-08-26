@@ -65,7 +65,7 @@ class Module(SlotRepr):
 
 
 class Timer(Module):
-    __slots__ = ("ref_datetime",)
+    __slots__ = ("ref_millis",)
 
     def load(self, data):
         Module.load(self, data)
@@ -103,7 +103,7 @@ class NewsfeedItem(SlotRepr):
 
 
 class Value(Module):
-    __slots__ = "initial", "ref_datetime", "growth", "rate", "resolution", "unit_labels"
+    __slots__ = "initial", "ref_millis", "growth", "rate", "resolution", "unit_labels"
 
     def load(self, data):
         Module.load(self, data)
