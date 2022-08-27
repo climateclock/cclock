@@ -1,4 +1,5 @@
 import cctime
+import fs
 import json
 from http_fetcher import HttpFetcher
 from unpacker import Unpacker
@@ -12,8 +13,7 @@ INTERVAL_AFTER_SUCCESS = 30 * 60 * 1000  # recheck for updates every half hour
 
 
 class SoftwareUpdater:
-    def __init__(self, fs, network, prefs, clock_mode):
-        self.fs = fs
+    def __init__(self, network, prefs, clock_mode):
         self.network = network
         self.prefs = prefs
         self.clock_mode = clock_mode
@@ -54,7 +54,7 @@ class SoftwareUpdater:
             data = self.api_fetcher.read()
             if data:
                 if not self.api_file:
-                    self.api_file = self.fs.open('/cache/clock.json', 'wb')
+                    self.api_file = fs.open('/cache/clock.json', 'wb')
                 self.api_file.write(data)
             return
         except Exception as e:
@@ -85,7 +85,7 @@ class SoftwareUpdater:
             data = self.index_fetcher.read()
             if data:
                 if not self.index_file:
-                    self.index_file = self.fs.open('/cache/packs.json', 'wb')
+                    self.index_file = fs.open('/cache/packs.json', 'wb')
                 self.index_file.write(data)
             return
         except Exception as e:
@@ -101,7 +101,7 @@ class SoftwareUpdater:
         print(f'Index file successfully fetched!')
         self.index_fetched = cctime.get_datetime()
         try:
-            with self.fs.open('/cache/packs.json') as index_file:
+            with fs.open('/cache/packs.json') as index_file:
                 pack_index = json.load(index_file)
             self.index_name = pack_index['name']
             self.index_updated = pack_index['updated']
@@ -115,13 +115,13 @@ class SoftwareUpdater:
         if version:
             latest, url_path, dir_name = version
             print(f'Latest enabled version is {dir_name} at {url_path}.')
-            if self.fs.isfile(dir_name + '/@VALID'):
+            if fs.isfile(dir_name + '/@VALID'):
                 print(f'{dir_name} already exists and is valid.')
-                write_enabled_flags(self.fs, self.index_packs)
+                write_enabled_flags(self.index_packs)
                 self.retry_after(INTERVAL_AFTER_SUCCESS)
             else:
                 self.index_fetcher = None
-                self.unpacker = Unpacker(self.fs, HttpFetcher(
+                self.unpacker = Unpacker(HttpFetcher(
                     self.network, self.prefs, self.index_hostname, url_path))
                 self.step = self.pack_fetch_step
 
@@ -133,7 +133,7 @@ class SoftwareUpdater:
             self.retry_after(INTERVAL_AFTER_FAILURE)
         else:
             if done:
-                write_enabled_flags(self.fs, self.index_packs)
+                write_enabled_flags(self.index_packs)
                 self.retry_after(INTERVAL_AFTER_SUCCESS)
 
 
@@ -158,7 +158,7 @@ def get_latest_enabled_version(index_packs):
     return latest
 
 
-def write_enabled_flags(fs, index_packs):
+def write_enabled_flags(index_packs):
     for pack_name, props in index_packs.items():
         enabled = props.get('enabled')
         pack_hash = props.get('hash', '')

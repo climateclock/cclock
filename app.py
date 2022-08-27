@@ -9,14 +9,14 @@ from utils import Cycle, mem
 
 
 class App:
-    def __init__(self, prefs, network, frame, fs, button_map, dial_map):
+    def __init__(self, prefs, network, frame, button_map, dial_map):
         mem('pre-App.__init__')
         self.prefs = prefs
         self.network = network
         self.frame = frame
         self.frame_counter = FrameCounter()
 
-        self.clock_mode = ClockMode(self, fs, network, button_map, dial_map)
+        self.clock_mode = ClockMode(self, network, button_map, dial_map)
         mem('ClockMode')
         self.menu_mode = MenuMode(self, button_map, dial_map)
         mem('MenuMode')
@@ -93,9 +93,9 @@ class FrameCounter:
             self.next_report += 10000
 
 
-def run(prefs, network, frame, fs, button_map, dial_map):
+def run(prefs, network, frame, button_map, dial_map):
     cctime.enable_rtc()
-    app = App(prefs, network, frame, fs, button_map, dial_map)
+    app = App(prefs, network, frame, button_map, dial_map)
     app.start()
     while True:
         app.step()

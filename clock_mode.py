@@ -2,6 +2,7 @@ import ccapi
 from ccinput import ButtonReader, DialReader, Press
 import cctime
 import ccui
+import fs
 from mode import Mode
 from updater import SoftwareUpdater
 import utils
@@ -9,13 +10,12 @@ from utils import Cycle, mem
 
 
 class ClockMode(Mode):
-    def __init__(self, app, fs, network, button_map, dial_map):
+    def __init__(self, app, network, button_map, dial_map):
         mem('pre-ClockMode.__init__')
         super().__init__(app)
-        self.fs = fs
         self.network = network
 
-        self.updater = SoftwareUpdater(fs, network, app.prefs, self)
+        self.updater = SoftwareUpdater(network, app.prefs, self)
         mem('SoftwareUpdater')
         self.deadline = None
         self.lifeline = None
@@ -46,7 +46,7 @@ class ClockMode(Mode):
 
     def reload_definition(self):
         try:
-            with self.fs.open('/cache/clock.json') as api_file:
+            with fs.open('/cache/clock.json') as api_file:
                 defn = ccapi.load(api_file)
                 self.deadline = defn.module_dict['carbon_deadline_1']
                 modules = [self.message_module]

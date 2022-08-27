@@ -1,12 +1,11 @@
 import sys
 import utils
 
-import fs
 from prefs import Prefs
-prefs = Prefs(fs)
+prefs = Prefs()
 utils.mem('Prefs')
 from fontlib import FontLibrary
-fontlib = FontLibrary(fs, [sys.path[0], '/'])
+fontlib = FontLibrary([sys.path[0], '/'])
 utils.mem('FontLibrary')
 
 import matrix_frame
@@ -32,7 +31,6 @@ run(
     prefs,
     network,
     frame,
-    fs,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )

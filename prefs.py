@@ -1,3 +1,4 @@
+import fs
 import json
 import utils
 
@@ -18,11 +19,10 @@ DEFAULTS = {
 
 
 class Prefs:
-    def __init__(self, fs):
-        self.fs = fs
+    def __init__(self):
         self.prefs = DEFAULTS.copy()
         try:
-            self.prefs.update(json.load(self.fs.open('/prefs.json')))
+            self.prefs.update(json.load(fs.open('/prefs.json')))
         except Exception as e:
             utils.report_error(e, f'Could not read prefs.json')
             self.save()
@@ -35,8 +35,8 @@ class Prefs:
 
     def save(self):
         try:
-            with self.fs.open('/prefs.json.new', 'wt') as file:
+            with fs.open('/prefs.json.new', 'wt') as file:
                 json.dump(self.prefs, file)
-            self.fs.rename('/prefs.json.new', '/prefs.json')
+            fs.rename('/prefs.json.new', '/prefs.json')
         except OSError as e:
             utils.report_error(e, f'Could not write prefs.json')

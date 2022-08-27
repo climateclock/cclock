@@ -2,6 +2,7 @@ try:
     from adafruit_hashlib import md5
 except:
     md5 = __import__('hashlib').md5
+import fs
 from utils import to_str
 
 
@@ -17,8 +18,7 @@ MAX_ROOT_SIZE = 512*1024  # max allotted for root files and lib/ directory
 MAX_UNPACKED_SIZE = (DISK_CAPACITY - MAX_ROOT_SIZE) / 4
 
 class Unpacker:
-    def __init__(self, fs, stream):
-        self.fs = fs
+    def __init__(self, stream):
         self.stream = stream
 
         self.buffer = bytearray()
@@ -91,13 +91,13 @@ class Unpacker:
         if block_type == b'ph':  # pack hash
             self.pack_hash = to_str(content)
             self.dir_name = self.pack_name + '.' + self.pack_hash
-            if self.fs.isdir(self.dir_name):
-                if self.fs.isfile(self.dir_name + '/@VALID'):
+            if fs.isdir(self.dir_name):
+                if fs.isfile(self.dir_name + '/@VALID'):
                     print(f'{self.dir_name} already exists and is valid.')
                     return True
                 else:
                     print(f'Removing incomplete {self.dir_name}.')
-                    self.fs.destroy(self.dir_name)
+                    fs.destroy(self.dir_name)
 
         if block_type == b'fn':  # file name
             self.file_path = self.dir_name + '/' + to_str(content)
@@ -109,12 +109,12 @@ class Unpacker:
                 raise ValueError(
                     f'Pack exceeded limit of {MAX_UNPACKED_SIZE} bytes.')
             self.digest.update(content)
-            self.fs.write(self.file_path, content, 'ab')
+            fs.write(self.file_path, content, 'ab')
 
         if block_type == b'pe':  # pack end
             actual_hash = self.digest.hexdigest()
             if actual_hash == self.pack_hash:
-                self.fs.write(self.dir_name + '/@VALID', b'')
+                fs.write(self.dir_name + '/@VALID', b'')
                 print(f'Pack {self.dir_name} unpacked successfully!')
                 return True
             raise ValueError(
