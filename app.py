@@ -4,14 +4,12 @@ from ccinput import DialReader
 from clock_mode import ClockMode
 from menu_mode import MenuMode
 from pref_entry_mode import PrefEntryMode
-from prefs import Prefs
 from utils import Cycle, mem
 
 
 class App:
-    def __init__(self, prefs, network, frame, button_map, dial_map):
+    def __init__(self, network, frame, button_map, dial_map):
         mem('pre-App.__init__')
-        self.prefs = prefs
         self.network = network
         self.frame = frame
         self.frame_counter = FrameCounter()
@@ -93,9 +91,9 @@ class FrameCounter:
             self.next_report += 10000
 
 
-def run(prefs, network, frame, button_map, dial_map):
+def run(network, frame, button_map, dial_map):
     cctime.enable_rtc()
-    app = App(prefs, network, frame, button_map, dial_map)
+    app = App(network, frame, button_map, dial_map)
     app.start()
     while True:
         app.step()

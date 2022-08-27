@@ -15,7 +15,7 @@ def open(relpath, mode='rb'):
 
 
 def write(relpath, content, mode='wb'):
-    with open_file(relpath, 'wb') as file:
+    with open(relpath, 'wb') as file:
         file.write(content)
 
 

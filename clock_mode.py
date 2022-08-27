@@ -4,6 +4,7 @@ import cctime
 import ccui
 import fs
 from mode import Mode
+import prefs
 from updater import SoftwareUpdater
 import utils
 from utils import Cycle, mem
@@ -15,7 +16,7 @@ class ClockMode(Mode):
         super().__init__(app)
         self.network = network
 
-        self.updater = SoftwareUpdater(network, app.prefs, self)
+        self.updater = SoftwareUpdater(network, self)
         mem('SoftwareUpdater')
         self.deadline = None
         self.lifeline = None
@@ -63,20 +64,20 @@ class ClockMode(Mode):
         self.reader.reset()
         self.dial_reader.reset()
         self.frame.clear()
-        auto_cycling = self.app.prefs.get('auto_cycling')
+        auto_cycling = prefs.get('auto_cycling')
         self.next_advance = auto_cycling and cctime.get_millis() + auto_cycling
 
         self.updates_paused_until_millis = cctime.try_isoformat_to_millis(
-            self.app.prefs, 'updates_paused_until')
+            prefs, 'updates_paused_until')
 
         ccui.reset_newsfeed()
         self.message_module.items[:] = [
-            ccapi.Item(0, self.app.prefs.get('custom_message'), '')
+            ccapi.Item(0, prefs.get('custom_message'), '')
         ]
 
     def step(self):
         if self.next_advance and cctime.get_millis() > self.next_advance:
-            auto_cycling = self.app.prefs.get('auto_cycling')
+            auto_cycling = prefs.get('auto_cycling')
             if auto_cycling:
                 self.next_advance += auto_cycling
             else:

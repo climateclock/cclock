@@ -30,14 +30,14 @@ run = __import__(module).run
 
 import fs
 fs.root = '/tmp/cclock'
-from prefs import Prefs
-prefs = Prefs()
 for path in ['kairon-10.pcf', 'kairon-16.pcf']:
     fs.write(path, open(path, 'rb').read())
 
 from unix_network import UnixNetwork
 network = UnixNetwork('climateclock', 'climateclock')
 
+import prefs
+prefs.init()
 from fontlib import FontLibrary
 import sdl2
 from sdl_frame import SdlFrame, SdlButton, SdlDial
@@ -50,7 +50,6 @@ brightness = SdlDial(
 selector = SdlDial(
     frame, sdl2.SDL_SCANCODE_LEFT, sdl2.SDL_SCANCODE_RIGHT, -100000, 100000, 1)
 run(
-    prefs,
     network,
     frame,
     {'UP': up, 'DOWN': down, 'ENTER': enter},

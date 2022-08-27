@@ -1,5 +1,6 @@
 import cctime
 from network import State
+import prefs
 from utils import to_bytes
 
 # If the remote server has stopped sending data for this many milliseconds,
@@ -11,9 +12,8 @@ PACKET_LENGTH = 1500 - 20 - 20  # 1500 - IP header (20) - TCP header (20)
 
 
 class HttpFetcher:
-    def __init__(self, network, prefs, hostname, path):
+    def __init__(self, network, hostname, path):
         self.network = network
-        self.prefs = prefs
         self.hostname = hostname
         self.path = path
         self.silence_started = None
@@ -40,8 +40,8 @@ class HttpFetcher:
     def connect_read(self):
         if self.network.state == State.OFFLINE:
             self.network.enable_step(
-                self.prefs.get('wifi_ssid'),
-                self.prefs.get('wifi_password')
+                prefs.get('wifi_ssid'),
+                prefs.get('wifi_password')
             )
         if self.network.state == State.ONLINE:
             self.network.connect_step(self.hostname)

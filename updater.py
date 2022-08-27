@@ -2,6 +2,7 @@ import cctime
 import fs
 import json
 from http_fetcher import HttpFetcher
+import prefs
 from unpacker import Unpacker
 import utils
 
@@ -13,9 +14,8 @@ INTERVAL_AFTER_SUCCESS = 30 * 60 * 1000  # recheck for updates every half hour
 
 
 class SoftwareUpdater:
-    def __init__(self, network, prefs, clock_mode):
+    def __init__(self, network, clock_mode):
         self.network = network
-        self.prefs = prefs
         self.clock_mode = clock_mode
 
         self.api_hostname = prefs.get('api_hostname')
@@ -46,7 +46,7 @@ class SoftwareUpdater:
     def wait_step(self):
         if cctime.get_millis() > self.next_check:
             self.api_fetcher = HttpFetcher(
-                self.network, self.prefs, self.api_hostname, self.api_path)
+                self.network, self.api_hostname, self.api_path)
             self.step = self.api_fetch_step
 
     def api_fetch_step(self):
@@ -67,7 +67,7 @@ class SoftwareUpdater:
                 self.network.close_step()
                 # Continue with software update anyway
                 self.index_fetcher = HttpFetcher(
-                    self.network, self.prefs, self.index_hostname, self.index_path)
+                    self.network, self.index_hostname, self.index_path)
                 self.step = self.index_fetch_step
                 return
 
@@ -77,7 +77,7 @@ class SoftwareUpdater:
         self.clock_mode.reload_definition()
 
         self.index_fetcher = HttpFetcher(
-            self.network, self.prefs, self.index_hostname, self.index_path)
+            self.network, self.index_hostname, self.index_path)
         self.step = self.index_fetch_step
 
     def index_fetch_step(self):
@@ -122,7 +122,7 @@ class SoftwareUpdater:
             else:
                 self.index_fetcher = None
                 self.unpacker = Unpacker(HttpFetcher(
-                    self.network, self.prefs, self.index_hostname, url_path))
+                    self.network, self.index_hostname, url_path))
                 self.step = self.pack_fetch_step
 
     def pack_fetch_step(self):

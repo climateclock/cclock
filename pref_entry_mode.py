@@ -1,5 +1,6 @@
 from ccinput import ButtonReader, DialReader, Press
 from mode import Mode
+import prefs
 
 FONT = 'kairon-10'
 UP_ARROW = '\u2191'
@@ -69,7 +70,7 @@ class PrefEntryMode(Mode):
         self.frame.clear()
 
         self.frame.print(1, 0, self.pref_title, FONT, cv=self.cv)
-        self.text = self.app.prefs.get(self.pref_name)
+        self.text = prefs.get(self.pref_name)
         self.draw_field()
         self.draw_menu()
 
@@ -162,7 +163,7 @@ class PrefEntryMode(Mode):
             self.draw_field()
 
         if command == 'ACCEPT':
-            self.app.prefs.set(self.pref_name, self.text)
+            prefs.set(self.pref_name, self.text)
             self.app.receive('MENU_MODE')
 
     def move_menu_cursor(self, delta):

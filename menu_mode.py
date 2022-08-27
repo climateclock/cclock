@@ -2,6 +2,7 @@ from ccinput import ButtonReader, DialReader, Press
 import cctime
 from mode import Mode
 from network import State
+import prefs
 import sys
 
 FONT = 'kairon-10'
@@ -33,7 +34,7 @@ class MenuMode(Mode):
         self.dial_reader.reset()
         self.frame.clear()
         status = 'Offline' if self.app.network.state == State.OFFLINE else 'Online'
-        wifi_ssid = self.app.prefs.get('wifi_ssid')
+        wifi_ssid = prefs.get('wifi_ssid')
         updater = self.app.clock_mode.updater
         index_updated = updater.index_updated or 'None'
         index_fetched = (updater.index_fetched and
@@ -41,10 +42,10 @@ class MenuMode(Mode):
         software_version = sys.path[0]
         esp_firmware_version = self.app.network.get_firmware_version()
         esp_hardware_address = self.app.network.get_hardware_address()
-        cycling_millis = self.app.prefs.get('auto_cycling')
+        cycling_millis = prefs.get('auto_cycling')
         auto_cycling = cycling_millis and f'{cycling_millis//1000} seconds' or 'Off'
         upu_millis = cctime.try_isoformat_to_millis(
-            self.app.prefs, 'updates_paused_until')
+            prefs, 'updates_paused_until')
         upu_min = upu_millis and int((upu_millis - cctime.get_millis())/1000/60)
         auto_update = (upu_millis and
             f'Paused {upu_min//60} h {upu_min % 60} min' or 'On')
@@ -132,15 +133,15 @@ class MenuMode(Mode):
         if command == 'NEXT_OPTION':
             self.move_cursor(1)
         if command == 'SET_CYCLING':
-            self.app.prefs.set('auto_cycling', arg)
+            prefs.set('auto_cycling', arg)
             self.app.receive('MENU_MODE')  # reformat the menu strings
         if command == 'SET_UPDATES_PAUSED':
             if arg:
                 deadline = cctime.get_millis() + arg
-                self.app.prefs.set('updates_paused_until',
+                prefs.set('updates_paused_until',
                     cctime.millis_to_datetime(deadline).isoformat())
             else:
-                self.app.prefs.set('updates_paused_until', None)
+                prefs.set('updates_paused_until', None)
             self.app.receive('MENU_MODE')  # reformat the menu strings
         if command == 'PROCEED':
             title, value, command, arg, children = self.node

@@ -3,7 +3,7 @@ import json
 import utils
 
 
-DEFAULTS = {
+pairs = {
     'wifi_ssid': 'climateclock',
     'wifi_password': 'climateclock',
     'api_hostname': 'api.climateclock.world',
@@ -16,27 +16,30 @@ DEFAULTS = {
     'rgb_pins': 'MTX_R1 MTX_G1 MTX_B1 MTX_R2 MTX_G2 MTX_B2',
     'addr_pins': 'MTX_ADDRA MTX_ADDRB MTX_ADDRC MTX_ADDRD',
 }
+get = pairs.get
 
 
-class Prefs:
-    def __init__(self):
-        self.prefs = DEFAULTS.copy()
-        try:
-            self.prefs.update(json.load(fs.open('/prefs.json')))
-        except Exception as e:
-            utils.report_error(e, f'Could not read prefs.json')
-            self.save()
-        self.get = self.prefs.get
+def init():
+    if not fs.isfile('/prefs.json'):
+        print('Creating prefs.json.')
+        save()
+    try:
+        pairs.update(json.load(fs.open('/prefs.json')))
+    except Exception as e:
+        utils.report_error(e, 'Could not read prefs.json.')
+        save()
 
-    def set(self, name, value):
-        if self.prefs.get(name) != value:
-            self.prefs[name] = value
-            self.save()
 
-    def save(self):
-        try:
-            with fs.open('/prefs.json.new', 'wt') as file:
-                json.dump(self.prefs, file)
-            fs.rename('/prefs.json.new', '/prefs.json')
-        except OSError as e:
-            utils.report_error(e, f'Could not write prefs.json')
+def set(name, value):
+    if pairs.get(name) != value:
+        pairs[name] = value
+        save()
+
+
+def save():
+    try:
+        with fs.open('/prefs.json.new', 'wt') as file:
+            json.dump(pairs, file)
+        fs.rename('/prefs.json.new', '/prefs.json')
+    except OSError as e:
+        utils.report_error(e, 'Could not write prefs.json.')

@@ -1,9 +1,7 @@
 import sys
 import utils
-
-from prefs import Prefs
-prefs = Prefs()
-utils.mem('Prefs')
+import prefs
+prefs.init()
 from fontlib import FontLibrary
 fontlib = FontLibrary([sys.path[0], '/'])
 utils.mem('FontLibrary')
@@ -28,7 +26,6 @@ utils.mem('EspWifiNetwork')
 from app import run
 utils.mem('pre-run')
 run(
-    prefs,
     network,
     frame,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
