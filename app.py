@@ -20,14 +20,7 @@ class App:
         mem('ClockMode')
         self.menu_mode = MenuMode(self, button_map, dial_map)
         mem('MenuMode')
-        self.wifi_ssid_mode = PrefEntryMode(
-            self, 'Wi-Fi network name', 'wifi_ssid', button_map, dial_map)
-        mem('PrefEntryMode')
-        self.wifi_password_mode = PrefEntryMode(
-            self, 'Wi-Fi password', 'wifi_password', button_map, dial_map)
-        mem('PrefEntryMode')
-        self.custom_message_mode = PrefEntryMode(
-            self, 'Custom message', 'custom_message', button_map, dial_map)
+        self.pref_entry_mode = PrefEntryMode(self, button_map, dial_map)
         mem('PrefEntryMode')
         self.mode = self.clock_mode
 
@@ -60,11 +53,14 @@ class App:
         if command == 'MENU_MODE':
             self.set_mode(self.menu_mode)
         if command == 'WIFI_SSID_MODE':
-            self.set_mode(self.wifi_ssid_mode)
+            self.pref_entry_mode.set_pref('Wi-Fi network name', 'wifi_ssid')
+            self.set_mode(self.pref_entry_mode)
         if command == 'WIFI_PASSWORD_MODE':
-            self.set_mode(self.wifi_password_mode)
+            self.pref_entry_mode.set_pref('Wi-Fi password', 'wifi_password')
+            self.set_mode(self.pref_entry_mode)
         if command == 'CUSTOM_MESSAGE_MODE':
-            self.set_mode(self.custom_message_mode)
+            self.pref_entry_mode.set_pref('Custom message', 'custom_message')
+            self.set_mode(self.pref_entry_mode)
         self.mode.receive(command, arg)
 
     def set_mode(self, mode):

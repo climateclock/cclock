@@ -32,10 +32,8 @@ DISPLAY_TEXT_ENTRY_MENU = [
 
 
 class PrefEntryMode(Mode):
-    def __init__(self, app, pref_title, pref_name, button_map, dial_map):
+    def __init__(self, app, button_map, dial_map):
         super().__init__(app)
-        self.pref_title = pref_title
-        self.pref_name = pref_name
 
         self.cv = self.frame.pack(0x80, 0x80, 0x80)
         self.cursor_cv = self.frame.pack(0x00, 0xff, 0x00)
@@ -60,6 +58,10 @@ class PrefEntryMode(Mode):
         self.menu_index = 0
         self.menu_selected = False
         self.char_indexes = [0] * len(self.menu)
+
+    def set_pref(self, pref_title, pref_name):
+        self.pref_title = pref_title
+        self.pref_name = pref_name
 
     def start(self):
         self.reader.reset()
