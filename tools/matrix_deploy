@@ -11,6 +11,11 @@
 cd $(dirname "$0")
 cd ..
 
+debug_fragmentation=no
+if [ "$1" = '-d' ]; then
+  debug_fragmentation=yes
+  shift
+fi
 module="$1"
 module=${module%.py}
 target=/Volumes/CIRCUITPY
@@ -62,28 +67,45 @@ for file in *.py; do
   fi
 done
 
+rm -f *.mpy /tmp/imports.py /tmp/start.py /tmp/start.mpy
+
 echo 'Scanning for imports...'
-cat <<EOF > /tmp/imports.py
+
+cat <<EOF >> /tmp/imports.py
 import time
 time.sleep(2)
 import gc
-import micropython
+before = after = 0
 gc.collect()
 print(f'pre-imports,{gc.mem_free()}')
-before = after = 0
 EOF
+if [ $debug_fragmentation = 'yes' ]; then
+  echo 'import micropython' >> /tmp/imports.py
+  echo 'micropython.mem_info(1); print()' >> /tmp/imports.py
+fi
 for module in $(tools/sort_imports start); do
-  echo "gc.collect(); before = gc.mem_free(); import $module; after = gc.mem_free(); print(f'$module,{before - after}'); micropython.mem_info(1)" >> /tmp/imports.py
+  cat <<EOF >> /tmp/imports.py
+gc.collect(); before = gc.mem_free()
+import $module
+after = gc.mem_free(); print(f'$module,{before - after}')
+EOF
+  if [ $debug_fragmentation = 'yes' ]; then
+    echo 'micropython.mem_info(1); print()' >> /tmp/imports.py
+  fi
 done
 cat <<EOF >> /tmp/imports.py
 gc.collect()
 print(f'post-imports,{gc.mem_free()}')
 EOF
+if [ $debug_fragmentation = 'yes' ]; then
+  echo 'micropython.mem_info(1); print()' >> /tmp/imports.py
+fi
+
 cat /tmp/imports.py start.py > /tmp/start.py
 mpy-cross /tmp/start.py
 cp /tmp/start.mpy $target/
 
-rm -f *.mpy # /tmp/imports.py /tmp/start.py /tmp/start.mpy
+rm -f *.mpy /tmp/imports.py /tmp/start.py /tmp/start.mpy
 
 echo 'Installing fonts...'
 cp *.pcf $target/

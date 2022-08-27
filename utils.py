@@ -1,16 +1,14 @@
 import gc
 
 
-def mem(*args):
-    pass
+def mem(label):
+    gc.collect()
 
 
 if hasattr(gc, 'mem_free'):
-    import micropython
     def mem(label):
         gc.collect()
         print(f'{label},{gc.mem_free()}')
-        micropython.mem_info(1)
 
 
 def to_bytes(arg):

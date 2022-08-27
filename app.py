@@ -2,7 +2,6 @@ import ccapi
 import cctime
 from ccinput import DialReader
 from clock_mode import ClockMode
-import gc
 from menu_mode import MenuMode
 from pref_entry_mode import PrefEntryMode
 from prefs import Prefs
@@ -43,9 +42,7 @@ class App:
         self.mode.start()
 
     def step(self):
-        gc.collect()
-        if hasattr(gc, 'mem_free'):
-            print(gc.mem_free())
+        mem('step')
         self.frame_counter.tick()
         self.brightness_reader.step(self.receive)
         self.mode.step()
@@ -96,7 +93,7 @@ class FrameCounter:
         self.last_tick = now
 
         if now > self.next_report:
-            print(f'uptime: {now - self.start:.1f} s / {self.fps:.1f} fps')
+            print(f'uptime: {(now - self.start)/1000:.1f} s / {self.fps:.1f} fps')
             self.next_report += 10000
 
 
