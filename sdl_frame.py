@@ -2,6 +2,7 @@ import cctime
 from ctypes import byref, c_char, c_void_p
 from displayio import Bitmap
 import draw_text
+import fontlib
 import frame
 from sdl2 import *
 import time
@@ -54,7 +55,7 @@ class SdlDial:
 
 
 class SdlFrame(frame.Frame):
-    def __init__(self, w, h, fps, title='Frame', scale=8, pad=4, fontlib=None):
+    def __init__(self, w, h, fps, title='Frame', scale=8, pad=4):
         """Creates a Frame with a given width and height.  Coordinates of the
         top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
         self.w = w
@@ -62,7 +63,6 @@ class SdlFrame(frame.Frame):
         self.timer = FrameTimer(fps)
         self.scale = scale
         self.pad = pad
-        self.fontlib = fontlib
 
         self.pw = w + pad*2  # width with padding
         self.ph = h + pad*2  # height with padding
@@ -168,17 +168,17 @@ class SdlFrame(frame.Frame):
                     si += 3
 
     def measure(self, text, font_id):
-        font = self.fontlib.get(font_id)
+        font = fontlib.get(font_id)
         return draw_text.measure(text, font)
 
     def print(self, x, y, text, font_id, cv=1):
-        font = self.fontlib.get(font_id)
+        font = fontlib.get(font_id)
         label = LabelFrame(text, font)
         self.paste(x, y, label, cv=cv)
         return x + label.w
 
     def new_label(self, text, font_id):
-        font = self.fontlib.get(font_id)
+        font = fontlib.get(font_id)
         return LabelFrame(text, font)
 
 

@@ -2,13 +2,12 @@ import sys
 import utils
 import prefs
 prefs.init()
-from fontlib import FontLibrary
-fontlib = FontLibrary([sys.path[0], '/'])
-utils.mem('FontLibrary')
+import fontlib
+fontlib.set_dirs(sys.path[0], '/')
 
 import matrix_frame
 frame = matrix_frame.new_display_frame(
-    192, 32, 16, fontlib, prefs.get('rgb_pins'), prefs.get('addr_pins'))
+    192, 32, 16, prefs.get('rgb_pins'), prefs.get('addr_pins'))
 utils.mem('new_display_frame')
 
 import board, gpio

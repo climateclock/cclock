@@ -3,6 +3,7 @@ import board
 import cctime
 import displayio
 import draw_text
+import fontlib
 import frame
 import framebufferio
 import rgbmatrix
@@ -16,9 +17,9 @@ BIT_DEPTH = 2
 MIN_RGB_VALUE = 0x100 >> BIT_DEPTH
 
 
-def new_display_frame(w, h, depth, fontlib, rgb_pins, addr_pins):
+def new_display_frame(w, h, depth, rgb_pins, addr_pins):
     displayio.release_displays()
-    return MatrixFrame(w, h, depth, fontlib, rgbmatrix.RGBMatrix(
+    return MatrixFrame(w, h, depth, rgbmatrix.RGBMatrix(
         width=192, height=32, bit_depth=BIT_DEPTH,
         rgb_pins=[getattr(board, name) for name in rgb_pins.split()],
         addr_pins=[getattr(board, name) for name in addr_pins.split()],
@@ -41,7 +42,7 @@ def apply_brightness(brightness, r, g, b):
 
 
 class MatrixFrame(frame.Frame):
-    def __init__(self, w, h, depth, fontlib=None, matrix=None):
+    def __init__(self, w, h, depth, matrix=None):
         """Creates a Frame with a given width and height.  Coordinates of the
         top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
         self.w = w
@@ -49,7 +50,6 @@ class MatrixFrame(frame.Frame):
         self.depth = depth
         self.bitmap = displayio.Bitmap(w, h, depth)
         self.display = None
-        self.fontlib = fontlib
         if matrix:
             self.display = framebufferio.FramebufferDisplay(
                 matrix, auto_refresh=False)
@@ -98,15 +98,15 @@ class MatrixFrame(frame.Frame):
         self.bitmap.freeblit(x, y, source.bitmap, sx, sy, w, h, bg, cv)
 
     def measure(self, text, font_id):
-        font = self.fontlib.get(font_id)
+        font = fontlib.get(font_id)
         return draw_text.measure(text, font)
 
     def print(self, x, y, text, font_id, cv=1):
-        font = self.fontlib.get(font_id)
+        font = fontlib.get(font_id)
         return draw_text.draw(text, font, self.bitmap, x, y, cv)
 
     def new_label(self, text, font_id):
-        font = self.fontlib.get(font_id)
+        font = fontlib.get(font_id)
         if not self.error_label:
             self.error_label = LabelFrame('[MemoryError] ', font)
         try:
