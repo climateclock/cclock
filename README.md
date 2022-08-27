@@ -239,8 +239,8 @@ For the record, though, here's how you build the firmware:
 
 ### Implementation notes
 
-The filesystem, display, and network subsystems are abstracted as
-interfaces called FileSystem, Frame, and Network respectively.  Each one
+The filesystem, display, and network subsystems are abstracted in
+interfaces called fs, Frame, and Network respectively.  Each one
 is implemented both for the MatrixPortal and for a Unix environment,
 and the appropriate implementation is passed in when the program starts.
 See `tools/sdl_run` and `tools/matrix_run` for details on how these

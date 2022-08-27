@@ -28,8 +28,8 @@ that takes an instance of frame.Frame as its single argument.''')
 
 run = __import__(module).run
 
-from fs import FileSystem
-fs = FileSystem('/tmp/cclock')
+import fs
+fs.root = '/tmp/cclock'
 from prefs import Prefs
 prefs = Prefs(fs)
 for path in ['kairon-10.pcf', 'kairon-16.pcf']:

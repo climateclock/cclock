@@ -1,9 +1,7 @@
 import sys
 import utils
 
-from fs import FileSystem
-fs = FileSystem('/')
-utils.mem('FileSystem')
+import fs
 from prefs import Prefs
 prefs = Prefs(fs)
 utils.mem('Prefs')
@@ -38,4 +36,3 @@ run(
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )
-
