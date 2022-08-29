@@ -2,6 +2,7 @@ import ccapi
 import cctime
 from ccinput import DialReader
 from clock_mode import ClockMode
+import gc
 from menu_mode import MenuMode
 from pref_entry_mode import PrefEntryMode
 from utils import Cycle, mem
@@ -59,6 +60,19 @@ class App:
         if command == 'CUSTOM_MESSAGE_MODE':
             self.pref_entry_mode.set_pref('Custom message', 'custom_message')
             self.set_mode(self.pref_entry_mode)
+        if command == 'DUMP_MEMORY':
+            import micropython
+            gc.collect()
+            micropython.mem_info(1)
+        if command == 'DUMP_FRAME':
+            print('[[FRAME]]')
+            for y in range(32):
+                for x in range(192):
+                    cv = self.frame.bitmap[x, y]
+                    print('%02x%02x%02x' % self.frame.unpack(cv), end='')
+            print()
+            gc.collect()
+
         self.mode.receive(command, arg)
 
     def set_mode(self, mode):

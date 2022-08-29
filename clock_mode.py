@@ -30,14 +30,15 @@ class ClockMode(Mode):
             button_map['UP']: {
                 Press.SHORT: 'NEXT_LANGUAGE',
                 Press.LONG: 'TOGGLE_CAPS',
+                Press.DOUBLE: 'DUMP_FRAME',
             },
             button_map['DOWN']: {
                 Press.SHORT: 'NEXT_LIFELINE',
                 Press.LONG: 'MENU_MODE',
+                Press.DOUBLE: 'DUMP_MEMORY',
             },
             button_map['ENTER']: {
                 Press.SHORT: 'NEXT_LIFELINE',
-                Press.SHORT: 'MENU_MODE',
             }
         })
         mem('ButtonReader')

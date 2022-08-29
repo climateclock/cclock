@@ -79,6 +79,9 @@ class MatrixFrame(frame.Frame):
             self.next_cv += 1
         return self.next_cv - 1
 
+    def unpack(self, cv):
+        return self.colours[cv]
+
     def send(self):
         self.display.refresh(minimum_frames_per_second=0)
         # Display bug: refresh() doesn't cause a refresh unless we also set

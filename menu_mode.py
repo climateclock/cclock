@@ -154,6 +154,7 @@ class MenuMode(Mode):
             self.offset = 0
             self.draw()
 
+
     def move_cursor(self, delta):
         title, value, command, arg, children = self.node
         if children:
