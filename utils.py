@@ -26,10 +26,18 @@ def to_str(arg):
 def report_error(e, message):
     try:
         import traceback
-        print(f'{message}: ', end='')
+        print(f'{message} due to:')
         traceback.print_exception(e, e, e.__traceback__)
     except:
         print(f'{message}: {e} {repr(e)}')
+
+
+def split_url(url):
+    proto, rest = url.split(':', 1)
+    if proto == 'http' or proto == 'https':
+        hostname, path = rest.lstrip('/').split('/', 1)
+        return proto == 'https', hostname, '/' + path
+    return None, None, None
 
 
 class Cycle:

@@ -6,10 +6,8 @@ import utils
 pairs = {
     'wifi_ssid': 'climateclock',
     'wifi_password': 'climateclock',
-    'api_hostname': 'api.climateclock.world',
-    'api_path': '/v1/clock',
-    'index_hostname': 'zestyping.github.io',
-    'index_path': '/cclock/packs.json',
+    'api_url': 'https://api.climateclock.world/v1/clock',
+    'update_url': 'https://zestyping.github.io/cclock/packs.json',
     'custom_message': 'Time left before 1.5\u00b0C rise',
     'auto_cycling': None,
     'updates_paused_until': None,

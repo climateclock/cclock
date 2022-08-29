@@ -151,19 +151,19 @@ The index file is conventionally named `packs.json` and looks like this:
       "updated": "2022-07-17T18:51:03Z",
       "packs": {
         "v1": {
-          "path": "/cclock/v1.f4a09eb4651480f7a20a2849544f80e2.pk",
+          "url": "https://zestyping.github.io/cclock/v1.f4a09eb4651480f7a20a2849544f80e2.pk",
           "hash": "f4a09eb4651480f7a20a2849544f80e2",
           "published": "2022-07-17T18:49:20Z",
           "enabled": true
         },
         "v2": {
-          "path": "/cclock/v2.e5be85c68ae680dd2b8fe001e4d82798.pk",
+          "url": "https://zestyping.github.io/cclock/v2.e5be85c68ae680dd2b8fe001e4d82798.pk",
           "hash": "e5be85c68ae680dd2b8fe001e4d82798",
           "published": "2022-07-18T07:29:37Z",
           "enabled": true
         },
         "v3": {
-          "path": "/cclock/v3.eacbbf89c33d9be378a8c655a160194d.pk",
+          "url": "https://zestyping.github.io/cclock/v3.eacbbf89c33d9be378a8c655a160194d.pk",
           "hash": "eacbbf89c33d9be378a8c655a160194d",
           "published": "2022-07-18T17:50:55Z",
           "enabled": true
@@ -204,25 +204,20 @@ The steps for publishing a new software update are as follows:
     will be created, containing all the files in the specified folder.
     The string of 32 hex digits is the MD5 hash of the folder contents.
 
-  - Publish the new `.pk` file at an HTTPS URL on the official update
-    server.
+  - Publish the new `.pk` file at an HTTPS URL.
 
   - Add an entry to the index file under the `"packs"` key, whose key
     is the version name, and whose value is an object containing the
-    keys: `"path"` (the URL path to your pack file), `"hash" (the
-    32-digit hash in the file name), and `"enabled"` (set to `true`).
+    keys: `"url"` (the URL to your pack file), `"hash" (the 32-digit
+    hash in the file name), and `"enabled"` (set to `true`).
 
-  - Publish the new index file on the official update server.
+  - Publish the new index file at the HTTPS URL (the official update URL).
 
-In the current system, index files and pack files must reside on the
-same HTTPS server; the index file specifies just the path to a pack file,
-not a complete URL.
-
-The "official update server" has not been designated yet; it is configured
-in `prefs.json` as the `index_hostname` entry.  For development, it defaults
-to `zestyping.github.io`.  If you are working on this feature, you can set
-`index_hostname` to point to your own server by editing `prefs.json` on the
-Action Clock's flash drive.
+The "official update URL" has not been designated yet; it is configured
+in `prefs.json` as the `update_url` entry.  For development, it defaults
+to `https://zestyping.github.io/cclock/packs.json`.  If you are working
+on this feature, you can set `update_url` to point to your own server by
+editing `prefs.json` on the Action Clock's flash drive.
 
 
 ### Building firmware

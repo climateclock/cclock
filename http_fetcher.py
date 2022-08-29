@@ -1,7 +1,7 @@
 import cctime
 from network import State
 import prefs
-from utils import to_bytes
+import utils
 
 # If the remote server has stopped sending data for this many milliseconds,
 # assume the HTTP response is finished.
@@ -12,10 +12,10 @@ PACKET_LENGTH = 1500 - 20 - 20  # 1500 - IP header (20) - TCP header (20)
 
 
 class HttpFetcher:
-    def __init__(self, network, hostname, path):
+    def __init__(self, network, url):
         self.network = network
-        self.hostname = hostname
-        self.path = path
+        self.url = url
+        self.ssl, self.hostname, self.path = utils.split_url(url)
         self.silence_started = None
 
         self.buffer = bytearray()
@@ -38,13 +38,15 @@ class HttpFetcher:
             self.silence_started = None
 
     def connect_read(self):
+        if not self.hostname:
+            raise ValueError(f'Invalid URL: {self.url}')
         if self.network.state == State.OFFLINE:
             self.network.enable_step(
                 prefs.get('wifi_ssid'),
                 prefs.get('wifi_password')
             )
         if self.network.state == State.ONLINE:
-            self.network.connect_step(self.hostname)
+            self.network.connect_step(self.hostname, ssl=self.ssl)
         if self.network.state == State.CONNECTED:
             self.read = self.request_read
         return b''
@@ -53,8 +55,8 @@ class HttpFetcher:
         if self.network.state == State.CONNECTED:
             print(f'Fetching {self.path} from {self.hostname}.')
             self.network.send_step(
-                b'GET ' + to_bytes(self.path) + b' HTTP/1.1\r\n' +
-                b'Host: ' + to_bytes(self.hostname) + b'\r\n' +
+                b'GET ' + utils.to_bytes(self.path) + b' HTTP/1.1\r\n' +
+                b'Host: ' + utils.to_bytes(self.hostname) + b'\r\n' +
                 b'Connection: Close\r\n' +
                 b'\r\n'
             )

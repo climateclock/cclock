@@ -18,14 +18,12 @@ class SoftwareUpdater:
         self.network = network
         self.clock_mode = clock_mode
 
-        self.api_hostname = prefs.get('api_hostname')
-        self.api_path = prefs.get('api_path')
+        self.api_url = prefs.get('api_url')
         self.api_fetcher = None
         self.api_file = None
         self.api_fetched = None
 
-        self.index_hostname = prefs.get('index_hostname')
-        self.index_path = prefs.get('index_path')
+        self.update_url = prefs.get('update_url')
         self.index_fetcher = None
         self.index_file = None
         self.index_name = None
@@ -45,8 +43,7 @@ class SoftwareUpdater:
 
     def wait_step(self):
         if cctime.get_millis() > self.next_check:
-            self.api_fetcher = HttpFetcher(
-                self.network, self.api_hostname, self.api_path)
+            self.api_fetcher = HttpFetcher(self.network, self.api_url)
             self.step = self.api_fetch_step
 
     def api_fetch_step(self):
@@ -66,8 +63,7 @@ class SoftwareUpdater:
                 utils.report_error(e, 'API fetch aborted')
                 self.network.close_step()
                 # Continue with software update anyway
-                self.index_fetcher = HttpFetcher(
-                    self.network, self.index_hostname, self.index_path)
+                self.index_fetcher = HttpFetcher(self.network, self.update_url)
                 self.step = self.index_fetch_step
                 return
 
@@ -76,8 +72,7 @@ class SoftwareUpdater:
         self.api_fetched = cctime.get_datetime()
         self.clock_mode.reload_definition()
 
-        self.index_fetcher = HttpFetcher(
-            self.network, self.index_hostname, self.index_path)
+        self.index_fetcher = HttpFetcher(self.network, self.update_url)
         self.step = self.index_fetch_step
 
     def index_fetch_step(self):
@@ -113,16 +108,15 @@ class SoftwareUpdater:
 
         version = get_latest_enabled_version(self.index_packs)
         if version:
-            latest, url_path, dir_name = version
-            print(f'Latest enabled version is {dir_name} at {url_path}.')
+            latest, url, dir_name = version
+            print(f'Latest enabled version is {dir_name} at {url}.')
             if fs.isfile(dir_name + '/@VALID'):
                 print(f'{dir_name} already exists and is valid.')
                 write_enabled_flags(self.index_packs)
                 self.retry_after(INTERVAL_AFTER_SUCCESS)
             else:
                 self.index_fetcher = None
-                self.unpacker = Unpacker(HttpFetcher(
-                    self.network, self.index_hostname, url_path))
+                self.unpacker = Unpacker(HttpFetcher(self.network, url))
                 self.step = self.pack_fetch_step
 
     def pack_fetch_step(self):
@@ -142,17 +136,17 @@ def get_latest_enabled_version(index_packs):
     for pack_name, props in index_packs.items():
         enabled = props.get('enabled')
         pack_hash = props.get('hash', '')
-        url_path = props.get('path', '')
+        url = props.get('url', '')
         try:
             assert pack_hash
-            assert url_path
+            assert url
             assert pack_name.startswith('v')
             num = int(pack_name[1:])
         except:
             print(f'Ignoring invalid pack entry: {pack_name}')
             continue
         if enabled:
-            version = (num, url_path, pack_name + '.' + pack_hash)
+            version = (num, url, pack_name + '.' + pack_hash)
             if not latest or version > latest:
                 latest = version
     return latest
