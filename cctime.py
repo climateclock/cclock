@@ -52,7 +52,7 @@ def get_datetime():
 
 
 def millis_to_datetime(ms):
-    if hasattr(time, 'gmtime'):
+    if datetime.__name__ == 'datetime':
         return datetime.datetime.utcfromtimestamp(ms//1000)
     else:
         # In CircuitPython, time.gmtime and datetime.utcfromtimestamp are

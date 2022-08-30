@@ -219,7 +219,6 @@ to `https://zestyping.github.io/cclock/packs.json`.  If you are working
 on this feature, you can set `update_url` to point to your own server by
 editing `prefs.json` on the Action Clock's flash drive.
 
-
 ### Building firmware
 
 The MatrixPortal firmware is already included in this repo as
@@ -228,7 +227,11 @@ For the record, though, here's how you build the firmware:
 
     git clone https://github.com/zestyping/circuitpython
     cd circuitpython
-    git checkout cclock
+    git checkout cclock_v8
+    make fetch-submodules
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip3 install -r requirements-dev.txt
     cd ports/atmel-samd
     make -j8 V=1 BOARD=matrixportal_m4_cclock
 

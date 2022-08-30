@@ -4,60 +4,74 @@ cd $(dirname "$0")
 cd ..
 
 if ! [ -d env ]; then
-    virtualenv -p python3 env
+    python3 -m venv env
 fi
 pip3 install -U -r requirements.txt
 
 if ! [ -x env/bin/mpy-cross ]; then
+    # mpy-cross binaries for many architectures are available at
+    # https://adafruit-circuit-python.s3.amazonaws.com/index.html?prefix=bin/mpy-cross/
     if [ $(uname) = Linux ]; then
-        curl -o env/bin/mpy-cross https://adafruit-circuit-python.s3.amazonaws.com/bin/mpy-cross/mpy-cross.static-amd64-linux-7.3.1
+        curl -o env/bin/mpy-cross https://adafruit-circuit-python.s3.amazonaws.com/bin/mpy-cross/mpy-cross.static-amd64-linux-8.0.0-beta.0-22-g3ba385ff5
         chmod 755 env/bin/mpy-cross
     elif [ $(uname) = Darwin ]; then
-        curl -o env/bin/mpy-cross https://adafruit-circuit-python.s3.amazonaws.com/bin/mpy-cross/mpy-cross-macos-bigsur-7.3.1-arm64
+        curl -o env/bin/mpy-cross https://adafruit-circuit-python.s3.amazonaws.com/bin/mpy-cross/mpy-cross-macos-11-8.0.0-beta.0-22-g3ba385ff5-universal
         chmod 755 env/bin/mpy-cross
     else
         echo "Please find and install 'mpy-cross' for your platform."
-        echo "Be sure to get a version compatible with CircuitPython 7.3.1."
+        echo "Be sure to get a version compatible with CircuitPython 8.0.0."
         echo
         echo "https://adafruit-circuit-python.s3.amazonaws.com/index.html?prefix=bin/mpy-cross/"
         exit 1
     fi
 fi
 
-bundle_name=adafruit-circuitpython-bundle-7.x-mpy-20220315
-if ! [ -d cache/lib ]; then
+if ! [ -d cache ]; then
     mkdir cache
-    curl -o cache/$bundle_name.zip -L https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/download/20220315/$bundle_name.zip
-    cd cache
-    unzip $bundle_name.zip
-    mv $bundle_name/lib .
-    cd ..
 fi
+
+# Clone the source code of some of the Python libraries,
+# at the exact versions used in the current firmware.uf2 file.
 
 if ! [ -d Adafruit_CircuitPython_Bitmap_Font ]; then
     git clone https://github.com/adafruit/Adafruit_CircuitPython_Bitmap_Font
 fi
 cd Adafruit_CircuitPython_Bitmap_Font
-git checkout 1.5.6
+git checkout 1.5.11
 cd ..
 
 if ! [ -d Adafruit_CircuitPython_Display_Text ]; then
     git clone https://github.com/adafruit/Adafruit_CircuitPython_Display_Text
 fi
 cd Adafruit_CircuitPython_Display_Text
-git checkout 2.22.2
+git checkout 2.22.8
 cd ..
 
 if ! [ -d Adafruit_CircuitPython_ESP32SPI ]; then
     git clone https://github.com/adafruit/Adafruit_CircuitPython_ESP32SPI
 fi
 cd Adafruit_CircuitPython_ESP32SPI
-git checkout 4.0.2
+git checkout 5.0.1
 cd ..
 
 if ! [ -d Adafruit_CircuitPython_Hashlib ]; then
     git clone https://github.com/adafruit/Adafruit_CircuitPython_Hashlib
 fi
 cd Adafruit_CircuitPython_Hashlib
-git checkout 1.4.4
+git checkout 1.4.9
 cd ..
+
+if ! [ -d Adafruit_CircuitPython_MatrixPortal ]; then
+    git clone https://github.com/adafruit/Adafruit_CircuitPython_MatrixPortal
+fi
+cd Adafruit_CircuitPython_MatrixPortal
+git checkout 3.0.10
+cd ..
+
+if ! [ -d Adafruit_CircuitPython_datetime ]; then
+    git clone https://github.com/adafruit/Adafruit_CircuitPython_datetime
+fi
+cd Adafruit_CircuitPython_datetime
+git checkout 1.2.2
+cd ..
+
