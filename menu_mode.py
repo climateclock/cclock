@@ -40,8 +40,8 @@ class MenuMode(Mode):
         index_fetched = (updater.index_fetched and
             updater.index_fetched.isoformat() or 'Not yet')
         software_version = sys.path[0]
-        esp_firmware_version = self.app.network.get_firmware_version()
-        esp_hardware_address = self.app.network.get_hardware_address()
+        esp_firmware_version = self.app.network.get_firmware_version() or 'None'
+        esp_hardware_address = self.app.network.get_hardware_address() or 'None'
         cycling_millis = prefs.get('auto_cycling')
         auto_cycling = cycling_millis and f'{cycling_millis//1000} seconds' or 'Off'
         upu_millis = cctime.try_isoformat_to_millis(

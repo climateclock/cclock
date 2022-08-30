@@ -61,12 +61,12 @@ class EspWifiNetwork(Network):
     def get_firmware_version(self):
         if self.esp:
             return str(bytes(self.esp.firmware_version), 'ascii')
-        return 'None'
+        return ''
 
     def get_hardware_address(self):
         if self.esp:
             return ':'.join('%02x' % byte for byte in self.esp.MAC_address)
-        return 'None'
+        return ''
 
     def set_state(self, new_state):
         self.state = new_state

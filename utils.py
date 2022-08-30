@@ -3,12 +3,15 @@ import gc
 
 def mem(label):
     gc.collect()
+    print(f'{label},{free()}')
+
+
+def free():
+    return 0
 
 
 if hasattr(gc, 'mem_free'):
-    def mem(label):
-        gc.collect()
-        print(f'{label},{gc.mem_free()}')
+    free = gc.mem_free
 
 
 def to_bytes(arg):

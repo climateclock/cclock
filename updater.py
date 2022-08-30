@@ -3,6 +3,7 @@ import fs
 import json
 from http_fetcher import HttpFetcher
 import prefs
+import sys
 from unpacker import Unpacker
 import utils
 
@@ -43,7 +44,11 @@ class SoftwareUpdater:
 
     def wait_step(self):
         if cctime.get_millis() > self.next_check:
-            self.api_fetcher = HttpFetcher(self.network, self.api_url)
+            fetch = self.index_fetched and self.index_fetched.isoformat() or ''
+            now = cctime.get_datetime().isoformat()
+            addr = self.network.get_hardware_address()
+            self.api_fetcher = HttpFetcher(self.network,
+                f'{self.api_url}?mac={addr}&v={sys.path[0]}&t={now}&if={fetch}&mem={utils.free()}')
             self.step = self.api_fetch_step
 
     def api_fetch_step(self):
