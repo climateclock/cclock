@@ -6,6 +6,7 @@ import gc
 from menu_mode import MenuMode
 import micropython
 from pref_entry_mode import PrefEntryMode
+import time
 from utils import Cycle, mem
 
 
@@ -83,7 +84,7 @@ class App:
 
 class FrameCounter:
     def __init__(self):
-        self.start = cctime.get_millis()
+        self.start = time.monotonic_ns()//1000000
         self.frame_count = 0
         self.fps = 0
         self.last_tick = self.start
@@ -91,7 +92,7 @@ class FrameCounter:
 
     def tick(self):
         print('.', end='')
-        now = cctime.get_millis()
+        now = time.monotonic_ns()//1000000
         elapsed = now - self.last_tick
         if elapsed > 0:
             last_fps = 1000.0/elapsed
