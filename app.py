@@ -66,10 +66,9 @@ class App:
             micropython.mem_info(1)
         if command == 'DUMP_FRAME':
             print('[[FRAME]]')
-            for y in range(32):
-                for x in range(192):
-                    cv = self.frame.bitmap[x, y]
-                    print('%02x%02x%02x' % self.frame.unpack(cv), end='')
+            cvs = ['%02x%02x%02x' % self.frame.unpack(cv) for cv in range(16)]
+            for i in range(192*32):
+                print(cvs[self.frame.bitmap[i]], end='')
             print()
             gc.collect()
 
