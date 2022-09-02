@@ -62,7 +62,7 @@ for file in *.py; do
     cp $file $target
   else
     name=${file%.py}
-    mpy-cross "$name.py"
+    env/bin/mpy-cross "$name.py"
     cp "$name.mpy" $target/
   fi
 done
@@ -102,7 +102,7 @@ if [ $debug_fragmentation = 'yes' ]; then
 fi
 
 cat /tmp/imports.py start.py > /tmp/start.py
-mpy-cross /tmp/start.py
+env/bin/mpy-cross /tmp/start.py
 cp /tmp/start.mpy $target/
 
 rm -f *.mpy /tmp/imports.py /tmp/start.py /tmp/start.mpy

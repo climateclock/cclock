@@ -49,7 +49,7 @@ rm -rf $target/v999
 mkdir $target/v999
 for file in *.py; do
     name=${file%.py}
-    mpy-cross "$name.py"
+    env/bin/mpy-cross "$name.py"
     mv "$name.mpy" $target/v999
 done
 

@@ -38,7 +38,7 @@ class ClockMode(Mode):
                 Press.DOUBLE: 'DUMP_MEMORY',
             },
             button_map['ENTER']: {
-                Press.SHORT: 'NEXT_LIFELINE',
+                Press.SHORT: 'MENU_MODE',
             }
         })
         mem('ButtonReader')
