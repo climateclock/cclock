@@ -33,27 +33,34 @@ class MenuMode(Mode):
         self.reader.reset()
         self.dial_reader.reset()
         self.frame.clear()
-        status = 'Offline' if self.app.network.state == State.OFFLINE else 'Online'
+
+        wifi_status = 'Offline'
+        if self.app.network.state != State.OFFLINE:
+            wifi_status = 'Online'
         wifi_ssid = prefs.get('wifi_ssid')
         updater = self.app.clock_mode.updater
         index_updated = updater.index_updated or 'None'
-        index_fetched = (updater.index_fetched and
-            updater.index_fetched.isoformat() or 'Not yet')
+        index_fetched = 'Not yet'
+        if updater.index_fetched:
+            index_fetched = cctime.millis_to_isoformat(updater.index_fetched)
         software_version = sys.path[0]
         esp_firmware_version = self.app.network.get_firmware_version() or 'None'
         esp_hardware_address = self.app.network.get_hardware_address() or 'None'
         cycling_millis = prefs.get('auto_cycling')
-        auto_cycling = cycling_millis and f'{cycling_millis//1000} seconds' or 'Off'
+        auto_cycling = 'Off'
+        if cycling_millis:
+            auto_cycling = f'{cycling_millis//1000} seconds'
         upu_millis = cctime.try_isoformat_to_millis(
             prefs, 'updates_paused_until')
         upu_min = upu_millis and int((upu_millis - cctime.get_millis())/1000/60)
         auto_update = (upu_millis and
             f'Paused {upu_min//60} h {upu_min % 60} min' or 'On')
+        now = cctime.millis_to_isoformat(cctime.get_millis())
 
         # Each node has the form (title, value, command, arg, children).
         self.tree = ('Settings', None, None, None, [
             ('Wi-Fi setup', None, None, None, [
-                ('Status: ' + status, None, None, None, []),
+                ('Status: ' + wifi_status, None, None, None, []),
                 ('Network', wifi_ssid, 'WIFI_SSID_MODE', None, []),
                 ('Password', None, 'WIFI_PASSWORD_MODE', None, []),
                 ('Back', None, 'BACK', None, [])
@@ -74,7 +81,7 @@ class MenuMode(Mode):
             ('System info', None, None, None, [
                 (updater.index_name or 'Climate Clock', None, None, None, []),
                 (f'Version', software_version, None, None, []),
-                (f'Time', cctime.get_datetime().isoformat(), None, None, []),
+                (f'Time', now, None, None, []),
                 (f'Index version', index_updated, None, None, []),
                 (f'Index fetched', index_fetched, None, None, []),
                 (f'ESP firmware', esp_firmware_version, None, None, []),
@@ -137,9 +144,8 @@ class MenuMode(Mode):
             self.app.receive('MENU_MODE')  # reformat the menu strings
         if command == 'SET_UPDATES_PAUSED':
             if arg:
-                deadline = cctime.get_millis() + arg
                 prefs.set('updates_paused_until',
-                    cctime.millis_to_datetime(deadline).isoformat())
+                    cctime.millis_to_isoformat(cctime.get_millis() + arg))
             else:
                 prefs.set('updates_paused_until', None)
             self.app.receive('MENU_MODE')  # reformat the menu strings

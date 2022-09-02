@@ -2,22 +2,19 @@
 
 import cctime
 import math
-try:
-    import adafruit_datetime as datetime
-except:
-    datetime = __import__('datetime')
 
 
 TEST_MODE = False
 
 
-def calc_deadline(module, now):
-    deadline = cctime.millis_to_datetime(module.ref_millis)
-    next_anniversary = deadline.replace(year=now.year)
+def calc_countdown(deadline_module, now_millis):
+    deadline = cctime.millis_to_tm(deadline_module.ref_millis)
+    now = cctime.millis_to_tm(now_millis)
+    next_anniversary = (now[0],) + deadline[1:]
     if next_anniversary < now:
-        next_anniversary = deadline.replace(year=now.year + 1)
-    y = deadline.year - next_anniversary.year
-    t = int((next_anniversary - now).total_seconds())
+        next_anniversary = (now[0] + 1,) + deadline[1:]
+    y = deadline[0] - next_anniversary[0]
+    t = (cctime.tm_to_millis(next_anniversary) - now_millis)//1000
     s, t = t % 60, t // 60
     m, t = t % 60, t // 60
     h, d = t % 24, t // 24
@@ -27,12 +24,12 @@ def calc_deadline(module, now):
 def to_bigint(f, scale):
     mantissa, exponent = math.frexp(f)
     # CircuitPython floats have 22 bits of mantissa
-    scaled = int(mantissa * (1<<22)) * scale
+    scaled = int(mantissa * (1 << 22)) * scale
     if exponent > 0:
-        scaled = scaled * (1<<exponent)
+        scaled = scaled * (1 << exponent)
     else:
-        scaled = scaled // (1<<-exponent)
-    return scaled // (1<<22)
+        scaled = scaled // (1 << -exponent)
+    return scaled // (1 << 22)
 
 
 def format_value(module, now_millis):
@@ -56,7 +53,7 @@ def format_value(module, now_millis):
 
 
 def render_deadline_module(frame, y, module, cv, lang='en', upper=False):
-    yr, d, h, m, s = calc_deadline(module, cctime.get_datetime())
+    yr, d, h, m, s = calc_countdown(module, cctime.get_millis())
     if TEST_MODE:
         # Just testing various languages for now.
         texts = {

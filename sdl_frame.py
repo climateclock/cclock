@@ -16,7 +16,7 @@ class FrameTimer:
     def wait(self):
         """Waits until the next frame display time."""
         next = self.next + self.interval
-        cctime.wait_until_millis(self.next)
+        cctime.sleep_millis(self.next - cctime.get_millis())
         self.next = next
 
 

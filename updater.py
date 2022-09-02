@@ -22,14 +22,14 @@ class SoftwareUpdater:
         self.api_url = prefs.get('api_url')
         self.api_fetcher = None
         self.api_file = None
-        self.api_fetched = None
+        self.api_fetched = 0
 
         self.update_url = prefs.get('update_url')
         self.index_fetcher = None
         self.index_file = None
         self.index_name = None
         self.index_updated = None
-        self.index_fetched = None
+        self.index_fetched = 0
         self.index_packs = None
         self.unpacker = None
 
@@ -43,9 +43,10 @@ class SoftwareUpdater:
         self.step = self.wait_step
 
     def wait_step(self):
-        if cctime.get_millis() > self.next_check:
-            fetch = self.index_fetched and self.index_fetched.isoformat() or ''
-            now = cctime.get_datetime().isoformat()
+        now_millis = cctime.get_millis()
+        if now_millis > self.next_check:
+            fetch = cctime.millis_to_isoformat(self.index_fetched)
+            now = cctime.millis_to_isoformat(now_millis)
             addr = self.network.get_hardware_address()
             self.api_fetcher = HttpFetcher(self.network,
                 f'{self.api_url}?mac={addr}&v={sys.path[0]}&t={now}&if={fetch}&mem={utils.free()}')
@@ -74,7 +75,7 @@ class SoftwareUpdater:
 
         # StopIteration means fetch was successfully completed
         print(f'API file successfully fetched!')
-        self.api_fetched = cctime.get_datetime()
+        self.api_fetched = cctime.get_millis()
         self.clock_mode.reload_definition()
 
         self.index_fetcher = HttpFetcher(self.network, self.update_url)
@@ -99,7 +100,7 @@ class SoftwareUpdater:
                 return
         # StopIteration means fetch was successfully completed
         print(f'Index file successfully fetched!')
-        self.index_fetched = cctime.get_datetime()
+        self.index_fetched = cctime.get_millis()
         try:
             with fs.open('/cache/packs.json') as index_file:
                 pack_index = json.load(index_file)
