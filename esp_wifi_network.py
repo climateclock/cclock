@@ -1,6 +1,5 @@
 from adafruit_esp32spi import adafruit_esp32spi
 import board
-import busio
 import cctime
 from digitalio import DigitalInOut, Direction
 from network import Network, State
@@ -78,7 +77,7 @@ class EspWifiNetwork(Network):
             esp32_cs = DigitalInOut(board.ESP_CS)
             esp32_ready = DigitalInOut(board.ESP_BUSY)
             esp32_reset = DigitalInOut(board.ESP_RESET)
-            self.spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
+            self.spi = board.SPI()
             self.esp = EspWifi(self.spi, esp32_cs, esp32_ready, esp32_reset)
             self.esp._debug = self.debug
             self.wifi_started = None
