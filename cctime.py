@@ -3,8 +3,11 @@
 import time
 import utils
 
+# CircuitPython cannot perform time calculations before 2000
+MIN_MILLIS = 946684800_000  # 2000-01-01 00:00:00 UTC
+
 # Unix time in ms that corresponds to monotonic_ns() == 0
-ref_millis = 946684800_000  # the board starts up with 2000-01-01 00:00:00 UTC
+ref_millis = MIN_MILLIS  # the board starts up with the clock set to 2000-01-01
 rtc_source = None
 
 
@@ -50,7 +53,7 @@ def get_tm():
 
 def millis_to_tm(millis):
     # In CircuitPython, there are no time zones; time.localtime works in UTC.
-    return time.localtime(millis//1000)
+    return time.localtime(max(millis, MIN_MILLIS)//1000)
 
 
 def tm_to_millis(tm):
