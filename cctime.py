@@ -20,7 +20,7 @@ def get_millis():
 
 def set_millis(millis):
     global ref_millis
-    print('Setting cctime clock to', millis_to_isoformat(millis))
+    print(f'Setting cctime clock to {millis} ({millis_to_isoformat(millis)})')
     ref_ns = time.monotonic_ns()
     ref_millis = millis - ref_ns//1000000
     if rtc_source:
@@ -61,12 +61,16 @@ def ntp_sync(socket, server):
         packet = bytearray(48)
         packet[0] = 0b_00_100_011  # no leap second, NTP version 4, client mode
         s.settimeout(0.5)
+        send_ns = time.monotonic_ns()
         s.send(packet)
         if s.recv_into(packet) == 48:
+            recv_ns = time.monotonic_ns()
             ntp_time = ((packet[40] << 24) + (packet[41] << 16) +
-                (packet[42] << 8) + packet[43])
-            # TODO: Account for transmission delay and fractional seconds.
-            set_millis((ntp_time - NTP_OFFSET) * 1000)
+                (packet[42] << 8) + packet[43]) - NTP_OFFSET
+            ntp_millis = ntp_time * 1000 + (packet[44] * 1000 // 256)
+            latency_millis = (recv_ns - send_ns)//2//1000000
+            print(f'Got NTP time {ntp_millis} with latency {latency_millis}')
+            set_millis(ntp_millis - latency_millis)
     finally:
         s.close()
 
