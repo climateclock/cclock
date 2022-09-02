@@ -1,7 +1,8 @@
 from cctime import get_millis
 from network import Network, State
 import socket
-from ssl import create_default_context as create_ssl_context
+import ssl
+from ssl import _create_unverified_context as create_ssl_context
 
 
 class UnixNetwork(Network):

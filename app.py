@@ -4,6 +4,7 @@ from ccinput import DialReader
 from clock_mode import ClockMode
 import gc
 from menu_mode import MenuMode
+import micropython
 from pref_entry_mode import PrefEntryMode
 from utils import Cycle, mem
 
@@ -61,7 +62,6 @@ class App:
             self.pref_entry_mode.set_pref('Custom message', 'custom_message')
             self.set_mode(self.pref_entry_mode)
         if command == 'DUMP_MEMORY':
-            import micropython
             gc.collect()
             micropython.mem_info(1)
         if command == 'DUMP_FRAME':

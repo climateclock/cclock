@@ -24,6 +24,8 @@ unalias -a
 echo 'Checking syntax...'
 python3 <<EOF || exit 1
 import os
+import sys
+sys.path.append('stubs')
 from app import run
 for name in os.listdir():
     if name.endswith('.py'):
