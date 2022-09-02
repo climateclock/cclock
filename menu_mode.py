@@ -18,10 +18,12 @@ class MenuMode(Mode):
             button_map['UP']: {
                 Press.SHORT: 'PREV_OPTION',
                 Press.LONG: 'BACK',
+                Press.DOUBLE: 'DUMP_FRAME',
             },
             button_map['DOWN']: {
                 Press.SHORT: 'NEXT_OPTION',
                 Press.LONG: 'PROCEED',
+                Press.DOUBLE: 'DUMP_MEMORY',
             },
             button_map['ENTER']: {
                 Press.SHORT: 'PROCEED',
@@ -156,9 +158,12 @@ class MenuMode(Mode):
             else:
                 command = 'BACK'
         if command == 'BACK':
-            self.node, self.top, self.index = self.crumbs.pop()
-            self.offset = 0
-            self.draw()
+            if self.crumbs:
+                self.node, self.top, self.index = self.crumbs.pop()
+                self.offset = 0
+                self.draw()
+            else:
+                self.app.receive('CLOCK_MODE')
 
 
     def move_cursor(self, delta):

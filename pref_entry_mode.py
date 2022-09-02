@@ -43,10 +43,12 @@ class PrefEntryMode(Mode):
             button_map['UP']: {
                 Press.SHORT: 'PREV_OPTION',
                 Press.LONG: 'BACK',
+                Press.DOUBLE: 'DUMP_FRAME',
             },
             button_map['DOWN']: {
                 Press.SHORT: 'NEXT_OPTION',
                 Press.LONG: 'PROCEED',
+                Press.DOUBLE: 'DUMP_MEMORY',
             },
             button_map['ENTER']: {
                 Press.SHORT: 'PROCEED',
@@ -148,8 +150,11 @@ class PrefEntryMode(Mode):
             # Fall through to handle the new value of command
 
         if command == 'BACK':
-            self.menu_selected = False
-            self.draw_menu()
+            if self.menu_selected:
+                self.menu_selected = False
+                self.draw_menu()
+            else:
+                self.app.receive('MENU_MODE')
         if command == 'SPACE':
             self.text += ' '
             self.draw_field()
