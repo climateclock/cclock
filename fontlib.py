@@ -2,7 +2,7 @@ from adafruit_bitmap_font import pcf
 import displayio
 import fs
 
-dirs = ['.']
+dirs = ['']
 fonts = {}
 
 
