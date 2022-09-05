@@ -7,24 +7,25 @@ import microfont
 import rgbmatrix
 import utils
 
-# TODO: BIT_DEPTH should normally be set to 5.  It is set to 2 in order to
-# conserve memory and avoid MemoryErrors.  Once memory issues are fixed,
-# this should be changed back to 5 to get good colour rendering and better
-# brightness control.
-BIT_DEPTH = 2
+# NOTE: Setting BIT_DEPTH to 5 gives the best colour rendering and brightness
+# control (higher than 5 doesn't help because the hardware colour depth appears
+# to be 5 red, 6 green, 5 blue).  If memory is tight, though, we sometimes need
+# to set BIT_DEPTH lower to avoid MemoryErrors.
+BIT_DEPTH = 4
 MIN_RGB_VALUE = 0x100 >> BIT_DEPTH
 
 
 def new_display_frame(w, h, depth, rgb_pins, addr_pins):
     displayio.release_displays()
-    return MatrixFrame(w, h, depth, rgbmatrix.RGBMatrix(
+    matrix = rgbmatrix.RGBMatrix(
         width=192, height=32, bit_depth=BIT_DEPTH,
         rgb_pins=[getattr(board, name) for name in rgb_pins.split()],
         addr_pins=[getattr(board, name) for name in addr_pins.split()],
         clock_pin=board.MTX_CLK,
         latch_pin=board.MTX_LAT,
         output_enable_pin=board.MTX_OE
-    ))
+    )
+    return MatrixFrame(w, h, depth, matrix)
 
 
 def apply_brightness(brightness, r, g, b):
