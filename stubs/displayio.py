@@ -23,6 +23,23 @@ class Bitmap(list):
         self.depth = depth
         self[:] = [0] * w * h
 
+    # Simulates file.readinto(memoryview(bitmap)).
+    def readbits(self, file):
+        bits = []
+        rowsize = (self.width + 31)//32 * 4
+        for y in range(self.height):
+            row = []
+            for x in range(0, rowsize, 4):
+                chunk = file.read(4)
+                row += map(int,
+                    bin(0x100 + chunk[3])[-8:] +
+                    bin(0x100 + chunk[2])[-8:] +
+                    bin(0x100 + chunk[1])[-8:] +
+                    bin(0x100 + chunk[0])[-8:]
+                )
+            bits += row[:self.width]
+        self[:] = bits
+
     # This is intended to be a direct Python translation of
     # common_hal_displayio_bitmap_freeblit.
     def freeblit(

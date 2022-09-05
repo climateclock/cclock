@@ -1,11 +1,9 @@
-from adafruit_display_text import bitmap_label
 import board
 import cctime
 import displayio
-import draw_text
-import fontlib
 import frame
 import framebufferio
+import microfont
 import rgbmatrix
 import utils
 
@@ -101,28 +99,17 @@ class MatrixFrame(frame.Frame):
         self.bitmap.freeblit(x, y, source.bitmap, sx, sy, w, h, bg, cv)
 
     def measure(self, text, font_id):
-        font = fontlib.get(font_id)
-        return draw_text.measure(text, font)
+        return microfont.get(font_id).measure(text)
 
     def print(self, x, y, text, font_id, cv=1):
-        font = fontlib.get(font_id)
-        return draw_text.draw(text, font, self.bitmap, x, y, cv)
+        return microfont.get(font_id).draw(text, self.bitmap, x, y, cv)
 
     def new_label(self, text, font_id):
-        font = fontlib.get(font_id)
-        if not self.error_label:
-            self.error_label = LabelFrame('[MemoryError] ', font)
-        try:
-            return LabelFrame(text, font)
-        except MemoryError as e:
-            utils.report_error(e, f'Failed to draw "{text}"')
-            return self.error_label
+        return LabelFrame(microfont.get(font_id), text)
 
 
 class LabelFrame(frame.Frame):
-    def __init__(self, text, font):
-        label = bitmap_label.Label(font, text=text, save_text=False)
-        self.bitmap = label.bitmap
-        # label.bitmap can be None if there is no text to render
-        self.w = label.bitmap.width if label.bitmap else 0
-        self.h = label.bitmap.height if label.bitmap else 0
+    def __init__(self, font, text):
+        self.w, self.h = font.measure(text), font.h
+        self.bitmap = displayio.Bitmap(self.w, self.h, 2)
+        font.draw(text, self.bitmap)

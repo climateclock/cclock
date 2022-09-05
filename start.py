@@ -2,8 +2,8 @@ import sys
 import utils
 import prefs
 prefs.init()
-import fontlib
-fontlib.set_dirs(sys.path[0], '/')
+import microfont
+microfont.set_dirs(sys.path[0], '/')
 
 import matrix_frame
 frame = matrix_frame.new_display_frame(

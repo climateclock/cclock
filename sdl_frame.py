@@ -1,9 +1,8 @@
 import cctime
 from ctypes import byref, c_char, c_void_p
-from displayio import Bitmap
-import draw_text
-import fontlib
+import displayio
 import frame
+import microfont
 from sdl2 import *
 import time
 
@@ -168,25 +167,21 @@ class SdlFrame(frame.Frame):
                     si += 3
 
     def measure(self, text, font_id):
-        font = fontlib.get(font_id)
-        return draw_text.measure(text, font)
+        return microfont.get(font_id).measure(text)
 
     def print(self, x, y, text, font_id, cv=1):
-        font = fontlib.get(font_id)
-        label = LabelFrame(text, font)
+        label = LabelFrame(microfont.get(font_id), text)
         self.paste(x, y, label, cv=cv)
         return x + label.w
 
     def new_label(self, text, font_id):
-        font = fontlib.get(font_id)
-        return LabelFrame(text, font)
+        return LabelFrame(microfont.get(font_id), text)
 
 
 class LabelFrame(frame.Frame):
-    def __init__(self, text, font):
-        self.w = draw_text.measure(text, font)
-        self.h = font.get_bounding_box()[1]
-        bitmap = Bitmap(self.w, self.h, 2)
-        draw_text.draw(text, font, bitmap)
+    def __init__(self, font, text):
+        self.w, self.h = font.measure(text), font.h
+        bitmap = displayio.Bitmap(self.w, self.h, 2)
+        font.draw(text, bitmap)
         palette = b'\x00\x00\x00', b'\xff\xff\xff'
         self.pixels = b''.join(palette[p] for p in bitmap)
