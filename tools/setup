@@ -33,20 +33,6 @@ fi
 # Clone the source code of some of the Python libraries,
 # at the exact versions used in the current firmware.uf2 file.
 
-if ! [ -d Adafruit_CircuitPython_Bitmap_Font ]; then
-    git clone https://github.com/adafruit/Adafruit_CircuitPython_Bitmap_Font
-fi
-cd Adafruit_CircuitPython_Bitmap_Font
-git checkout 1.5.11
-cd ..
-
-if ! [ -d Adafruit_CircuitPython_Display_Text ]; then
-    git clone https://github.com/adafruit/Adafruit_CircuitPython_Display_Text
-fi
-cd Adafruit_CircuitPython_Display_Text
-git checkout 2.22.8
-cd ..
-
 if ! [ -d Adafruit_CircuitPython_ESP32SPI ]; then
     git clone https://github.com/adafruit/Adafruit_CircuitPython_ESP32SPI
 fi
@@ -66,12 +52,5 @@ if ! [ -d Adafruit_CircuitPython_MatrixPortal ]; then
 fi
 cd Adafruit_CircuitPython_MatrixPortal
 git checkout 3.0.10
-cd ..
-
-if ! [ -d Adafruit_CircuitPython_datetime ]; then
-    git clone https://github.com/adafruit/Adafruit_CircuitPython_datetime
-fi
-cd Adafruit_CircuitPython_datetime
-git checkout 1.2.2
 cd ..
 
