@@ -182,7 +182,7 @@ causing Action Clocks in the field to downgrade to a previous version.
 When we talk about v0, we are referring to the contents of the root
 directory of the flash drive on a factory-installed Action Clock.
 Each pack file is an overlay over v0, NOT over the preceding version.
-Specifically, each Python module (`*.py`) and each font file (`*.pcf`)
+Specifically, each Python module (`*.py`) and each font file (`*.mcf`)
 overrides the file of the same name in the root directory of the flash
 drive.  Therefore, once the first Action Clock is released, v0 must be
 set in stone; the root directory must never be changed henceforth, in

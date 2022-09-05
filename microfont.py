@@ -23,6 +23,16 @@ def get(font_id):
 
 
 class Microfont:
+    # All glyphs are concatenated horizontally into a single bitmap.
+    # The set of available characters is represented as the union of
+    # one or more codepoint ranges.  The file begins with a magic
+    # number, the dimensions of the bitmap, and the number of ranges.
+    # Then comes the bitmap data, followed by arrays that specify:
+    #   - The starting and ending codepoints of each codepoint range
+    #   - The x-offset into the bitmap of each glyph
+    #   - The x-offset of each glyph within its bounding box
+    #   - The advance width of each glyph
+
     def __init__(self, path):
         with fs.open(path, 'rb') as file:
             assert file.read(4) == b'\xc2\xb5f1'

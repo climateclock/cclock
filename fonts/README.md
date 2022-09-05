@@ -37,14 +37,12 @@ PCF file is up to date.
 
 ## Compiling
 
-The fonts shipped with the Action Clock are in PCF format.  To compile a
-BDF file into a PCF file, you will need the tool `bdftopcf`, which is
-provided with X Windows (you'll get it if you install X11 or XQuartz).
-Once you have this installed, simply run:
+The fonts shipped with the Action Clock are in the "Microfont" format,
+a small and efficient font format that was designed for this application.
+See `microfont.py` for details on this format.  To compile a BDF file into
+a Microfont file, use `compile_microfont`.  For example:
 
-    tools/compile_font kairon-10.bdf
+    tools/compile_microfont kairon-10.bdf
 
-to produce the corresponding `kairon-10.pcf` file.  The `compile_font` tool
-will perform some optimizations and error checks to produce a slimmer PCF
-file and avoid erroneous rendering behaviour on the Action Clock; please use
-`compile_font` instead of running `bdftopcf` directly.
+will produce a corresponding `kairon-10.mcf` file.  It will also check the
+input and warn you if any metrics or bounding boxes seem wrong.
