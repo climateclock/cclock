@@ -11,7 +11,7 @@ MIN_MILLIS = 946684800_000  # 2000-01-01 00:00:00 UTC represented as Unix time
 
 # Unix time in ms that corresponds to monotonic_ns() == 0
 ref_millis = MIN_MILLIS  # the board starts up with the clock set to 2000-01-01
-rtc_source = None
+rtc_setter = None
 
 
 def get_millis():
@@ -23,32 +23,35 @@ def set_millis(millis):
     print(f'Setting cctime clock to {millis} ({millis_to_isoformat(millis)})')
     ref_ns = time.monotonic_ns()
     ref_millis = millis - ref_ns//1000000
-    if rtc_source:
+    if rtc_setter:
         # TODO: To set the RTC with sub-second precision, try waiting
         # until the transition to the next second to set the RTC.
         tm = time.localtime(millis//1000)
         print('Setting RTC to', tm)
-        rtc_source.datetime = tm
+        rtc_setter(tm)
 
 
 def enable_rtc():
     # Activates use of an attached DS3231 RTC as the time source.
-    global ref_millis, rtc_source
+    global ref_millis, rtc_setter
     try:
         import board
-        import rtc
+        from adafruit_bus_device.i2c_device import I2CDevice
+        from adafruit_register.i2c_bcd_datetime import BCDDateTimeRegister
     except:
-        print(f'No rtc module available; using internal clock')
+        print(f'Libraries for accessing the RTC are not available')
         return
     try:
-        from adafruit_ds3231 import DS3231
-        rtc_source = DS3231(board.I2C())
-        rtc_datetime, ref_ns = rtc_source.datetime, time.monotonic_ns()
+        register = BCDDateTimeRegister(0)
+        class DS3231:
+            i2c_device = I2CDevice(board.I2C(), 0x68)
+        rtc_datetime, ref_ns = register.__get__(DS3231), time.monotonic_ns()
+        rtc_setter = lambda tm: register.__set__(DS3231, tm)
         # TODO: To get sub-second precision from the RTC, try sampling it
         # until we detect a transition to the next second.
         ref_millis = time.mktime(rtc_datetime)*1000 - ref_ns//1000000
     except Exception as e:
-        rtc_source = None
+        rtc_setter = None
         utils.report_error(e, 'Could not find an attached DS3231 RTC')
 
 
