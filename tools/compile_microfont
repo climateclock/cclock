@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+
+from array import array
+import os
+import subprocess
+import sys
+import tempfile
+
+
+def compile_bdf_to_microfont(inpath, outpath):
+    with open(inpath) as infile:
+        lines = iter(enumerate(infile.readlines()))
+    cname = frows = None
+    chars = {}
+    clefts = {}
+    cwidths = {}
+    dwidths = {}
+
+    for lnum, line in lines:
+        words = line.split()
+        key = words[0]
+
+        if key == 'FONTBOUNDINGBOX':
+            fwidth, fheight, fleft, fbottom = map(int, words[1:])
+
+        elif key == 'STARTPROPERTIES':
+            for lnum, line in lines:
+                if line.split()[0] == 'ENDPROPERTIES':
+                    break
+
+        elif key == 'STARTCHAR':
+            cname = words[1]
+
+        elif key == 'ENCODING':
+            try:
+                enc = int(words[1])
+                assert enc > 0
+            except:
+                raise ValueError(f'Invalid ENCODING for {cname} on line {lnum}')
+            char_repr = '\\u%04x %r' % (enc, chr(enc))
+
+        elif key == 'DWIDTH':
+            try:
+                dwidth = int(words[1])
+                assert dwidth > 0
+            except:
+                raise ValueError(f'Invalid DWIDTH for {cname} on line {lnum}')
+            dwidths[enc] = dwidth
+
+        elif key == 'BBX':
+            desc = f'for {char_repr} ({cname}) on line {lnum}'
+            try:
+                cwidth, cheight, cleft, cbottom = map(int, words[1:])
+            except:
+                raise ValueError(f'Invalid BBX {desc}')
+            if cleft < 0:
+                raise ValueError(f'Negative BBX left edge {desc}')
+            if cwidth > dwidth:
+                raise ValueError(
+                    f'BBX width {cwidth} exceeds DWIDTH {dwidth} {desc}')
+            if cleft > dwidth:
+                raise ValueError(
+                    f'BBX left edge {cleft} exceeds DWIDTH {dwidth} {desc}')
+            if cleft > 1:
+                print(f'Note: BBX left edge {cleft} exceeds 1 {desc}')
+            clefts[enc] = cleft
+            cwidths[enc] = cwidth
+
+        elif key == 'BITMAP':
+            crows = ['' for y in range(fheight)]
+
+            y = (fheight + fbottom) - (cheight + cbottom)
+            for lnum, line in lines:
+                word = line.strip()
+                if word == 'ENDCHAR':
+                    break
+                crows[y] = hex_to_bits(word)[:cwidth]
+                y += 1
+
+            chars[enc] = crows
+
+    # Sort codepoints and group them into ranges.
+    encs = sorted(chars.keys())
+    ranges = []
+    start, stop = encs[0], encs[0] + 1
+    for enc in encs:
+        if enc <= stop + 4:  # allow gaps of up to 4 missing codepoints
+            stop = enc + 1
+            continue
+        ranges.append((start, stop))
+        start, stop = enc, enc + 1
+    ranges.append((start, stop))
+    starts = [start for start, stop in ranges]
+    stops = [stop for start, stop in ranges]
+    print('Codepoint ranges:', ', '.join(
+        f'{start}-{stop-1}' for start, stop in ranges))
+
+    # Rebuild the list of codepoints, including gaps covered by ranges.
+    encs = []
+    for start, stop in ranges:
+        encs += range(start, stop)
+    print(f'Used {len(chars)} of {len(encs)} available slots.')
+
+    # Concatenate the bitmaps of all the glyphs into one long bitmap.
+    frows = ['' for i in range(fheight)]
+    sxs = []
+    for enc in encs:
+        sxs.append(len(frows[0]))
+        crows = chars.get(enc, ['']*fheight)
+        for y in range(fheight):
+            frows[y] += crows[y] or '0'*cwidths.get(enc, 0)
+    sxs.append(len(frows[0]))
+    width = len(frows[0])
+    print(f'Packed {len(chars)} glyphs into a {width} x {fheight} bitmap.')
+
+    # Write out the file as a series of packed arrays.
+    with open(outpath, 'wb') as outfile:
+        outfile.write(b'\xc2\xb5f1')
+        outfile.write(bytes([width >> 8, width & 0xff, fheight, len(ranges)]))
+        for y in range(fheight):
+            outfile.write(pack_bitmap_row(frows[y]))
+        outfile.write(memoryview(array('H', starts)))
+        outfile.write(memoryview(array('H', stops)))
+        outfile.write(memoryview(array('H', sxs)))
+        outfile.write(array('b', [clefts.get(enc, 0) for enc in encs]))
+        outfile.write(array('B', [dwidths.get(enc, 0) for enc in encs]))
+
+
+def hex_to_bits(hex):
+    bits = ''
+    for char in hex:
+        bits += bin(int('1' + char, 16))[-4:]
+    return bits
+
+
+def pack_bitmap_row(bits):
+    bits += '0' * (-len(bits) % 32)
+    packed = []
+    for i in range(0, len(bits), 32):
+        chunk = bits[i:i + 32]
+        packed += [
+            int(chunk[24:32], 2),
+            int(chunk[16:24], 2),
+            int(chunk[8:16], 2),
+            int(chunk[0:8], 2)
+        ]
+    return bytes(packed)
+
+def main(bdf_path):
+    base_path = os.path.basename(bdf_path)
+    if base_path.endswith('.bdf'):
+        base_path = base_path[:-4]
+    mcf_path = base_path + '.mcf'
+
+    try:
+        compile_bdf_to_microfont(bdf_path, mcf_path)
+        print(f'Wrote {os.path.getsize(mcf_path)} bytes to {mcf_path}.')
+
+    except ValueError as e:
+        print(f'Bad BDF file: {e.args[0]}')
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    args = sys.argv[1:]
+    if len(args) != 1:
+        print(f'Usage: {sys.argv[0]} filename.bdf')
+        sys.exit(1)
+    main(*args)
