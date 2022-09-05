@@ -27,6 +27,7 @@ class MenuMode(Mode):
             },
             button_map['ENTER']: {
                 Press.SHORT: 'PROCEED',
+                Press.LONG: 'BACK',
             }
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
