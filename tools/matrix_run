@@ -57,7 +57,7 @@ done
 
 if [ -z "$quick" ]; then
     echo 'Installing fonts...'
-    cp *.pcf $target
+    cp *.mcf $target
 fi
 
 echo 'Installing startup logic...'

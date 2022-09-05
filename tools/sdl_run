@@ -26,7 +26,7 @@ run = __import__(module).run
 import fs
 fs.root = '/tmp/cclock'
 for path in os.listdir():
-    if path.endswith('.pcf'):
+    if path.endswith('.mcf'):
         fs.write(path, open(path, 'rb').read())
 
 from unix_network import UnixNetwork

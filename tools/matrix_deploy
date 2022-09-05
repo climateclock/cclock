@@ -110,7 +110,7 @@ cp /tmp/start.mpy $target/
 rm -f *.mpy /tmp/imports.py /tmp/start.py /tmp/start.mpy
 
 echo 'Installing fonts...'
-cp *.pcf $target/
+cp *.mcf $target/
 
 echo 'Installing initial copy of clock.json...'
 mkdir $target/cache
