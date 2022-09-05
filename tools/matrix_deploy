@@ -73,7 +73,7 @@ rm -f *.mpy /tmp/imports.py /tmp/start.py /tmp/start.mpy
 
 echo 'Scanning for imports...'
 
-cat <<EOF >> /tmp/imports.py
+cat <<EOF >>/tmp/imports.py
 import time
 time.sleep(2)
 import gc
@@ -82,28 +82,28 @@ gc.collect()
 print(f'pre-imports,{gc.mem_free()}')
 EOF
 if [ $debug_fragmentation = 'yes' ]; then
-  echo 'import micropython' >> /tmp/imports.py
-  echo 'micropython.mem_info(1); print()' >> /tmp/imports.py
+  echo 'import micropython' >>/tmp/imports.py
+  echo 'micropython.mem_info(1); print()' >>/tmp/imports.py
 fi
 for module in $(tools/sort_imports start); do
-  cat <<EOF >> /tmp/imports.py
+  cat <<EOF >>/tmp/imports.py
 gc.collect(); before = gc.mem_free()
 import $module
 after = gc.mem_free(); print(f'$module,{before - after}')
 EOF
   if [ $debug_fragmentation = 'yes' ]; then
-    echo 'micropython.mem_info(1); print()' >> /tmp/imports.py
+    echo 'micropython.mem_info(1); print()' >>/tmp/imports.py
   fi
 done
-cat <<EOF >> /tmp/imports.py
+cat <<EOF >>/tmp/imports.py
 gc.collect()
 print(f'post-imports,{gc.mem_free()}')
 EOF
 if [ $debug_fragmentation = 'yes' ]; then
-  echo 'micropython.mem_info(1); print()' >> /tmp/imports.py
+  echo 'micropython.mem_info(1); print()' >>/tmp/imports.py
 fi
 
-cat /tmp/imports.py start.py > /tmp/start.py
+cat /tmp/imports.py start.py >/tmp/start.py
 env/bin/mpy-cross /tmp/start.py
 cp /tmp/start.mpy $target/
 

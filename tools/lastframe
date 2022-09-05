@@ -2,4 +2,4 @@
 
 # Extracts and displays the last dumped screen frame in a screenlog file.
 
-grep -A 1 '^\[\[FRAME\]\]' screenlog.0 | tail -1 | python -c 'import binascii, os, sys; os.fdopen(1, "wb").write(b"P6\n192 32\n255\n" + binascii.unhexlify(sys.stdin.read().strip()))' | pnmtopng > /tmp/frame.png && open /tmp/frame.png
+grep -A 1 '^\[\[FRAME\]\]' screenlog.0 | tail -1 | python -c 'import binascii, os, sys; os.fdopen(1, "wb").write(b"P6\n192 32\n255\n" + binascii.unhexlify(sys.stdin.read().strip()))' | pnmtopng >/tmp/frame.png && open /tmp/frame.png
