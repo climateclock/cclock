@@ -71,6 +71,9 @@ class MatrixFrame(frame.Frame):
             self.shader[cv] = ((sr << 16) | (sg << 8) | sb)
 
     def pack(self, r, g, b):
+        for cv in range(0, self.next_cv):
+            if self.colours[cv] == (r, g, b):
+                return cv
         if self.next_cv < self.depth:
             self.colours[self.next_cv] = (r, g, b)
             sr, sg, sb = apply_brightness(self.brightness, r, g, b)
