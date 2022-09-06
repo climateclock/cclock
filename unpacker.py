@@ -1,8 +1,5 @@
-try:
-    from adafruit_hashlib import md5
-except:
-    md5 = __import__('hashlib').md5
 import fs
+from md5 import md5
 from utils import to_str
 
 

@@ -40,13 +40,6 @@ cd Adafruit_CircuitPython_ESP32SPI
 git checkout 5.0.1
 cd ..
 
-if ! [ -d Adafruit_CircuitPython_Hashlib ]; then
-    git clone https://github.com/adafruit/Adafruit_CircuitPython_Hashlib
-fi
-cd Adafruit_CircuitPython_Hashlib
-git checkout 1.4.9
-cd ..
-
 if ! [ -d Adafruit_CircuitPython_MatrixPortal ]; then
     git clone https://github.com/adafruit/Adafruit_CircuitPython_MatrixPortal
 fi
