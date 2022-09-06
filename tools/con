@@ -1,23 +1,23 @@
 #!/bin/bash
 
 if ! [ -c /dev/tty.usb* ]; then
-  echo -n 'Waiting for /dev/tty.usb* to appear..'
+    echo -n 'Waiting for /dev/tty.usb* to appear..'
 fi
 
 while true; do
-  while ! [ -c /dev/tty.usb* ]; do
-    echo -n '.'
-    sleep 0.4
-  done
-  device=/dev/tty.usb*
-  cat <<EOF >/tmp/screenrc
+    while ! [ -c /dev/tty.usb* ]; do
+        echo -n '.'
+        sleep 0.05
+    done
+    device=/dev/tty.usb*
+    cat <<EOF >/tmp/screenrc
 logfile flush 0
 defscrollback 10000
 EOF
-  screen -c /tmp/screenrc -L $device 115200
-  if ! [ -c $device ]; then
-    echo -n "$device vanished; waiting for it to reappear.."
-  else
-    break
-  fi
+    screen -c /tmp/screenrc -L $device 115200
+    if ! [ -c $device ]; then
+        echo -n "$device vanished; waiting for it to reappear.."
+    else
+        break
+    fi
 done

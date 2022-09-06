@@ -7,36 +7,35 @@ from menu_mode import MenuMode
 import micropython
 from pref_entry_mode import PrefEntryMode
 import time
-from utils import Cycle, mem
+from utils import Cycle, log
 
 
 class App:
     def __init__(self, network, frame, button_map, dial_map):
-        mem('pre-App.__init__')
+        log('Starting App.__init__')
         self.network = network
         self.frame = frame
         self.frame_counter = FrameCounter()
 
         self.clock_mode = ClockMode(self, network, button_map, dial_map)
-        mem('ClockMode')
+        log('Created ClockMode')
         self.menu_mode = MenuMode(self, button_map, dial_map)
-        mem('MenuMode')
+        log('Created MenuMode')
         self.pref_entry_mode = PrefEntryMode(self, button_map, dial_map)
-        mem('PrefEntryMode')
+        log('Created PrefEntryMode')
         self.mode = self.clock_mode
 
         self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
         self.lang = self.langs.current()
         self.brightness_reader = DialReader(
             'BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
-        mem('App.__init__')
+        log('Finished App.__init__')
 
     def start(self):
         self.frame.set_brightness(self.brightness_reader.value)
         self.mode.start()
 
     def step(self):
-        mem('step')
         self.frame_counter.tick()
         self.brightness_reader.step(self.receive)
         self.mode.step()
@@ -85,29 +84,30 @@ class App:
 class FrameCounter:
     def __init__(self):
         self.start = time.monotonic_ns()//1000000
-        self.frame_count = 0
         self.fps = 0
         self.last_tick = self.start
-        self.next_report = self.start + 10000
 
     def tick(self):
-        print('.', end='')
         now = time.monotonic_ns()//1000000
         elapsed = now - self.last_tick
         if elapsed > 0:
             last_fps = 1000.0/elapsed
             self.fps = 0.9 * self.fps + 0.1 * last_fps
-        self.frame_count += 1
+        last_sec = self.last_tick//1000
+        now_sec = now//1000
+        if now_sec > last_sec:
+            print('|\n', end='')
+            if now_sec % 10 == 0:
+                log(f'Uptime {(now - self.start)//1000} s ({self.fps:.1f} fps)')
+        print('.', end='')
         self.last_tick = now
-
-        if now > self.next_report:
-            print(f'uptime: {(now - self.start)/1000:.1f} s / {self.fps:.1f} fps')
-            self.next_report += 10000
 
 
 def run(network, frame, button_map, dial_map):
+    log('Starting run')
     cctime.enable_rtc()
     app = App(network, frame, button_map, dial_map)
     app.start()
+    log('First frame')
     while True:
         app.step()

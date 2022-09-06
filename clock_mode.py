@@ -7,24 +7,22 @@ from mode import Mode
 import prefs
 from updater import SoftwareUpdater
 import utils
-from utils import Cycle, mem
+from utils import Cycle, log
 
 
 class ClockMode(Mode):
     def __init__(self, app, network, button_map, dial_map):
-        mem('pre-ClockMode.__init__')
+        log('Starting ClockMode.__init__')
         super().__init__(app)
         self.network = network
 
         self.updater = SoftwareUpdater(network, self)
-        mem('SoftwareUpdater')
+        log('Created SoftwareUpdater')
         self.deadline = None
         self.lifeline = None
         self.message_module = ccapi.Newsfeed('newsfeed', '', [], [])
-        mem('Newsfeed')
 
         self.reload_definition()
-        mem('reload_definition')
 
         self.reader = ButtonReader({
             button_map['UP']: {
@@ -41,12 +39,12 @@ class ClockMode(Mode):
                 Press.SHORT: 'MENU_MODE',
             }
         })
-        mem('ButtonReader')
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
-        mem('DialReader')
         self.force_caps = False
+        log('Finished ClockMode.__init__')
 
     def reload_definition(self):
+        log()
         try:
             with fs.open('/cache/clock.json') as api_file:
                 defn = ccapi.load(api_file)
@@ -60,6 +58,7 @@ class ClockMode(Mode):
                 self.lifeline_cv = self.frame.pack(*display.lifeline.primary)
         except Exception as e:
             utils.report_error(e, 'Could not load API file')
+        log('reload_definition')
 
     def start(self):
         self.reader.reset()

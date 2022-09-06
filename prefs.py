@@ -24,7 +24,7 @@ def init():
     try:
         pairs.update(json.load(fs.open('/prefs.json')))
     except Exception as e:
-        utils.report_error(e, 'Could not read prefs.json.')
+        print(f'Could not read prefs.json: {e}')
         save()
 
 
@@ -39,5 +39,5 @@ def save():
         with fs.open('/prefs.json.new', 'wt') as file:
             json.dump(pairs, file)
         fs.rename('/prefs.json.new', '/prefs.json')
-    except OSError as e:
-        utils.report_error(e, 'Could not write prefs.json.')
+    except Exception as e:
+        print(f'Could not read prefs.json: {e}')

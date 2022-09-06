@@ -1,9 +1,5 @@
 import gc
-
-
-def mem(label):
-    gc.collect()
-    print(f'{label},{free()}')
+import time
 
 
 def free():
@@ -11,7 +7,35 @@ def free():
 
 
 if hasattr(gc, 'mem_free'):
-    free = gc.mem_free
+    def free():
+        gc.collect()
+        return gc.mem_free()
+
+
+last_ms = None
+last_mem = None
+
+def log(message=None):
+    global last_ms
+    global last_mem
+    ms = time.monotonic_ns()//1000000
+    mem = free()
+    if message:
+        sms = str(ms)
+        msg = f'[{sms[:-3]}.{sms[-3:]}: {mem} free] {message}'
+        if last_ms:
+            dms = str(ms - last_ms)
+            if len(dms) < 4:
+                dms = ('0000' + dms)[-4:]
+            dmem = last_mem - mem
+            print(msg, f'[{dms[:-3]}.{dms[-3:]} s elapsed, {dmem} used]')
+            last_ms = None
+            last_mem = None
+        else:
+            print(msg)
+    else:
+        last_ms = ms
+        last_mem = mem
 
 
 def to_bytes(arg):
