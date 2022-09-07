@@ -46,20 +46,24 @@ of the Adafruit libraries built-in, to conserve RAM.  To install the firmware:
 
 Once you have a `CIRCUITPY` volume visible, run:
 
-    tools/matrix_deploy
+    tools/deploy
 
-to wipe the MatrixPortal and do the equivalent of a "factory reset"; the
-current code will be deployed as version 0 and preferences will be wiped.
+to wipe the MatrixPortal and perform a clean installation.  The current
+code will be deployed as version 0 and preferences will be wiped (the
+equivalent of a "factory reset").
 
-Alternatively, during development, you can run:
+Alternatively, during development, you can run the clock in a window on
+your computer with:
+
+    tools/sdl_run app
+
+Or you can deploy the current code to a MatrixPortal (without resetting
+anything else) with:
 
     tools/matrix_run app
 
-to deploy the code in the working directory as version 999, without
-resetting anything else on the MatrixPortal.  This is a quicker way to
-write small code changes during development.
-
-The clock should then automatically restart and run the installed software.
+This is a quicker way to write small code changes during development.
+The clock should then automatically restart and run the updated code.
 If necessary, you can press the reset button once to restart.
 
 ### Networking
@@ -96,10 +100,10 @@ develop the clock display and user interaction.
 
 ### Writing over USB
 
-After you run `tools/matrix_run` for the first time and restart the board,
-`tools/matrix_run` will not work any more.  That's because the startup
-sequence sets the filesystem to be writable from CircuitPython, which
-makes it non-writable over the USB cable.
+After you run `tools/deploy` or `tools/matrix_run` for the first time
+and restart the board, they won't work a second time.  That's because
+the startup sequence sets the filesystem to be writable from CircuitPython,
+which makes it non-writable over the USB cable.
 
 To enable writing over USB, press the reset button once and then hold
 down either of the other two buttons until the status light turns red.
@@ -109,6 +113,8 @@ to the board.  The status light can be red or purple; the mnemonic is:
 
   - Red means you can wRite (or think of a red recording light)
   - PuRple means it's in PRoduction (non-writable over USB)
+
+When the light is red, `tools/deploy` or `tools/matrix_run` will work.
 
 ### Communicating with the MatrixPortal
 
@@ -134,9 +140,9 @@ you can edit `prefs.json` to customize the network name and password.
 First, put the board into writable mode by pressing the reset button and
 holding down one of the other buttons until the status light turns red
 (see the preceding section).  Then open `/Volumes/CIRCUITPY/prefs.json`
-in a text editor, edit the network's SSID and password, and save the file.
-Eject the `/Volumes/CIRCUITPY` drive from your computer, then press the
-reset button to restart the board.
+in a text editor, edit the `wifi_ssid` and `wifi_password` values, and save
+the file.  Eject the `/Volumes/CIRCUITPY` drive from your computer, then
+press the reset button to restart the board.
 
 ### Software update
 

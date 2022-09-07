@@ -36,7 +36,7 @@ import prefs
 prefs.init()
 import sdl2
 from sdl_frame import SdlFrame, SdlButton, SdlDial
-frame = SdlFrame(192, 32, 16)  # 16 fps is roughly what we get on the board
+frame = SdlFrame(192, 32, 20)  # 20 fps is roughly what we get on the board
 up = SdlButton(frame, sdl2.SDL_SCANCODE_LSHIFT)
 down = SdlButton(frame, sdl2.SDL_SCANCODE_RSHIFT)
 enter = SdlButton(frame, sdl2.SDL_SCANCODE_RETURN)
