@@ -47,11 +47,11 @@ class PrefEntryMode(Mode):
             },
             button_map['DOWN']: {
                 Press.SHORT: 'NEXT_OPTION',
-                Press.LONG: 'PROCEED',
+                Press.LONG: 'GO',
                 Press.DOUBLE: 'DUMP_MEMORY',
             },
             button_map['ENTER']: {
-                Press.SHORT: 'PROCEED',
+                Press.SHORT: 'GO',
                 Press.LONG: 'BACK',
             }
         })
@@ -135,7 +135,7 @@ class PrefEntryMode(Mode):
         if command == 'NEXT_OPTION':
             move_cursor(1)
 
-        if command == 'PROCEED':
+        if command == 'GO':
             label, command, chars = self.menu[self.menu_index]
             if self.menu_selected:
                 ci = self.char_indexes[self.menu_index]
