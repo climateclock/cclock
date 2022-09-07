@@ -50,7 +50,7 @@ class EspWifiNetwork(Network):
                 cctime.ntp_sync(socket, 'pool.ntp.org')
 
             elif cctime.get_millis() > self.wifi_started + 20000:
-                utils.log('No Wi-Fi network joined after 20 seconds; retrying.')
+                utils.log(f'Could not join {repr(ssid)} after 20 s; retrying.')
                 self.esp.disconnect()
                 self.esp.wifi_set_passphrase(ssid, password)
                 self.wifi_started = cctime.get_millis()
@@ -80,7 +80,7 @@ class EspWifiNetwork(Network):
             self.set_state(State.CONNECTED)
 
         elif cctime.get_millis() > self.connect_started + 10000:
-            utils.log('No connection after 10 seconds; retrying.')
+            utils.log(f'Could not connect to {hostname} after 10 s; retrying.')
             self.close_step()
 
         elif self.esp.status != 3:
