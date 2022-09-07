@@ -55,12 +55,12 @@ equivalent of a "factory reset").
 Alternatively, during development, you can run the clock in a window on
 your computer with:
 
-    tools/sdl_run app
+    tools/sdl_run
 
 Or you can deploy the current code to a MatrixPortal (without resetting
 anything else) with:
 
-    tools/matrix_run app
+    tools/matrix_run
 
 This is a quicker way to write small code changes during development.
 The clock should then automatically restart and run the updated code.
@@ -92,7 +92,7 @@ to set up your Python virtual environment and install dependencies.
 
 To run the clock in a window on your computer:
 
-    tools/sdl_run app
+    tools/sdl_run
 
 This will substitute your computer's filesystem, network, and display, but
 otherwise run the same code that runs in production, so you can test and
@@ -108,7 +108,7 @@ which makes it non-writable over the USB cable.
 To enable writing over USB, press the reset button once and then hold
 down either of the other two buttons until the status light turns red.
 The red light indicates that the board is now writable, so you can
-run `tools/matrix_run app` again to copy any of your local edits over
+run `tools/matrix_run` again to copy any of your local edits over
 to the board.  The status light can be red or purple; the mnemonic is:
 
   - Red means you can wRite (or think of a red recording light)
@@ -261,26 +261,3 @@ Python, using the SDL2 graphics library for display.
 `matrix_frame.py` is a partial implementation of `Frame` that runs on
 CircuitPython.  It's written for the Adafruit MatrixPortal M4, and
 assumes that there is an attached grid of 192 x 32 pixels (HUB75 panels).
-
-You can write one main module and run it in both contexts.  Your module
-must expose a run() function that takes a Frame instance as its one argument.
-An example of such a module is `quilt.py`, provided as a simple demo;
-you can run it like this:
-
-    tools/sdl_run quilt
-
-which will appear in a window on your computer, or like this:
-
-    tools/matrix_run quilt
-
-which will run the same module on an attached MatrixPortal board.
-
-`app.py` is the Action Clock implementation.  You can run it in a window
-on your computer with:
-
-    tools/sdl_run app
-
-or run it on an attached MatrixPortal with:
-
-    tools/matrix_run app
-

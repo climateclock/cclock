@@ -13,11 +13,8 @@ module=${module%.py}
 target=/Volumes/CIRCUITPY
 unalias -a
 
-# TODO: Deploy start.py in such a way that it runs $module, instead of
-# always running the "app" module.
-
-if [ -z "$module" ]; then
-    echo "Usage: $0 [-q] <module>"
+if [ "$1" = -h ]; then
+    echo "Usage: $0 [-q]"
     echo
     echo "Runs a module on the attached CircuitPython device, using"
     echo "adafruit.rgbmatrix as the graphics driver.  Specify -q for"
@@ -48,7 +45,7 @@ fi
 
 echo 'Installing program modules...'
 rm -rf $target/v999
-mkdir $target/v999
+mkdir -p $target/v999
 for file in *.py; do
     name=${file%.py}
     env/bin/mpy-cross "$name.py"
@@ -65,7 +62,7 @@ rm -f $target/code.py
 cp boot.py gpio.py main.py $target
 
 echo 'Installing initial copy of clock.json...'
-mkdir $target/cache
+mkdir -p $target/cache
 curl -s -o $target/cache/clock.json https://api.climateclock.world/v1/clock
 
 touch $target/v999/@VALID

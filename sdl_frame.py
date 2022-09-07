@@ -16,7 +16,7 @@ class FrameTimer:
         """Waits until the next frame display time."""
         next = self.next + self.interval
         cctime.sleep_millis(self.next - cctime.get_millis())
-        self.next = next
+        self.next = max(next, cctime.get_millis())
 
 
 class SdlButton:

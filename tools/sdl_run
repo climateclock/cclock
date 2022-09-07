@@ -15,14 +15,6 @@ for name in os.listdir('.'):
     if name.startswith('Adafruit_CircuitPython'):
         sys.path.append(name)
 
-try:
-    module = sys.argv[1]
-    module = re.sub(r'\.py.?$', '', module)
-except:
-    module = 'app'
-
-run = __import__(module).run
-
 import fs
 fs.root = '/tmp/cclock'
 for path in os.listdir():
@@ -44,7 +36,9 @@ brightness = SdlDial(
     frame, sdl2.SDL_SCANCODE_DOWN, sdl2.SDL_SCANCODE_UP, 0.0, 1.0, 1/8.0)
 selector = SdlDial(
     frame, sdl2.SDL_SCANCODE_LEFT, sdl2.SDL_SCANCODE_RIGHT, -100000, 100000, 1)
-run(
+
+import app
+app.run(
     network,
     frame,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
