@@ -57,7 +57,12 @@ class EspWifiNetwork(Network):
 
     def connect_step(self, hostname, port=None, ssl=True):
         if self.socket is None:
-            self.socket = self.esp.get_socket()
+            try:
+                self.socket = self.esp.get_socket()
+            except TimeoutError as e:
+                utils.report_error(e, 'Failed to get socket; resetting')
+                self.esp.reset()
+                self.set_state(State.OFFLINE)
             port = port or (443 if ssl else 80)
             mode = self.esp.TLS_MODE if ssl else self.esp.TCP_MODE
             utils.log(f'Connecting to {hostname} port {port}')
@@ -66,7 +71,7 @@ class EspWifiNetwork(Network):
                 self.esp.socket_open(self.socket, hostname, port, mode)
                 self.connect_started = cctime.get_millis()
             except Exception as e:
-                utils.report_error(e, 'Failed to open socket')
+                utils.report_error(e, 'Failed to open socket; resetting')
                 self.esp.reset()
                 self.socket = None
                 self.set_state(State.OFFLINE)
