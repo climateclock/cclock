@@ -5,7 +5,6 @@ import cctime
 from digitalio import DigitalInOut, Direction
 from network import Network, State
 import utils
-from utils import to_bytes
 
 
 class EspWifiNetwork(Network):
@@ -33,13 +32,15 @@ class EspWifiNetwork(Network):
 
     def set_state(self, new_state):
         self.state = new_state
-        print(f'Network is now {self.state}.')
+        utils.log(f'Network is now {self.state}.')
 
     def enable_step(self, ssid, password):
+        ssid = utils.to_bytes(ssid)
+        password = utils.to_bytes(password)
         if not self.wifi_started:
-            print(f'Joining Wi-Fi network {repr(ssid)}.')
+            utils.log(f'Joining Wi-Fi network {repr(ssid)}.')
             # NOTE: ssid and password must be bytes, not str!
-            self.esp.wifi_set_passphrase(to_bytes(ssid), to_bytes(password))
+            self.esp.wifi_set_passphrase(ssid, password)
             self.wifi_started = cctime.get_millis()
 
         elif self.wifi_started:
@@ -49,9 +50,9 @@ class EspWifiNetwork(Network):
                 cctime.ntp_sync(socket, 'pool.ntp.org')
 
             elif cctime.get_millis() > self.wifi_started + 20000:
-                print('Could not join Wi-Fi network after 20 seconds; retrying.')
+                utils.log('No Wi-Fi network joined after 20 seconds; retrying.')
                 self.esp.disconnect()
-                self.esp.wifi_set_passphrase(to_bytes(ssid), to_bytes(password))
+                self.esp.wifi_set_passphrase(ssid, password)
                 self.wifi_started = cctime.get_millis()
 
     def connect_step(self, hostname, port=None, ssl=True):
@@ -59,7 +60,7 @@ class EspWifiNetwork(Network):
             self.socket = self.esp.get_socket()
             port = port or (443 if ssl else 80)
             mode = self.esp.TLS_MODE if ssl else self.esp.TCP_MODE
-            print(f'Connecting to', hostname, 'port', port)
+            utils.log(f'Connecting to {hostname} port {port}')
             try:
                 # NOTE: hostname must be str, not bytes!
                 self.esp.socket_open(self.socket, hostname, port, mode)
@@ -74,11 +75,11 @@ class EspWifiNetwork(Network):
             self.set_state(State.CONNECTED)
 
         elif cctime.get_millis() > self.connect_started + 10000:
-            print('No connection after 10 seconds; retrying.')
+            utils.log('No connection after 10 seconds; retrying.')
             self.close_step()
 
         elif self.esp.status != 3:
-            print('Wi-Fi network lost.')
+            utils.log('Wi-Fi network lost.')
             self.close_step()
             self.set_state(State.OFFLINE)
 
@@ -103,7 +104,7 @@ class EspWifiNetwork(Network):
         if self.socket:
             try:
                 self.esp.socket_close(self.socket)
-                print('Closed socket.')
+                utils.log('Closed socket.')
             except Exception as e:
                 utils.report_error(e, 'Failed to close socket')
         if self.state == State.CONNECTED:

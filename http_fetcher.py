@@ -33,7 +33,7 @@ class HttpFetcher:
             if self.silence_started:
                 silence = int(now - self.silence_started)
                 if silence > SILENCE_TIMEOUT:
-                    print(f'Closing connection after {silence} s of silence.')
+                    utils.log(f'Closing socket after {silence} s of silence.')
                     self.network.close_step()
                     raise StopIteration
             else:
@@ -61,7 +61,7 @@ class HttpFetcher:
 
     def request_read(self):
         if self.network.state == State.CONNECTED:
-            print(f'Fetching {self.path} from {self.hostname}.')
+            utils.log(f'Fetching {self.path} from {self.hostname}.')
             self.network.send_step(
                 b'GET ' + utils.to_bytes(self.path) + b' HTTP/1.1\r\n' +
                 b'Host: ' + utils.to_bytes(self.hostname) + b'\r\n' +
@@ -109,6 +109,6 @@ class HttpFetcher:
             print(f'Received {len(chunk)} bytes.')
             return chunk
         else:
-            print('Remote server closed connection.')
+            utils.log('Remote server closed connection.')
             self.network.close_step()
             raise StopIteration

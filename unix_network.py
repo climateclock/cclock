@@ -1,4 +1,4 @@
-from cctime import get_millis
+import cctime
 from network import Network, State
 import socket
 import ssl
@@ -28,21 +28,24 @@ class UnixNetwork(Network):
         print(f'Network is now {self.state}.')
 
     def enable_step(self, ssid, password):
+        now = cctime.get_millis()
+
         if not self.initialized:
             if self.initialize_time:
-                if get_millis() > self.initialize_time:
+                if now > self.initialize_time:
                     self.initialized = True
                     self.initialize_time = None
             else:
-                self.initialize_time = get_millis() + self.initialize_delay
+                self.initialize_time = now + self.initialize_delay
 
         elif self.state == State.OFFLINE:
             if self.wifi_connect_time:
-                if get_millis() > self.wifi_connect_time:
+                if now > self.wifi_connect_time:
                     self.wifi_connect_time = None
                     self.set_state(State.ONLINE)
+                    simulate_ntp_sync()
             elif ssid == self.ssid and password == self.password:
-                self.wifi_connect_time = get_millis() + self.wifi_connect_delay
+                self.wifi_connect_time = now + self.wifi_connect_delay
 
     def connect_step(self, hostname, port=None, ssl=True):
         port = port or (443 if ssl else 80)
@@ -74,3 +77,8 @@ class UnixNetwork(Network):
     def disable_step(self):
         self.set_state(State.OFFLINE)
         self.initialized = False
+
+
+def simulate_ntp_sync():
+    import time
+    cctime.set_millis(int(time.time() * 1000))
