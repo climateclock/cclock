@@ -171,4 +171,4 @@ def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
         newsfeed_index = (i + 1) % n
         headline_label = None
     else:
-        newsfeed_x -= 3
+        newsfeed_x -= 2
