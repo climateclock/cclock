@@ -132,9 +132,13 @@ class MenuMode(Mode):
     def step(self):
         self.reader.step(self.app.receive)
         self.dial_reader.step(self.app.receive)
-        # TODO: Currently every mode's step() method must call self.frame.send()
-        # in order for sdl_frame to detect events; fix this leaky abstraction.
-        self.frame.send()
+        title, value, command, arg, children = self.node
+        if not children:
+            self.draw()  # show live updates for leaf nodes, e.g. current time
+        else:
+            # TODO: Every mode's step() method must call self.frame.send() in
+            # order for sdl_frame to detect events; fix this leaky abstraction.
+            self.frame.send()
 
     def receive(self, command, arg=None):
         if command == 'SELECTOR':
