@@ -7,7 +7,7 @@ from menu_mode import MenuMode
 import micropython
 from pref_entry_mode import PrefEntryMode
 import time
-from utils import Cycle, log
+from utils import Cycle, free, log
 
 
 class App:
@@ -86,6 +86,7 @@ class FrameCounter:
         self.start = time.monotonic_ns()//1000000
         self.fps = 0
         self.last_tick = self.start
+        self.min_free = free()
 
     def tick(self):
         now = time.monotonic_ns()//1000000
@@ -98,9 +99,18 @@ class FrameCounter:
         if now_sec > last_sec:
             print('|\n', end='')
             if now_sec % 10 == 0:
-                log(f'Uptime {(now - self.start)//1000} s ({self.fps:.1f} fps)')
+                log(f'Uptime {self.uptime()} s ({self.fps:.1f} fps, {self.mem()} free)')
         print('.', end='')
         self.last_tick = now
+
+    def uptime(self):
+        now = time.monotonic_ns()//1000000
+        return (now - self.start)//1000
+
+    def mem(self):
+        now_free = free()
+        self.min_free = min(self.min_free, now_free)
+        return now_free
 
 
 def run(network, frame, button_map, dial_map):

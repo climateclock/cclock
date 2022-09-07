@@ -21,14 +21,9 @@ def log(message=None):
     ms = time.monotonic_ns()//1000000
     mem = free()
     if message:
-        sms = str(ms)
-        msg = f'[{sms[:-3]}.{sms[-3:]}: {mem} free] {message}'
+        msg = f'[{format_ms(ms)}: {mem} free] {message}'
         if last_ms:
-            dms = str(ms - last_ms)
-            if len(dms) < 4:
-                dms = ('0000' + dms)[-4:]
-            dmem = last_mem - mem
-            print(msg, f'[{dms[:-3]}.{dms[-3:]} s elapsed, {dmem} used]')
+            print(msg, f'[{format_ms(ms - last_ms)} s elapsed, {last_mem - mem} used]')
             last_ms = None
             last_mem = None
         else:
@@ -36,6 +31,13 @@ def log(message=None):
     else:
         last_ms = ms
         last_mem = mem
+
+
+def format_ms(ms):
+    digits = str(ms)
+    if len(digits) < 4:
+        digits = ('0000' + digits)[-4:]
+    return digits[:-3] + '.' + digits[-3:]
 
 
 def to_bytes(arg):

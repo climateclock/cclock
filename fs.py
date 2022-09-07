@@ -15,6 +15,7 @@ def open(relpath, mode='rb'):
 
 
 def write(relpath, content, mode='wb'):
+    make_parent(relpath)
     with open(relpath, mode) as file:
         file.write(content)
 
@@ -51,10 +52,10 @@ def get_mode(relpath):
 def make_parent(relpath):
     parts = relpath.strip('/').split('/')
     relpath = ''
-    for part in parts[:-1]:
-        relpath += '/' + part
+    for part in parts:
         path = resolve(relpath)
         if isfile(relpath):
             os.remove(path)
         if not isdir(relpath):
             os.mkdir(path)
+        relpath += '/' + part

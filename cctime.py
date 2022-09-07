@@ -39,7 +39,7 @@ def enable_rtc():
         from adafruit_bus_device.i2c_device import I2CDevice
         from adafruit_register.i2c_bcd_datetime import BCDDateTimeRegister
     except:
-        print(f'Libraries for accessing the RTC are not available')
+        print(f'RTC access libraries are unavailable')
         return
     try:
         register = BCDDateTimeRegister(0)

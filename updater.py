@@ -15,7 +15,8 @@ INTERVAL_AFTER_SUCCESS = 30 * 60 * 1000  # recheck for updates every half hour
 
 
 class SoftwareUpdater:
-    def __init__(self, network, clock_mode):
+    def __init__(self, app, network, clock_mode):
+        self.app = app
         self.network = network
         self.clock_mode = clock_mode
 
@@ -37,6 +38,7 @@ class SoftwareUpdater:
 
     def retry_after(self, delay):
         self.network.close_step()
+        self.api_fetcher = None
         self.index_fetcher = None
         self.unpacker = None
         self.next_check = cctime.get_millis() + delay
@@ -45,11 +47,13 @@ class SoftwareUpdater:
     def wait_step(self):
         now_millis = cctime.get_millis()
         if now_millis > self.next_check:
-            fetch = cctime.millis_to_isoformat(self.index_fetched)
-            now = cctime.millis_to_isoformat(now_millis)
             addr = self.network.get_hardware_address()
+            now = cctime.millis_to_isoformat(now_millis)
+            afetch = cctime.millis_to_isoformat(self.api_fetched)
+            ifetch = cctime.millis_to_isoformat(self.index_fetched)
+            fc = self.app.frame_counter
             self.api_fetcher = HttpFetcher(self.network,
-                f'{self.api_url}?mac={addr}&v={sys.path[0]}&t={now}&if={fetch}&mem={utils.free()}')
+                f'{self.api_url}?p=ac&v={sys.path[0]}&mac={addr}&t={now}&af={afetch}&if={ifetch}&up={fc.uptime()}&fps={fc.fps:.1f}&mem={fc.min_free}')
             self.step = self.api_fetch_step
 
     def api_fetch_step(self):

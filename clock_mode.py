@@ -16,7 +16,7 @@ class ClockMode(Mode):
         super().__init__(app)
         self.network = network
 
-        self.updater = SoftwareUpdater(network, self)
+        self.updater = SoftwareUpdater(app, network, self)
         log('Created SoftwareUpdater')
         self.deadline = None
         self.lifeline = None
