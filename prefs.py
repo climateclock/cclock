@@ -38,6 +38,6 @@ def save():
     try:
         with fs.open('/prefs.json.new', 'wt') as file:
             json.dump(pairs, file)
-        fs.rename('/prefs.json.new', '/prefs.json')
+        fs.move('/prefs.json.new', '/prefs.json')
     except Exception as e:
         print(f'Could not read prefs.json: {e}')

@@ -62,7 +62,7 @@ class SoftwareUpdater:
             data = self.api_fetcher.read()
             if data:
                 if not self.api_file:
-                    self.api_file = fs.open('/cache/clock.json', 'wb')
+                    self.api_file = fs.open('/cache/clock.json.new', 'wb')
                 self.api_file.write(data)
             return
         except Exception as e:
@@ -70,7 +70,9 @@ class SoftwareUpdater:
             if self.api_file:
                 self.api_file.close()
                 self.api_file = None
-            if not isinstance(e, StopIteration):
+            if isinstance(e, StopIteration):
+                fs.move('/cache/clock.json.new', '/cache/clock.json')
+            else:
                 utils.report_error(e, 'API fetch aborted')
                 self.network.close_step()
                 # Continue with software update anyway

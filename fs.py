@@ -20,7 +20,8 @@ def write(relpath, content, mode='wb'):
         file.write(content)
 
 
-def rename(relpath, newrelpath):
+def move(relpath, newrelpath):
+    destroy(newrelpath)
     os.rename(resolve(relpath), resolve(newrelpath))
 
 
