@@ -128,6 +128,9 @@ class SoftwareUpdater:
                 self.index_fetcher = None
                 self.unpacker = Unpacker(HttpFetcher(self.network, url))
                 self.step = self.pack_fetch_step
+        else:
+            print(f'No versions are enabled.')
+            self.retry_after(INTERVAL_AFTER_SUCCESS)
 
     def pack_fetch_step(self):
         try:
