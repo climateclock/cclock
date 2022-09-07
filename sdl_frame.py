@@ -9,7 +9,7 @@ import time
 
 class FrameTimer:
     def __init__(self, fps):
-        self.next = 0
+        self.next = cctime.get_millis()
         self.interval = int(1000/fps)
 
     def wait(self):
@@ -83,7 +83,7 @@ class SdlFrame(frame.Frame):
         self.flush_events()
 
     def set_brightness(self, brightness):
-        print('brightness =', brightness)
+        print('Setting brightness to', brightness)
         # TODO: Actually change the brightness of the displayed pixels
 
     def pack(self, r, g, b):

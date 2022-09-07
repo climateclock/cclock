@@ -103,6 +103,8 @@ def sleep_millis(ms):
 def try_isoformat_to_millis(data, key):
     # Parses a yyyy-mm-ddThh:mm:ss string into a time in millis.
     iso = data.get(key)
+    if iso is None:
+        return None
     try:
         assert iso[4] + iso[7] + iso[10] + iso[13] + iso[16] == '--T::'
         y, l, d = iso[:4], iso[5:7], iso[8:10]

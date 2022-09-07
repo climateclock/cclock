@@ -122,7 +122,8 @@ def reset_newsfeed():
 
 
 def format_item(item):
-    return f'{item.headline} ({item.source})' if item.source else item.headline
+    headline = item.headline.strip()
+    return f'{headline} ({item.source.strip()})' if item.source else headline
 
 
 def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
@@ -170,4 +171,4 @@ def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
         newsfeed_index = (i + 1) % n
         headline_label = None
     else:
-        newsfeed_x -= 4
+        newsfeed_x -= 3
