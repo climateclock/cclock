@@ -3,6 +3,9 @@ from network import State
 import prefs
 import utils
 
+# Wait this long after Wi-Fi is connected to attempt a fetch.
+INITIAL_DELAY = 1000
+
 # If the remote server has stopped sending data for this many milliseconds,
 # assume the HTTP response is finished.
 SILENCE_TIMEOUT = 10000
@@ -16,6 +19,7 @@ class HttpFetcher:
         self.network = network
         self.url = url
         self.ssl, self.hostname, self.path = utils.split_url(url)
+        self.online_started = None
         self.silence_started = None
 
         self.buffer = bytearray()
@@ -41,12 +45,16 @@ class HttpFetcher:
         if not self.hostname:
             raise ValueError(f'Invalid URL: {self.url}')
         if self.network.state == State.OFFLINE:
+            self.online_started = None
             self.network.enable_step(
                 prefs.get('wifi_ssid'),
                 prefs.get('wifi_password')
             )
         if self.network.state == State.ONLINE:
-            self.network.connect_step(self.hostname, ssl=self.ssl)
+            if not self.online_started:
+                self.online_started = cctime.get_millis()
+            if cctime.get_millis() > self.online_started + INITIAL_DELAY:
+                self.network.connect_step(self.hostname, ssl=self.ssl)
         if self.network.state == State.CONNECTED:
             self.read = self.request_read
         return b''

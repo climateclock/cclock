@@ -9,9 +9,9 @@ import utils
 
 
 # All durations are measured in milliseconds.
-INITIAL_DELAY = 2000  # wait this long after booting up
+INITIAL_DELAY = 1000  # wait this long after booting up
 INTERVAL_AFTER_FAILURE = 15000  # try again after 15 seconds
-INTERVAL_AFTER_SUCCESS = 30 * 60 * 1000  # recheck for updates every half hour
+INTERVAL_AFTER_SUCCESS = 60 * 60 * 1000  # recheck for updates once an hour
 
 
 class SoftwareUpdater:
@@ -43,6 +43,7 @@ class SoftwareUpdater:
         self.unpacker = None
         self.next_check = cctime.get_millis() + delay
         self.step = self.wait_step
+        utils.log(f'Next software update attempt in {delay} ms.')
 
     def wait_step(self):
         now_millis = cctime.get_millis()
@@ -78,7 +79,7 @@ class SoftwareUpdater:
                 return
 
         # StopIteration means fetch was successfully completed
-        print(f'API file successfully fetched!')
+        utils.log(f'API file successfully fetched!')
         self.api_fetched = cctime.get_millis()
         self.clock_mode.reload_definition()
 
@@ -103,7 +104,7 @@ class SoftwareUpdater:
                 self.retry_after(INTERVAL_AFTER_FAILURE)
                 return
         # StopIteration means fetch was successfully completed
-        print(f'Index file successfully fetched!')
+        utils.log(f'Index file successfully fetched!')
         self.index_fetched = cctime.get_millis()
         try:
             with fs.open('/cache/packs.json') as index_file:
