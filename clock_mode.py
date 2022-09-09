@@ -62,7 +62,7 @@ class ClockMode(Mode):
                 if current in lifelines:
                     while self.lifelines.next() != current:
                         pass
-                self.lifeline = self.lifelines.current()
+                self.switch_lifeline(0)
 
                 display = defn.config.display
                 self.deadline_cv = self.frame.pack(*display.deadline.primary)
@@ -72,10 +72,14 @@ class ClockMode(Mode):
         log('reload_definition')
 
     def switch_lifeline(self, delta):
-        if delta == 1:
+        if not self.lifelines:
+            return
+        if delta < 0:
             self.lifeline = self.lifelines.next()
-        if delta == -1:
+        elif delta > 0:
             self.lifeline = self.lifelines.previous()
+        else:
+            self.lifeline = self.lifelines.current()
         if self.lifeline == self.message_module:
             if not prefs.get('custom_message'):
                 if delta == -1:
@@ -113,7 +117,8 @@ class ClockMode(Mode):
         self.frame.clear()
         if not (self.deadline or self.lifelines):
             cv = self.frame.pack(255, 255, 255)
-            self.frame.print(1, 0, 'Loading...', 'kairon-10', cv)
+            ssid = prefs.get('wifi_ssid')
+            self.frame.print(1, 0, f'Joining Wi-Fi network "{ssid}"...', 'kairon-10', cv)
         if self.deadline:
             ccui.render_deadline_module(
                 self.frame, 0, self.deadline,
