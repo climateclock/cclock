@@ -8,7 +8,7 @@ pairs = {
     'wifi_password': 'climateclock',
     'api_url': 'https://api.climateclock.world/v1/clock',
     'update_url': 'https://zestyping.github.io/cclock/packs.json',
-    'custom_message': 'Time left before 1.5\u00b0C rise',
+    'custom_message': '',
     'auto_cycling': None,
     'updates_paused_until': None,
     'rgb_pins': 'MTX_R1 MTX_G1 MTX_B1 MTX_R2 MTX_G2 MTX_B2',

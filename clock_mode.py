@@ -20,7 +20,9 @@ class ClockMode(Mode):
         log('Created SoftwareUpdater')
         self.deadline = None
         self.lifeline = None
-        self.message_module = ccapi.Newsfeed('newsfeed', '', [], [])
+        self.lifelines = None
+        self.message_module = ccapi.Newsfeed(
+            'custom_message', 'newsfeed', 'lifeline', [], [])
 
         self.reload_definition()
 
@@ -48,17 +50,40 @@ class ClockMode(Mode):
         try:
             with fs.open('/cache/clock.json') as api_file:
                 defn = ccapi.load(api_file)
-                self.deadline = defn.module_dict['carbon_deadline_1']
-                modules = [self.message_module]
-                modules += [m for m in defn.modules if m.flavor == 'lifeline']
-                self.lifelines = Cycle(*modules)
+                defn.module_dict['custom_message'] = self.message_module
+                defn.modules.append(self.message_module)
+                deadlines = [m for m in defn.modules if m.flavor == 'deadline']
+                lifelines = [m for m in defn.modules if m.flavor == 'lifeline']
+
+                self.deadline = deadlines and deadlines[0] or None
+                self.lifelines = Cycle(*lifelines)
+
+                current = defn.module_dict.get(prefs.get('lifeline_id'))
+                if current in lifelines:
+                    while self.lifelines.next() != current:
+                        pass
                 self.lifeline = self.lifelines.current()
+
                 display = defn.config.display
                 self.deadline_cv = self.frame.pack(*display.deadline.primary)
                 self.lifeline_cv = self.frame.pack(*display.lifeline.primary)
         except Exception as e:
             utils.report_error(e, 'Could not load API file')
         log('reload_definition')
+
+    def switch_lifeline(self, delta):
+        if delta == 1:
+            self.lifeline = self.lifelines.next()
+        if delta == -1:
+            self.lifeline = self.lifelines.previous()
+        if self.lifeline == self.message_module:
+            if not prefs.get('custom_message'):
+                if delta == -1:
+                    self.lifeline = self.lifelines.previous()
+                else:
+                    self.lifeline = self.lifelines.next()
+        prefs.set('lifeline_id', self.lifeline.id)
+        self.frame.clear()
 
     def start(self):
         self.reader.reset()
@@ -74,6 +99,7 @@ class ClockMode(Mode):
         self.message_module.items[:] = [
             ccapi.Item(0, prefs.get('custom_message'), '')
         ]
+        self.switch_lifeline(0)
 
     def step(self):
         if self.next_advance and cctime.get_millis() > self.next_advance:
@@ -82,11 +108,10 @@ class ClockMode(Mode):
                 self.next_advance += auto_cycling
             else:
                 self.next_advance = None
-            self.lifeline = self.lifelines.next()
-            self.frame.clear()
+            self.switch_lifeline(1)
 
         self.frame.clear()
-        if not self.deadline:
+        if not (self.deadline or self.lifelines):
             cv = self.frame.pack(255, 255, 255)
             self.frame.print(1, 0, 'Loading...', 'kairon-10', cv)
         if self.deadline:
@@ -109,12 +134,7 @@ class ClockMode(Mode):
             self.force_caps = not self.force_caps
             self.frame.clear()
         if command == 'NEXT_LIFELINE':
-            self.lifeline = self.lifelines.next()
-            self.frame.clear()
+            self.switch_lifeline(1)
         if command == 'SELECTOR':
             delta, value = arg
-            if delta > 0:
-                self.lifeline = self.lifelines.next()
-            else:
-                self.lifeline = self.lifelines.previous()
-            self.frame.clear()
+            self.switch_lifeline(delta > 0 and 1 or -1)

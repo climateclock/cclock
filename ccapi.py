@@ -13,9 +13,9 @@ Config = namedtuple('Config', ('device_id', 'module_ids', 'display'))
 Display = namedtuple('Display', ('deadline', 'lifeline', 'neutral'))
 Palette = namedtuple('Palette', ('primary', 'secondary'))
 Item = namedtuple('Item', ('pub_millis', 'headline', 'source'))
-Timer = namedtuple('Timer', ('type', 'flavor', 'labels', 'ref_millis'))
-Newsfeed = namedtuple('Newsfeed', ('type', 'flavor', 'labels', 'items'))
-Value = namedtuple('Value', ('type', 'flavor', 'labels', 'initial', 'ref_millis', 'growth', 'rate', 'unit_labels', 'decimals', 'scale'))
+Timer = namedtuple('Timer', ('id', 'type', 'flavor', 'labels', 'ref_millis'))
+Newsfeed = namedtuple('Newsfeed', ('id', 'type', 'flavor', 'labels', 'items'))
+Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'initial', 'ref_millis', 'growth', 'rate', 'unit_labels', 'decimals', 'scale'))
 Defn = namedtuple('Defn', ('config', 'module_dict', 'modules'))
 
 
@@ -56,9 +56,10 @@ def parse_css_color(color):
         return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
 
 
-def load_timer(data):
+def load_timer(id, data):
     gc.collect()
     return Timer(
+        id,
         data.get("type"),
         data.get("flavor"),
         sorted_by_length(data.get("labels")),
@@ -66,9 +67,10 @@ def load_timer(data):
     )
 
 
-def load_newsfeed(data):
+def load_newsfeed(id, data):
     gc.collect()
     return Newsfeed(
+        id,
         data.get("type"),
         data.get("flavor"),
         sorted_by_length(data.get("labels")),
@@ -87,7 +89,7 @@ def load_item(data):
     )
 
 
-def load_value(data):
+def load_value(id, data):
     res = data.get("resolution") or 1
     decimals = 0
     scale = 1
@@ -96,6 +98,7 @@ def load_value(data):
         res, decimals, scale = res * 10, decimals + 1, scale * 10
 
     return Value(
+        id,
         data.get("type"),
         data.get("flavor"),
         sorted_by_length(data.get("labels")),
@@ -116,11 +119,11 @@ def load_defn(data):
     module_dict = {}
     for module_id, value in data.get("modules", {}).items():
         if value["type"] == "timer":
-            module = load_timer(value)
+            module = load_timer(module_id, value)
         elif value["type"] == "newsfeed":
-            module = load_newsfeed(value)
+            module = load_newsfeed(module_id, value)
         elif value["type"] == "value":
-            module = load_value(value)
+            module = load_value(module_id, value)
         gc.collect()
         module_dict[module_id] = module
     return Defn(
