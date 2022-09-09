@@ -74,13 +74,6 @@ class Cycle:
         self.items = items
         self.index = 0
 
-    def current(self):
-        return self.items[self.index]
-
-    def next(self):
-        self.index = (self.index + 1) % len(self.items)
-        return self.items[self.index]
-
-    def previous(self):
-        self.index = (self.index + len(self.items) - 1) % len(self.items)
+    def get(self, delta=0):
+        self.index = (self.index + len(self.items) + delta) % len(self.items)
         return self.items[self.index]

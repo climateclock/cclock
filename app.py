@@ -26,7 +26,7 @@ class App:
         self.mode = self.clock_mode
 
         self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
-        self.lang = self.langs.current()
+        self.lang = self.langs.get()
         self.brightness_reader = DialReader(
             'BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
         log('Finished App.__init__')
@@ -46,7 +46,7 @@ class App:
             delta, value = arg
             self.frame.set_brightness(value)
         if command == 'NEXT_LANGUAGE':
-            self.lang = self.langs.next()
+            self.lang = self.langs.get(1)
             self.frame.clear()
         if command == 'CLOCK_MODE':
             self.set_mode(self.clock_mode)

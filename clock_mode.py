@@ -60,7 +60,7 @@ class ClockMode(Mode):
 
                 current = defn.module_dict.get(prefs.get('lifeline_id'))
                 if current in lifelines:
-                    while self.lifelines.next() != current:
+                    while self.lifelines.get(1) != current:
                         pass
                 self.switch_lifeline(0)
 
@@ -72,22 +72,13 @@ class ClockMode(Mode):
         log('reload_definition')
 
     def switch_lifeline(self, delta):
-        if not self.lifelines:
-            return
-        if delta < 0:
-            self.lifeline = self.lifelines.next()
-        elif delta > 0:
-            self.lifeline = self.lifelines.previous()
-        else:
-            self.lifeline = self.lifelines.current()
-        if self.lifeline == self.message_module:
-            if not prefs.get('custom_message'):
-                if delta == -1:
-                    self.lifeline = self.lifelines.previous()
-                else:
-                    self.lifeline = self.lifelines.next()
-        prefs.set('lifeline_id', self.lifeline.id)
-        self.frame.clear()
+        if self.lifelines:
+            self.lifeline = self.lifelines.get(delta)
+            if self.lifeline == self.message_module:
+                if not prefs.get('custom_message'):
+                    self.lifeline = self.lifelines.get(delta or 1)
+            prefs.set('lifeline_id', self.lifeline.id)
+            self.frame.clear()
 
     def start(self):
         self.reader.reset()
