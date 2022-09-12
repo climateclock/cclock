@@ -127,8 +127,9 @@ echo 'Installing initial copy of clock.json...'
 mkdir $target/cache
 curl -s -o $target/cache/clock.json https://api.climateclock.world/v1/clock
 
-mkdir $target/v0
-touch $target/v0/@VALID
-touch $target/v0/@ENABLED
+version=v0.$(git describe --always --match='' --dirty)
+mkdir $target/$version
+touch $target/$version/@VALID
+touch $target/$version/@ENABLED
 sync
 echo 'All done!'

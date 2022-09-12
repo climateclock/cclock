@@ -126,7 +126,7 @@ device that newly appears when you plug in the USB cable.  For example:
 
     screen /dev/tty.usbmodem1101 115200
 
-If you are on MacOS, the utility `tools/con` will do this for you.
+If you are on MacOS, the utility `tools/serial` will do this for you.
 
 `print` statements will print to this serial console.  You can also
 press Ctrl-C in the console to stop the running program, which will
