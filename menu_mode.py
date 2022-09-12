@@ -88,6 +88,7 @@ class MenuMode(Mode):
                 (f'Last update fetch', lambda: cctime.millis_to_isoformat(
                     updater.index_fetched), None, None, []),
                 (f'ESP firmware', esp_firmware_version, None, None, []),
+                (f'Uptime', self.app.frame_counter.uptime, None, None, []),
                 (f'Free memory', utils.free, None, None, []),
                 (f'Free disk', lambda: f'{fs.free_kb()} kB', None, None, []),
                 ('Back', None, 'BACK', None, [])
