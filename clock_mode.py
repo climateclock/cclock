@@ -118,12 +118,13 @@ class ClockMode(Mode):
             ccui.render_lifeline_module(
                 self.frame, 16, self.lifeline,
                 self.lifeline_cv, self.app.lang, self.force_caps)
-        self.reader.step(self.app.receive)
-        self.dial_reader.step(self.app.receive)
         self.frame.send()
-
         if cctime.get_millis() > (self.updates_paused_until_millis or 0):
             self.updater.step()
+
+        # Handle input at the end of step(), because it might change modes.
+        self.reader.step(self.app.receive)
+        self.dial_reader.step(self.app.receive)
 
     def receive(self, command, arg=None):
         if command == 'TOGGLE_CAPS':

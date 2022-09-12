@@ -77,11 +77,12 @@ class PrefEntryMode(Mode):
         self.draw_menu()
 
     def step(self):
-        self.reader.step(self.app.receive)
-        self.dial_reader.step(self.app.receive)
         # TODO: Currently every mode's step() method must call self.frame.send()
         # in order for sdl_frame to detect events; fix this leaky abstraction.
         self.frame.send()
+        # Handle input at the end of step(), because it might change modes.
+        self.reader.step(self.app.receive)
+        self.dial_reader.step(self.app.receive)
 
     # Rows 0 to 9: pref_title and text being edited
     # Row 10: underline cursor for text being edited

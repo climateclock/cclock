@@ -141,11 +141,12 @@ class MenuMode(Mode):
         self.frame.send()
 
     def step(self):
-        self.reader.step(self.app.receive)
-        self.dial_reader.step(self.app.receive)
         if cctime.monotonic_millis() > self.next_draw:
             self.draw()
             self.next_draw += 20
+        # Handle input at the end of step(), because it might change modes.
+        self.reader.step(self.app.receive)
+        self.dial_reader.step(self.app.receive)
 
     def receive(self, command, arg=None):
         if command == 'SELECTOR':
