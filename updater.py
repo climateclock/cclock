@@ -3,7 +3,6 @@ import fs
 import json
 from http_fetcher import HttpFetcher
 import prefs
-import sys
 from unpacker import Unpacker
 import utils
 
@@ -23,14 +22,14 @@ class SoftwareUpdater:
         self.api_url = prefs.get('api_url')
         self.api_fetcher = None
         self.api_file = None
-        self.api_fetched = 0
+        self.api_fetched = None
 
         self.update_url = prefs.get('update_url')
         self.index_fetcher = None
         self.index_file = None
         self.index_name = None
         self.index_updated = None
-        self.index_fetched = 0
+        self.index_fetched = None
         self.index_packs = None
         self.unpacker = None
 
@@ -41,20 +40,22 @@ class SoftwareUpdater:
         self.api_fetcher = None
         self.index_fetcher = None
         self.unpacker = None
-        self.next_check = cctime.get_millis() + delay
+        self.next_check = cctime.monotonic_millis() + delay
         self.step = self.wait_step
         utils.log(f'Next software update attempt in {delay} ms.')
 
     def wait_step(self):
-        now_millis = cctime.get_millis()
-        if now_millis > self.next_check:
+        if cctime.monotonic_millis() > self.next_check:
+            print('fetch')
             addr = self.network.get_hardware_address()
-            now = cctime.millis_to_isoformat(now_millis)
-            afetch = cctime.millis_to_isoformat(self.api_fetched)
-            ifetch = cctime.millis_to_isoformat(self.index_fetched)
+            now = cctime.millis_to_isoformat(cctime.get_millis())
+            v = utils.version_running()
+            vp = ','.join(utils.versions_present())
+            afetch = cctime.millis_to_isoformat(self.api_fetched) or ''
+            ifetch = cctime.millis_to_isoformat(self.index_fetched) or ''
             fc = self.app.frame_counter
             self.api_fetcher = HttpFetcher(self.network,
-                f'{self.api_url}?p=ac&v={sys.path[0]}&mac={addr}&t={now}&af={afetch}&if={ifetch}&up={fc.uptime()}&fps={fc.fps:.1f}&mem={fc.min_free}')
+                f'{self.api_url}?p=ac&mac={addr}&v={v}&vp={vp}&t={now}&af={afetch}&if={ifetch}&up={fc.uptime()}&fps={fc.fps:.1f}&mem={fc.min_free}&disk={fs.free_kb()}')
             self.step = self.api_fetch_step
 
     def api_fetch_step(self):

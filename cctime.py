@@ -14,15 +14,18 @@ ref_millis = MIN_MILLIS  # the board starts up with the clock set to 2000-01-01
 rtc_setter = None
 
 
+def monotonic_millis():
+    return time.monotonic_ns()//1000000
+
+
 def get_millis():
-    return ref_millis + time.monotonic_ns()//1000000
+    return ref_millis + monotonic_millis()
 
 
 def set_millis(millis):
     global ref_millis
     print(f'Setting cctime clock to {millis} ({millis_to_isoformat(millis)})')
-    ref_ns = time.monotonic_ns()
-    ref_millis = millis - ref_ns//1000000
+    ref_millis = millis - monotonic_millis()
     if rtc_setter:
         # TODO: To set the RTC with sub-second precision, try waiting
         # until the transition to the next second to set the RTC.
@@ -45,11 +48,11 @@ def enable_rtc():
         register = BCDDateTimeRegister(0)
         class DS3231:
             i2c_device = I2CDevice(board.I2C(), 0x68)
-        rtc_datetime, ref_ns = register.__get__(DS3231), time.monotonic_ns()
         rtc_setter = lambda tm: register.__set__(DS3231, tm)
+        rtc_datetime = register.__get__(DS3231)
         # TODO: To get sub-second precision from the RTC, try sampling it
         # until we detect a transition to the next second.
-        ref_millis = time.mktime(rtc_datetime)*1000 - ref_ns//1000000
+        ref_millis = -monotonic_millis() + time.mktime(rtc_datetime)*1000
     except Exception as e:
         rtc_setter = None
         utils.report_error(e, 'Could not find an attached DS3231 RTC')
@@ -64,14 +67,14 @@ def ntp_sync(socket, server):
         packet = bytearray(48)
         packet[0] = 0b_00_100_011  # no leap second, NTP version 4, client mode
         s.settimeout(0.5)
-        send_ns = time.monotonic_ns()
+        send_millis = monotonic_millis()
         s.send(packet)
         if s.recv_into(packet) == 48:
-            recv_ns = time.monotonic_ns()
+            recv_millis = monotonic_millis()
             ntp_time = ((packet[40] << 24) + (packet[41] << 16) +
                 (packet[42] << 8) + packet[43]) - NTP_OFFSET
             ntp_millis = ntp_time * 1000 + (packet[44] * 1000 // 256)
-            latency_millis = (recv_ns - send_ns)//2//1000000
+            latency_millis = (recv_millis - send_millis)//2
             print(f'Got NTP time {ntp_millis} with latency {latency_millis}')
             set_millis(ntp_millis - latency_millis)
     finally:
@@ -117,4 +120,5 @@ def try_isoformat_to_millis(data, key):
 
 def millis_to_isoformat(millis):
     # Formats a time in millis into a yyyy-mm-ddThh:mm:ss string.
-    return '%04d-%02d-%02dT%02d:%02d:%02d' % millis_to_tm(millis)[:6]
+    if millis != None:
+        return '%04d-%02d-%02dT%02d:%02d:%02d' % millis_to_tm(millis)[:6]

@@ -16,8 +16,6 @@ class ClockMode(Mode):
         super().__init__(app)
         self.network = network
 
-        self.updater = SoftwareUpdater(app, network, self)
-        log('Created SoftwareUpdater')
         self.deadline = None
         self.lifeline = None
         self.lifelines = None
@@ -25,6 +23,8 @@ class ClockMode(Mode):
             'custom_message', 'newsfeed', 'lifeline', [], [])
 
         self.reload_definition()
+        self.updater = SoftwareUpdater(app, network, self)
+        log('Created SoftwareUpdater')
 
         self.reader = ButtonReader({
             button_map['UP']: {

@@ -1,5 +1,8 @@
+import fs
 import gc
+import os
 import time
+import sys
 
 
 def free():
@@ -10,6 +13,20 @@ if hasattr(gc, 'mem_free'):
     def free():
         gc.collect()
         return gc.mem_free()
+
+
+def version_running():
+    return sys.path[0]
+
+
+def versions_present():
+    versions = []
+    for name in fs.listdir():
+        if name.startswith('v') and fs.isdir(name):
+            pack_name = name.split('.')[0]
+            enabled_star = '*' if fs.isfile(name + '/@ENABLED') else ''
+            versions.append(enabled_star + pack_name)
+    return versions
 
 
 last_ms = None

@@ -1,9 +1,10 @@
 from ccinput import ButtonReader, DialReader, Press
 import cctime
+import fs
 from mode import Mode
 from network import State
 import prefs
-import sys
+import utils
 
 FONT = 'kairon-10'
 
@@ -13,6 +14,7 @@ class MenuMode(Mode):
         super().__init__(app)
         self.cv = self.frame.pack(0x80, 0x80, 0x80)
         self.cursor_cv = self.frame.pack(0x00, 0xff, 0x00)
+        self.next_draw = cctime.monotonic_millis()
 
         self.reader = ButtonReader({
             button_map['UP']: {
@@ -32,15 +34,18 @@ class MenuMode(Mode):
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
 
-        wifi_status = lambda: 'Status: ' + ['Online', 'Offline'][self.app.network.state == State.OFFLINE]
+        wifi_status = lambda: 'Status: ' + ['Online', 'Offline'][
+            self.app.network.state == State.OFFLINE]
         wifi_ssid = lambda: prefs.get('wifi_ssid')
+
+        now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
         updater = self.app.clock_mode.updater
-        index_updated = lambda: updater.index_updated or 'None'
-        index_fetched = lambda: updater.index_fetched and cctime.millis_to_isoformat(updater.index_fetched) or 'Not yet'
-        software_version = sys.path[0]
+        api_fetched = lambda: (updater.api_fetched and
+            cctime.millis_to_isoformat(updater.api_fetched) or 'Not yet')
+        index_fetched = lambda: (updater.index_fetched and
+            cctime.millis_to_isoformat(updater.index_fetched) or 'Not yet')
         esp_firmware_version = self.app.network.get_firmware_version()
         esp_hardware_address = self.app.network.get_hardware_address()
-        now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
 
         def auto_cycling():
             cycling_millis = prefs.get('auto_cycling')
@@ -73,13 +78,17 @@ class MenuMode(Mode):
             ]),
             ('Custom message', None, 'CUSTOM_MESSAGE_MODE', None, []),
             ('System info', None, None, None, [
-                (updater.index_name or 'Climate Clock', None, None, None, []),
-                (f'Version', software_version, None, None, []),
                 (f'Time', now, None, None, []),
-                (f'Index version', index_updated, None, None, []),
-                (f'Index fetched', index_fetched, None, None, []),
-                (f'ESP firmware', esp_firmware_version, None, None, []),
                 (f'MAC ID', esp_hardware_address, None, None, []),
+                (f'Version', utils.version_running, None, None, []),
+                (f'Versions present', utils.versions_present, None, None, []),
+                (f'Last API fetch', lambda: cctime.millis_to_isoformat(
+                    updater.api_fetched), None, None, []),
+                (f'Last update fetch', lambda: cctime.millis_to_isoformat(
+                    updater.index_fetched), None, None, []),
+                (f'ESP firmware', esp_firmware_version, None, None, []),
+                (f'Free memory', utils.free, None, None, []),
+                (f'Free disk', lambda: f'{fs.free_kb()} kB', None, None, []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Exit', None, 'CLOCK_MODE', None, [])
@@ -107,9 +116,11 @@ class MenuMode(Mode):
     def format_title(self, title, value):
         if title and callable(title):
             title = title()
-        if value and callable(value):
-            value = value()
-        return value and f'{title}: {value}' or title
+        if value:
+            if callable(value):
+                value = value()
+            return f'{title}: {value}'
+        return title
 
     def draw(self):
         title, value, command, arg, children = self.node
@@ -132,13 +143,9 @@ class MenuMode(Mode):
     def step(self):
         self.reader.step(self.app.receive)
         self.dial_reader.step(self.app.receive)
-        title, value, command, arg, children = self.node
-        if not children:
-            self.draw()  # show live updates for leaf nodes, e.g. current time
-        else:
-            # TODO: Every mode's step() method must call self.frame.send() in
-            # order for sdl_frame to detect events; fix this leaky abstraction.
-            self.frame.send()
+        if cctime.monotonic_millis() > self.next_draw:
+            self.draw()
+            self.next_draw += 20
 
     def receive(self, command, arg=None):
         if command == 'SELECTOR':

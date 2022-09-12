@@ -2,11 +2,11 @@ import os
 import supervisor
 import sys
 
-# Directories containing software versions are named v1, v2, etc.  We need
-# a way to mark software versions as enabled, disabled, or partial, and we
-# can't atomically move directories (os.rename doesn't work on directories
-# in CircuitPython), so we mark each directory by creating empty files to
-# indicate its status.  There can be two such files:
+# Directories containing software versions are named v1.<hash>, v2.<hash>,
+# etc.  We need a way to mark software versions as enabled, disabled, or
+# partial, and we can't atomically move directories (os.rename doesn't work
+# on directories in CircuitPython), so we mark each directory by creating
+# empty files to indicate its status.  There can be two such files:
 #
 #     @ENABLED: The software version is enabled.
 #     @VALID: The software version is completely downloaded and verified.
