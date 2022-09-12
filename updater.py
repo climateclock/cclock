@@ -70,17 +70,25 @@ class SoftwareUpdater:
             if self.api_file:
                 self.api_file.close()
                 self.api_file = None
+
+            fetch_error = None
             if isinstance(e, StopIteration):
-                fs.move('/cache/clock.json.new', '/cache/clock.json')
+                try:
+                    with fs.open('/cache/clock.json.new') as api_file:
+                        json.load(api_file)
+                except Exception as e:
+                    fetch_error = e
             else:
-                utils.report_error(e, 'API fetch aborted')
+                fetch_error = e
+            if fetch_error:
+                utils.report_error(fetch_error, 'API fetch failed')
                 self.network.close_step()
                 # Continue with software update anyway
                 self.index_fetcher = HttpFetcher(self.network, self.update_url)
                 self.step = self.index_fetch_step
                 return
 
-        # StopIteration means fetch was successfully completed
+        fs.move('/cache/clock.json.new', '/cache/clock.json')
         utils.log(f'API file successfully fetched!')
         self.api_fetched = cctime.get_millis()
         self.clock_mode.reload_definition()
