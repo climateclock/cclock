@@ -34,7 +34,7 @@ def compile_bdf_to_microfont(inpath, outpath):
         elif key == 'ENCODING':
             try:
                 enc = int(words[1])
-                assert enc > 0
+                assert enc >= 0
             except:
                 raise ValueError(f'Invalid ENCODING for {cname} on line {lnum}')
             char_repr = '\\u%04x %r' % (enc, chr(enc))
