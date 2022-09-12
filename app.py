@@ -58,7 +58,8 @@ class App:
             self.pref_entry_mode.set_pref('Wi-Fi password', 'wifi_password')
             self.set_mode(self.pref_entry_mode)
         if command == 'CUSTOM_MESSAGE_MODE':
-            self.pref_entry_mode.set_pref('Custom message', 'custom_message')
+            self.pref_entry_mode.set_pref(
+                'Custom message', 'custom_message', True)
             self.set_mode(self.pref_entry_mode)
         if command == 'DUMP_MEMORY':
             1/0

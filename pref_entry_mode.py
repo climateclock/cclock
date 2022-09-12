@@ -6,7 +6,7 @@ FONT = 'kairon-10'
 UP_ARROW = '\u2191'
 
 # ASCII characters only, for entering passwords and the like.
-ASCII_TEXT_ENTRY_MENU = [
+ASCII_TEXT_MENU = [
     ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz'),
     ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
     ('123', None, UP_ARROW + '1234567890'),
@@ -18,13 +18,13 @@ ASCII_TEXT_ENTRY_MENU = [
 ]
 
 # All the common letters and punctuation marks in Western European languages.
-DISPLAY_TEXT_ENTRY_MENU = [
+DISPLAY_TEXT_MENU = [
     ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz'),
     ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
-    ('ÀÁÂ', None, UP_ARROW + 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ'),
     ('àáâ', None, UP_ARROW + 'àáâãäåæçèéêëìíîïðµñòóôõöøßùúûüýÿþ'),
+    ('ÀÁÂ', None, UP_ARROW + 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ'),
     ('+−123', None, UP_ARROW + '+−1234567890²³₂₃₄'),
-    ('-\',.!?', None, UP_ARROW + '-\',.;:!?¡¿"‘’“”@#$%^&*=_~/\\()[]<>«»{}'),
+    (',.!?', None, UP_ARROW + ',.;:‘’!?¡¿“”@#$%^&*=_~/\\()[]<>«»{}'),
     ('\u2423', 'SPACE', ''),
     ('\b', 'BACKSPACE', ''),
     ('\x0b', 'CLEAR', ''),
@@ -57,14 +57,15 @@ class PrefEntryMode(Mode):
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
 
-        self.menu = ASCII_TEXT_ENTRY_MENU
+        self.menu = ASCII_TEXT_MENU
         self.menu_index = 0
         self.menu_selected = False
         self.char_indexes = [0] * len(self.menu)
 
-    def set_pref(self, pref_title, pref_name):
+    def set_pref(self, pref_title, pref_name, display_text=False):
         self.pref_title = pref_title
         self.pref_name = pref_name
+        self.menu = DISPLAY_TEXT_MENU if display_text else ASCII_TEXT_MENU
 
     def start(self):
         self.reader.reset()
