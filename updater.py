@@ -46,7 +46,6 @@ class SoftwareUpdater:
 
     def wait_step(self):
         if cctime.monotonic_millis() > self.next_check:
-            print('fetch')
             addr = self.network.get_hardware_address()
             now = cctime.millis_to_isoformat(cctime.get_millis())
             v = utils.version_running()

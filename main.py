@@ -1,6 +1,9 @@
+import microcontroller
 import os
 import supervisor
 import sys
+import time
+import traceback
 
 # Directories containing software versions are named v1.<hash>, v2.<hash>,
 # etc.  We need a way to mark software versions as enabled, disabled, or
@@ -33,6 +36,7 @@ if versions:
     latest, name = max(versions)
     print(f'\nRunning /{name} (version {latest}).\n')
     sys.path[:0] = [name]
+    start_time = time.monotonic()
     try:
         import start
     except Exception as e:
@@ -44,6 +48,20 @@ if versions:
                 print(f'{repr(ee)}: {ee}')
         else:
             print(f'\n/{name} is the last available version; not disabling.\n')
-        raise
+
+        try:
+            traceback.print_exception(e, e, e.__traceback__)
+            with open(f'{int(time.time())}.exc', 'w') as f:
+                f.write(traceback.format_exception(e, e, e.__traceback__))
+        except:
+            pass
+
+        run_time = time.monotonic() - start_time
+        if run_time < 300:
+            print(f'\nRunning time was only {run_time} s; not restarting.\n')
+        else:
+            print(f'\nRunning time was {run_time}s; restarting in 5 seconds.\n')
+            time.sleep(5)
+            microcontroller.reset()
 else:
     print('\nNo valid, enabled versions found.\n')
