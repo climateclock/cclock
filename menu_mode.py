@@ -46,6 +46,7 @@ class MenuMode(Mode):
             cctime.millis_to_isoformat(updater.index_fetched) or 'Not yet')
         esp_firmware_version = self.app.network.get_firmware_version()
         esp_hardware_address = self.app.network.get_hardware_address()
+        versions_present = ','.join(utils.versions_present() or ['None'])
 
         def auto_cycling():
             cycling_millis = prefs.get('auto_cycling')
@@ -81,7 +82,7 @@ class MenuMode(Mode):
                 (f'Time', now, None, None, []),
                 (f'MAC ID', esp_hardware_address, None, None, []),
                 (f'Version', utils.version_running, None, None, []),
-                (f'Versions present', utils.versions_present, None, None, []),
+                (f'Versions present', versions_present, None, None, []),
                 (f'Last API fetch', lambda: cctime.millis_to_isoformat(
                     updater.api_fetched), None, None, []),
                 (f'Last update fetch', lambda: cctime.millis_to_isoformat(
