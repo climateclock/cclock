@@ -144,12 +144,15 @@ def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
     if n == 1:
         if not headline_label:
             headline_label = frame.new_label(format_item(item), 'kairon-16')
+            if headline_label.w > DISPLAY_WIDTH:
+                text = format_item(item) + ' \xb7 '
+                headline_width = frame.measure(text, 'kairon-16')
+                headline_label = frame.new_label(text + text, 'kairon-16')
         if headline_label.w <= DISPLAY_WIDTH:
             # There is only one headline and it fits entirely; do not scroll.
             x = (DISPLAY_WIDTH - headline_label.w) // 2
             frame.paste(x, y, headline_label, cv=cv)
             return
-        headline_label = None
 
     if not headline_label:
         text = format_item(item) + ' \xb7 '
