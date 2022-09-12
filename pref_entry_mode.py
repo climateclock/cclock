@@ -10,7 +10,7 @@ ASCII_TEXT_MENU = [
     ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz'),
     ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
     ('123', None, UP_ARROW + '1234567890'),
-    (',.!?', None, UP_ARROW + ',.;:!?-\'"@#$%^&*+=_~/\\()[]<>{}'),
+    (',.-!?', None, UP_ARROW + ',.-;:\'!?"@#$%^&*+=_~/\\()[]<>{}'),
     ('\u2423', 'SPACE', ''),
     ('\b', 'BACKSPACE', ''),
     ('\x0b', 'CLEAR', ''),  # we're using Ctrl-K as the clear character
@@ -24,7 +24,7 @@ DISPLAY_TEXT_MENU = [
     ('àáâ', None, UP_ARROW + 'àáâãäåæçèéêëìíîïðµñòóôõöøßùúûüýÿþ'),
     ('ÀÁÂ', None, UP_ARROW + 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ'),
     ('+−123', None, UP_ARROW + '+−1234567890²³₂₃₄'),
-    (',.!?', None, UP_ARROW + ',.;:‘’!?¡¿“”@#$%^&*=_~/\\()[]<>«»{}'),
+    (',.-!?', None, UP_ARROW + ',.-;:‘’!?¡¿“”@#$%^&*=_~/\\()[]<>«»{}'),
     ('\u2423', 'SPACE', ''),
     ('\b', 'BACKSPACE', ''),
     ('\x0b', 'CLEAR', ''),

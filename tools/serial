@@ -14,6 +14,11 @@ while true; do
 logfile flush 0
 defscrollback 10000
 EOF
+    cat <<EOF >>screenlog.0
+
+
+==== Starting screen: $(date) ====
+EOF
     screen -c /tmp/screenrc -L $device 115200
     if ! [ -c $device ]; then
         echo -n "$device vanished; waiting for it to reappear.."

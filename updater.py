@@ -9,8 +9,8 @@ import utils
 
 # All durations are measured in milliseconds.
 INITIAL_DELAY = 1000  # wait this long after booting up
-INTERVAL_AFTER_FAILURE = 15000  # try again after 15 seconds
-INTERVAL_AFTER_SUCCESS = 60 * 60 * 1000  # recheck for updates once an hour
+INTERVAL_AFTER_FAILURE = 30000  # try again after 30 seconds
+INTERVAL_AFTER_SUCCESS = 30 * 60 * 1000  # recheck for updates twice an hour
 
 
 class SoftwareUpdater:

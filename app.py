@@ -6,29 +6,29 @@ import gc
 from menu_mode import MenuMode
 import micropython
 from pref_entry_mode import PrefEntryMode
-from utils import Cycle, free, log
+import utils
 
 
 class App:
     def __init__(self, network, frame, button_map, dial_map):
-        log('Starting App.__init__')
+        utils.log('Starting App.__init__')
         self.network = network
         self.frame = frame
         self.frame_counter = FrameCounter()
 
         self.clock_mode = ClockMode(self, network, button_map, dial_map)
-        log('Created ClockMode')
+        utils.log('Created ClockMode')
         self.menu_mode = MenuMode(self, button_map, dial_map)
-        log('Created MenuMode')
+        utils.log('Created MenuMode')
         self.pref_entry_mode = PrefEntryMode(self, button_map, dial_map)
-        log('Created PrefEntryMode')
+        utils.log('Created PrefEntryMode')
         self.mode = self.clock_mode
 
-        self.langs = Cycle('en', 'es', 'de', 'fr', 'is')
+        self.langs = utils.Cycle('en', 'es', 'de', 'fr', 'is')
         self.lang = self.langs.get()
         self.brightness_reader = DialReader(
             'BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
-        log('Finished App.__init__')
+        utils.log('Finished App.__init__')
 
     def start(self):
         self.frame.set_brightness(self.brightness_reader.value)
@@ -87,7 +87,7 @@ class FrameCounter:
         self.start = cctime.monotonic_millis()
         self.fps = 0
         self.last_tick = self.start
-        self.min_free = free()
+        self.min_free = utils.free()
 
     def tick(self):
         now = cctime.monotonic_millis()
@@ -100,7 +100,7 @@ class FrameCounter:
         if now_sec > last_sec:
             print('|\n', end='')
             if now_sec % 10 == 0:
-                log(f'Uptime {self.uptime()} s ({self.fps:.1f} fps, {self.mem()} free)')
+                utils.log(f'Up {self.uptime()} s ({self.fps:.1f} fps) on {utils.version_running()}')
         print('.', end='')
         self.last_tick = now
 
@@ -109,16 +109,16 @@ class FrameCounter:
         return (now - self.start)//1000
 
     def mem(self):
-        now_free = free()
+        now_free = utils.free()
         self.min_free = min(self.min_free, now_free)
         return now_free
 
 
 def run(network, frame, button_map, dial_map):
-    log('Starting run')
+    utils.log('Starting run')
     cctime.enable_rtc()
     app = App(network, frame, button_map, dial_map)
     app.start()
-    log('First frame')
+    utils.log('First frame')
     while True:
         app.step()
