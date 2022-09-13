@@ -1,7 +1,6 @@
 import fs
 import gc
 import os
-import time
 import sys
 
 
@@ -35,6 +34,7 @@ last_mem = None
 def log(message=None):
     global last_ms
     global last_mem
+    import time
     ms = time.monotonic_ns()//1000000
     mem = free()
     if message:

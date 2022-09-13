@@ -29,6 +29,7 @@ def set_millis(millis):
     if rtc_setter:
         # TODO: To set the RTC with sub-second precision, try waiting
         # until the transition to the next second to set the RTC.
+        # In CircuitPython, time.localtime works in UTC.
         tm = time.localtime(millis//1000)
         print('Setting RTC to', tm)
         rtc_setter(tm)

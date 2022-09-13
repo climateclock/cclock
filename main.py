@@ -45,16 +45,22 @@ if versions:
             try:
                 os.remove(name + '/@ENABLED')
             except Exception as ee:
-                print(f'{repr(ee)}: {ee}')
+                print(f'Could not disable /{name}: {ee}')
         else:
             print(f'\n/{name} is the last available version; not disabling.\n')
 
         try:
             traceback.print_exception(e, e, e.__traceback__)
-            with open(f'{int(time.time())}.exc', 'w') as f:
+            try:
+                import cctime
+                filename = f'{cctime.get_millis()//1000}.exc'
+            except:
+                filename = f'{int(time.time())}.exc'
+            with open(filename, 'w') as f:
                 f.write(traceback.format_exception(e, e, e.__traceback__))
-        except:
-            pass
+            print(f'Wrote traceback to {filename}.')
+        except Exception as ee:
+            print(f'Could not write traceback: {ee}')
 
         run_time = time.monotonic() - start_time
         if run_time < 300:

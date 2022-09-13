@@ -4,7 +4,6 @@ import displayio
 import frame
 import microfont
 from sdl2 import *
-import time
 
 
 class FrameTimer:
