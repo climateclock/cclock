@@ -67,7 +67,9 @@ class MenuMode(Mode):
             ]),
             (f'Auto cycling', auto_cycling, None, None, [
                 ('Off', None, 'SET_CYCLING', 0, []),
+                ('10 seconds', None, 'SET_CYCLING', 10000, []),
                 ('15 seconds', None, 'SET_CYCLING', 15000, []),
+                ('30 seconds', None, 'SET_CYCLING', 30000, []),
                 ('60 seconds', None, 'SET_CYCLING', 60000, []),
                 ('Back', None, 'BACK', None, [])
             ]),
