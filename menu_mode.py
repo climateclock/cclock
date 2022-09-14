@@ -3,6 +3,7 @@ import cctime
 import fs
 from mode import Mode
 from network import State
+import os
 import prefs
 import utils
 
@@ -89,10 +90,11 @@ class MenuMode(Mode):
                     updater.api_fetched), None, None, []),
                 (f'Last update fetch', lambda: cctime.millis_to_isoformat(
                     updater.index_fetched), None, None, []),
+                (f'Firmware', os.uname().version, None, None, []),
                 (f'ESP firmware', esp_firmware_version, None, None, []),
-                (f'Uptime', self.app.frame_counter.uptime, None, None, []),
-                (f'Free memory', utils.free, None, None, []),
                 (f'Free disk', lambda: f'{fs.free_kb()} kB', None, None, []),
+                (f'Free memory', utils.free, None, None, []),
+                (f'Uptime', self.app.frame_counter.uptime, None, None, []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Exit', None, 'CLOCK_MODE', None, [])

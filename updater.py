@@ -2,6 +2,7 @@ import cctime
 import fs
 import json
 from http_fetcher import HttpFetcher
+import os
 import prefs
 from unpacker import Unpacker
 import utils
@@ -50,11 +51,12 @@ class SoftwareUpdater:
             now = cctime.millis_to_isoformat(cctime.get_millis())
             v = utils.version_running()
             vp = ','.join(utils.versions_present())
+            fv = os.uname().version.split()[0]
             afetch = cctime.millis_to_isoformat(self.api_fetched) or ''
             ifetch = cctime.millis_to_isoformat(self.index_fetched) or ''
             fc = self.app.frame_counter
             self.api_fetcher = HttpFetcher(self.network,
-                f'{self.api_url}?p=ac&mac={addr}&v={v}&vp={vp}&t={now}&af={afetch}&if={ifetch}&up={fc.uptime()}&fps={fc.fps:.1f}&mem={fc.min_free}&disk={fs.free_kb()}')
+                f'{self.api_url}?p=ac&mac={addr}&up={fc.uptime()}&v={v}&vp={vp}&t={now}&af={afetch}&if={ifetch}&fps={fc.fps:.1f}&mem={fc.min_free}&disk={fs.free_kb()}&fv={fv}')
             self.step = self.api_fetch_step
 
     def api_fetch_step(self):
