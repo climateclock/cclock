@@ -29,7 +29,6 @@ class ClockMode(Mode):
         self.reader = ButtonReader({
             button_map['UP']: {
                 Press.SHORT: 'NEXT_LANGUAGE',
-                Press.LONG: 'TOGGLE_CAPS',
                 Press.DOUBLE: 'DUMP_FRAME',
             },
             button_map['DOWN']: {
@@ -42,7 +41,6 @@ class ClockMode(Mode):
             }
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
-        self.force_caps = False
         log('Finished ClockMode.__init__')
 
     def reload_definition(self):
@@ -113,11 +111,11 @@ class ClockMode(Mode):
         if self.deadline:
             ccui.render_deadline_module(
                 self.frame, 0, self.deadline,
-                self.deadline_cv, self.app.lang, self.force_caps)
+                self.deadline_cv, self.app.lang)
         if self.lifeline:
             ccui.render_lifeline_module(
                 self.frame, 16, self.lifeline,
-                self.lifeline_cv, self.app.lang, self.force_caps)
+                self.lifeline_cv, self.app.lang)
         self.frame.send()
         if cctime.get_millis() > (self.updates_paused_until_millis or 0):
             self.updater.step()
@@ -127,9 +125,6 @@ class ClockMode(Mode):
         self.dial_reader.step(self.app.receive)
 
     def receive(self, command, arg=None):
-        if command == 'TOGGLE_CAPS':
-            self.force_caps = not self.force_caps
-            self.frame.clear()
         if command == 'NEXT_LIFELINE':
             self.switch_lifeline(1)
         if command == 'SELECTOR':

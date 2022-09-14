@@ -4,9 +4,6 @@ import cctime
 import math
 
 
-TEST_MODE = False
-
-
 def calc_countdown(deadline_module, now_millis):
     deadline = cctime.millis_to_tm(deadline_module.ref_millis)
     now = cctime.millis_to_tm(now_millis)
@@ -52,57 +49,36 @@ def format_value(module, now_millis):
     return ''
 
 
-def render_deadline_module(frame, y, module, cv, lang='en', upper=False):
+def render_deadline_module(frame, y, module, cv, lang='en'):
     yr, d, h, m, s = calc_countdown(module, cctime.get_millis())
-    if TEST_MODE:
-        # Just testing various languages for now.
-        texts = {
-            'de': f'{yr} Jahre {d} Tage {h:02d}:{m:02d}:{s:02d}',
-            'en': f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}',
-            'es': f'{yr} años {d} días {h:02d}:{m:02d}:{s:02d}',
-            'fr': f'{yr} ans {d} jours {h:02d}:{m:02d}:{s:02d}',
-            'is': f'{yr} ár {d} dagar {h:02d}:{m:02d}:{s:02d}'
-        }
-        text = texts.get(lang, texts['en'])
-    else:
-        text = f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}'
-    if upper:
-        text = text.upper()
+    texts = {
+        'de': f'{yr} Jahre {d} Tage {h:02d}:{m:02d}:{s:02d}',
+        'en': f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}',
+        'es': f'{yr} años {d} días {h:02d}:{m:02d}:{s:02d}',
+        'fr': f'{yr} ans {d} jours {h:02d}:{m:02d}:{s:02d}',
+        'is': f'{yr} ár {d} dagar {h:02d}:{m:02d}:{s:02d}'
+    }
+    text = texts.get(lang, texts['en'])
     frame.print(1, y, text, 'kairon-16', cv=cv)
 
 
-def render_lifeline_module(frame, y, module, cv, lang='en', upper=False):
+def render_lifeline_module(frame, y, module, cv, lang='en'):
     if module.type == 'value':
-        render_value_module(frame, y, module, cv, lang, upper)
+        render_value_module(frame, y, module, cv, lang)
     if module.type == 'newsfeed':
-        render_newsfeed_module(frame, y, module, cv, lang, upper)
+        render_newsfeed_module(frame, y, module, cv, lang)
 
 
-def render_value_module(frame, y, module, cv, lang='en', upper=False):
-    if TEST_MODE:
-        value_text = '43.5'
-        unit_text = 'M km²'
-        # Just testing various languages for now.
-        texts = {
-          'de': 'geshütztes indigenes Land',
-          'en': 'indigenous protected land',
-          'es': 'tierra indígena protegida',
-          'fr': 'terre indigène protégée',
-          'is': 'friðlýst frumbyggjaland'
-        }
-        label_text = texts.get(lang, texts['en'])
-        if upper:
-            label_text = label_text.upper()
-    else:
-        value_text = format_value(module, cctime.get_millis())
-        for label_text in module.labels:
-            label_w = frame.measure(label_text, 'kairon-10')
-            for unit_text in module.unit_labels:
-                value_w = frame.measure(value_text + unit_text, 'kairon-16')
-                if value_w + label_w < frame.w:
-                    break
+def render_value_module(frame, y, module, cv, lang='en'):
+    value_text = format_value(module, cctime.get_millis())
+    for label_text in module.labels:
+        label_w = frame.measure(label_text, 'kairon-10')
+        for unit_text in module.unit_labels:
+            value_w = frame.measure(value_text + unit_text, 'kairon-16')
             if value_w + label_w < frame.w:
                 break
+        if value_w + label_w < frame.w:
+            break
     x = 1
     x = frame.print(x, y, value_text + unit_text, 'kairon-16', cv=cv)
     frame.print(x + 4, y + 5, label_text, 'kairon-10', cv=cv)
@@ -126,7 +102,7 @@ def format_item(item):
     return f'{headline} ({item.source.strip()})' if item.source else headline
 
 
-def render_newsfeed_module(frame, y, module, cv, lang='en', upper=False):
+def render_newsfeed_module(frame, y, module, cv, lang='en'):
     global newsfeed_x
     global newsfeed_index
     global headline_label
