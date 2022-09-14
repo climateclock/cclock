@@ -1,7 +1,10 @@
 import fs
 import gc
+import micropython
 import os
 import sys
+
+debug = False
 
 
 def free():
@@ -31,7 +34,7 @@ def versions_present():
 last_ms = None
 last_mem = None
 
-def log(message=None):
+def log(message=None, dump=False):
     global last_ms
     global last_mem
     import time
@@ -48,6 +51,9 @@ def log(message=None):
     else:
         last_ms = ms
         last_mem = mem
+    if dump or debug:
+        gc.collect()
+        micropython.mem_info(1)
 
 
 def format_ms(ms):

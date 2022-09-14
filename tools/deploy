@@ -11,9 +11,9 @@
 cd $(dirname "$0")
 cd ..
 
-debug_fragmentation=no
+debug_memory=no
 if [ "$1" = '-d' ]; then
-  debug_fragmentation=yes
+  debug_memory=yes
   shift
 fi
 module="$1"
@@ -86,32 +86,33 @@ cat <<EOF >>/tmp/imports.py
 import time
 time.sleep(0.5)  # allow console to connect so we can see debug messages
 import gc
-before = after = 0
-gc.collect()
 now = str(time.monotonic_ns()//1000000)
-print(f'[{now[:-3]}.{now[-3:]}: {gc.mem_free()} free] Start imports')
+print(f'[{now[:-3]}.{now[-3:]}: {gc.mem_free()} free] Starting imports')
 EOF
-if [ $debug_fragmentation = 'yes' ]; then
+if [ $debug_memory = 'yes' ]; then
   echo 'import micropython' >>/tmp/imports.py
   echo 'micropython.mem_info(1); print()' >>/tmp/imports.py
 fi
 for module in $(tools/sort_imports start); do
-  cat <<EOF >>/tmp/imports.py
+  if [ $debug_memory = 'yes' ]; then
+    cat <<EOF >>/tmp/imports.py
 gc.collect(); before = gc.mem_free()
 import $module
-after = gc.mem_free(); print(f'import $module,{before - after}')
+gc.collect(); after = gc.mem_free()
+print(f'import $module,{before - after}')
+micropython.mem_info(1); print()
 EOF
-  if [ $debug_fragmentation = 'yes' ]; then
-    echo 'micropython.mem_info(1); print()' >>/tmp/imports.py
+  else
+    echo "import $module" >>/tmp/imports.py
   fi
 done
 cat <<EOF >>/tmp/imports.py
 gc.collect()
 now = str(time.monotonic_ns()//1000000)
-print(f'[{now[:-3]}.{now[-3:]}: {gc.mem_free()} free] Finish imports')
+print(f'[{now[:-3]}.{now[-3:]}: {gc.mem_free()} free] Finished imports')
 EOF
-if [ $debug_fragmentation = 'yes' ]; then
-  echo 'micropython.mem_info(1); print()' >>/tmp/imports.py
+if [ $debug_memory = 'yes' ]; then
+  echo 'utils.debug = True; micropython.mem_info(1); print()' >>/tmp/imports.py
 fi
 
 cat /tmp/imports.py start.py >/tmp/start.py
@@ -125,7 +126,7 @@ cp *.mcf $target/
 
 echo 'Installing initial copy of clock.json...'
 mkdir $target/cache
-curl -s -o $target/cache/clock.json https://api.climateclock.world/v1/clock
+curl -s -o $target/cache/clock.json --connect-timeout 2 https://api.climateclock.world/v1/clock || cp cache/clock.json $target/cache/clock.json
 
 version=v0.$(git describe --always --match='' --dirty)
 mkdir $target/$version

@@ -62,7 +62,6 @@ class App:
                 'Custom message', 'custom_message', True)
             self.set_mode(self.pref_entry_mode)
         if command == 'DUMP_MEMORY':
-            1/0
             gc.collect()
             micropython.mem_info(1)
         if command == 'DUMP_FRAME':

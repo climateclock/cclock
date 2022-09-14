@@ -30,6 +30,10 @@ if ! [ -d cache ]; then
     mkdir cache
 fi
 
+# Grab a copy of the API file.
+
+curl -o $target/cache/clock.json https://api.climateclock.world/v1/clock
+
 # Clone the source code of some of the Python libraries,
 # at the exact versions used in the current firmware.uf2 file.
 

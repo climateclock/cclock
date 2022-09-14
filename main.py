@@ -1,6 +1,5 @@
 import microcontroller
 import os
-import supervisor
 import sys
 import time
 import traceback
@@ -17,30 +16,38 @@ import traceback
 # The current directory should never be changed from '/'.
 os.chdir('/')
 
-versions = []
-for name in os.listdir():
-    try:
-        assert name.startswith('v')
-        pack_name = name.split('.')[0]
-        num = int(pack_name[1:])
-    except:
-        continue
-    try:
-        os.stat(name + '/@VALID')
-        os.stat(name + '/@ENABLED')
-    except OSError:
-        continue
-    versions.append((num, name))
+def get_latest_enabled_version():
+    versions = []
+    for name in os.listdir():
+        try:
+            assert name.startswith('v')
+            pack_name = name.split('.')[0]
+            number = int(pack_name[1:])
+        except:
+            continue
+        try:
+            os.stat(name + '/@VALID')
+            os.stat(name + '/@ENABLED')
+        except OSError:
+            continue
+        versions.append((number, name))
+    number = name = None
+    if versions:
+        number, name = max(versions)
+    return number, name, len(versions)
 
-if versions:
-    latest, name = max(versions)
-    print(f'\nRunning /{name} (version {latest}).\n')
+number, name, count = get_latest_enabled_version()
+if name:
+    print(f'\nRunning /{name} (version {number}).\n')
     sys.path[:0] = [name]
-    start_time = time.monotonic()
+    start_time = int(time.monotonic())
     try:
         import start
     except Exception as e:
-        if len(versions) > 1:
+        run_time = int(time.monotonic()) - start_time
+
+        # Downgrade to the previous enabled version.
+        if count > 1:
             print(f'\nDisabling /{name} due to crash: {e}\n')
             try:
                 os.remove(name + '/@ENABLED')
@@ -49,20 +56,21 @@ if versions:
         else:
             print(f'\n/{name} is the last available version; not disabling.\n')
 
+        # Print and log the exception.
         try:
             traceback.print_exception(e, e, e.__traceback__)
             try:
                 import cctime
-                filename = f'{cctime.get_millis()//1000}.exc'
+                timestamp = cctime.get_millis()//1000
             except:
-                filename = f'{int(time.time())}.exc'
-            with open(filename, 'w') as f:
+                timestamp = int(time.time())
+            with open(f'{timestamp}-{run_time}.exc', 'w') as f:
                 f.write(traceback.format_exception(e, e, e.__traceback__))
             print(f'Wrote traceback to {filename}.')
         except Exception as ee:
             print(f'Could not write traceback: {ee}')
 
-        run_time = time.monotonic() - start_time
+        # Restart.
         if run_time < 300:
             print(f'\nRunning time was only {run_time} s; not restarting.\n')
         else:
