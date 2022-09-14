@@ -10,8 +10,8 @@ from collections import namedtuple
 
 
 Config = namedtuple('Config', ('device_id', 'module_ids', 'display'))
-Display = namedtuple('Display', ('deadline', 'lifeline', 'neutral'))
-Palette = namedtuple('Palette', ('primary', 'secondary'))
+Display = namedtuple('Display', ('deadline', 'lifeline'))
+Palette = namedtuple('Palette', ('primary',))
 Item = namedtuple('Item', ('pub_millis', 'headline', 'source'))
 Timer = namedtuple('Timer', ('id', 'type', 'flavor', 'labels', 'ref_millis'))
 Newsfeed = namedtuple('Newsfeed', ('id', 'type', 'flavor', 'labels', 'items'))
@@ -37,15 +37,13 @@ def load_display(data):
     return Display(
         load_palette(data.get("deadline") or {}),
         load_palette(data.get("lifeline") or {}),
-        load_palette(data.get("neutral") or {})
     )
 
 
 def load_palette(data):
     gc.collect()
     return Palette(
-        parse_css_color(data.get("color_primary") or None),
-        parse_css_color(data.get("color_secondary") or None)
+        parse_css_color(data.get("color_primary") or None)
     )
 
 
