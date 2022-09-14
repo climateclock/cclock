@@ -67,7 +67,7 @@ class ClockMode(Mode):
                 self.lifeline_cv = self.frame.pack(*display.lifeline.primary)
         except Exception as e:
             utils.report_error(e, 'Could not load API file')
-        log('reload_definition', 1)
+        log('reload_definition')
 
     def switch_lifeline(self, delta):
         if self.lifelines:
