@@ -1,34 +1,40 @@
+# Show the startup message as soon as possible.
+import microfont
 import sys
-from utils import log
+microfont.set_dirs(sys.path[0], '/')
 import prefs
 prefs.init()
-import microfont
-microfont.set_dirs(sys.path[0], '/')
-
-log()
 import matrix_frame
-frame = matrix_frame.new_display_frame(
+display_frame = matrix_frame.new_display_frame(
     192, 32, 16, prefs.get('rgb_pins'), prefs.get('addr_pins'))
-log('Finished new_display_frame')
+ver = sys.path[0].split('.')[0]
+title_cv = display_frame.pack(0x00, 0xff, 0x00)
+text_cv = display_frame.pack(0x80, 0x80, 0x80)
+display_frame.print(1, 0, 'ClimateClock.world', 'kairon-10', cv=title_cv)
+display_frame.print(1, 11, f'Action Clock {ver}', 'kairon-10', cv=text_cv)
+display_frame.print(1, 22, '#ActInTime', 'kairon-10', cv=text_cv)
+display_frame.send()
 
-log()
-import board, gpio
+#IMPORTS#
+
+utils.log()
+import gpio
 up = gpio.Button(board.BUTTON_UP)
 down = gpio.Button(board.BUTTON_DOWN)
 enter = gpio.Button(board.A4)
 brightness = gpio.AnalogInput(board.A1)
 selector = gpio.RotaryInput(board.A2, board.A3)
-log('Created gpio objects')
+utils.log('Created gpio objects')
 
-log()
-from esp_wifi_network import EspWifiNetwork
-network = EspWifiNetwork()
-log('Created EspWifiNetwork')
+utils.log()
+import esp_wifi_network
+network = esp_wifi_network.EspWifiNetwork()
+utils.log('Created EspWifiNetwork')
 
-from app import run
-run(
+import app
+app.run(
     network,
-    frame,
+    display_frame,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )

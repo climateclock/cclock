@@ -53,14 +53,14 @@ class MatrixFrame(frame.Frame):
             self.display = framebufferio.FramebufferDisplay(
                 matrix, auto_refresh=False)
 
+            self.brightness = 1.0
             self.shader = displayio.Palette(depth)
             self.colours = [(0, 0, 0)] * self.depth
-            self.brightness = 1.0
             self.next_cv = 1
 
-            self.layer = displayio.TileGrid(self.bitmap, pixel_shader=self.shader)
             self.group = displayio.Group()
-            self.group.append(self.layer)
+            self.group.append(
+                displayio.TileGrid(self.bitmap, pixel_shader=self.shader))
             self.display.show(self.group)
             self.error_label = None
 

@@ -69,53 +69,55 @@ rm -rf $target/*
 echo 'Installing program modules...'
 rm -f *.mpy
 for file in *.py; do
-  if [ $file = boot.py ] || [ $file = main.py ]; then
-    cp $file $target
-  else
-    name=${file%.py}
-    env/bin/mpy-cross "$name.py"
-    cp "$name.mpy" $target/
-  fi
+    if [ $file = boot.py ] || [ $file = main.py ]; then
+        cp $file $target
+    else
+        name=${file%.py}
+        env/bin/mpy-cross "$name.py"
+        cp "$name.mpy" $target/
+    fi
 done
 
 rm -f *.mpy /tmp/imports.py /tmp/start.py /tmp/start.mpy
 
 echo 'Scanning for imports...'
 
+if [ $debug_memory = 'yes' ]; then
+    echo 'import time; time.sleep(2)' >>/tmp/imports.py
+fi
 cat <<EOF >>/tmp/imports.py
 import time
-time.sleep(0.5)  # allow console to connect so we can see debug messages
 import gc
 now = str(time.monotonic_ns()//1000000)
 print(f'[{now[:-3]}.{now[-3:]}: {gc.mem_free()} free] Starting imports')
 EOF
 if [ $debug_memory = 'yes' ]; then
-  echo 'import micropython' >>/tmp/imports.py
-  echo 'micropython.mem_info(1); print()' >>/tmp/imports.py
+    echo 'import micropython; micropython.mem_info(1)' >>/tmp/imports.py
 fi
 for module in $(tools/sort_imports start); do
-  if [ $debug_memory = 'yes' ]; then
-    cat <<EOF >>/tmp/imports.py
+    if [ $debug_memory = 'yes' ]; then
+        cat <<EOF >>/tmp/imports.py
 gc.collect(); before = gc.mem_free()
 import $module
 gc.collect(); after = gc.mem_free()
 print(f'import $module,{before - after}')
 micropython.mem_info(1); print()
 EOF
-  else
-    echo "import $module" >>/tmp/imports.py
-  fi
+    else
+        echo "import $module" >>/tmp/imports.py
+    fi
 done
 cat <<EOF >>/tmp/imports.py
 gc.collect()
 now = str(time.monotonic_ns()//1000000)
+frame = display_frame
 print(f'[{now[:-3]}.{now[-3:]}: {gc.mem_free()} free] Finished imports')
 EOF
 if [ $debug_memory = 'yes' ]; then
-  echo 'utils.debug = True; micropython.mem_info(1); print()' >>/tmp/imports.py
+    echo 'utils.debug = True; micropython.mem_info(1); print()' >>/tmp/imports.py
 fi
 
-cat /tmp/imports.py start.py >/tmp/start.py
+sed -e /#IMPORTS#/r/tmp/imports.py <start.py >/tmp/start.py
 env/bin/mpy-cross /tmp/start.py
 cp /tmp/start.mpy $target/
 
