@@ -95,9 +95,16 @@ class PrefEntryMode(Mode):
 
     def draw_field(self):
         self.frame.clear(0, 0, None, 11)
-        x = self.frame.print(0, 0, self.pref_title + ': ', FONT, cv=self.cv)
-        x = self.frame.print(x, 0, self.text, FONT, cv=self.cursor_cv)
-        self.frame.fill(x, 10, 5, 1, cv=self.cursor_cv)
+        title_width = self.frame.measure(self.pref_title + ': ', FONT)
+        text_width = self.frame.measure(self.text, FONT)
+
+        # Shift text to the left if it's too long to fit.
+        text_x = min(title_width, 192 - 5 - text_width)
+        cx = self.frame.print(text_x, 0, self.text, FONT, cv=self.cursor_cv)
+        self.frame.fill(cx, 10, 5, 1, cv=self.cursor_cv)
+
+        self.frame.clear(0, 0, title_width, 11)
+        self.frame.print(0, 0, self.pref_title + ': ', FONT, cv=self.cv)
 
     def draw_menu(self):
         self.frame.clear(0, 11)
