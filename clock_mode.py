@@ -82,8 +82,11 @@ class ClockMode(Mode):
         self.reader.reset()
         self.dial_reader.reset()
         self.frame.clear()
+
+        self.next_advance = None
         auto_cycling = prefs.get('auto_cycling')
-        self.next_advance = auto_cycling and cctime.get_millis() + auto_cycling
+        if auto_cycling:
+            self.next_advance = cctime.monotonic_millis() + auto_cycling
 
         self.updates_paused_until_millis = cctime.try_isoformat_to_millis(
             prefs, 'updates_paused_until')
@@ -95,7 +98,7 @@ class ClockMode(Mode):
         self.switch_lifeline(0)
 
     def step(self):
-        if self.next_advance and cctime.get_millis() > self.next_advance:
+        if self.next_advance and cctime.monotonic_millis() > self.next_advance:
             auto_cycling = prefs.get('auto_cycling')
             if auto_cycling:
                 self.next_advance += auto_cycling

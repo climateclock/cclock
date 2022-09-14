@@ -8,14 +8,13 @@ from sdl2 import *
 
 class FrameTimer:
     def __init__(self, fps):
-        self.next = cctime.get_millis()
         self.interval = int(1000/fps)
+        self.next_frame = cctime.monotonic_millis() + self.interval
 
     def wait(self):
         """Waits until the next frame display time."""
-        next = self.next + self.interval
-        cctime.sleep_millis(self.next - cctime.get_millis())
-        self.next = max(next, cctime.get_millis())
+        cctime.sleep_millis(self.next_frame - cctime.monotonic_millis())
+        self.next_frame += self.interval
 
 
 class SdlButton:
