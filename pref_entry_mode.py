@@ -1,5 +1,4 @@
 from ccinput import ButtonReader, DialReader, Press
-from mode import Mode
 import prefs
 
 FONT = 'kairon-10'
@@ -32,10 +31,10 @@ DISPLAY_TEXT_MENU = [
 ]
 
 
-class PrefEntryMode(Mode):
+class PrefEntryMode:
     def __init__(self, app, button_map, dial_map):
-        super().__init__(app)
-
+        self.app = app
+        self.frame = app.frame
         self.cv = self.frame.pack(0x80, 0x80, 0x80)
         self.cursor_cv = self.frame.pack(0x00, 0xff, 0x00)
 

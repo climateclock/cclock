@@ -1,7 +1,6 @@
 from ccinput import ButtonReader, DialReader, Press
 import cctime
 import fs
-from mode import Mode
 from network import State
 import os
 import prefs
@@ -10,9 +9,10 @@ import utils
 FONT = 'kairon-10'
 
 
-class MenuMode(Mode):
+class MenuMode:
     def __init__(self, app, button_map, dial_map):
-        super().__init__(app)
+        self.app = app
+        self.frame = app.frame
         self.cv = self.frame.pack(0x80, 0x80, 0x80)
         self.cursor_cv = self.frame.pack(0x00, 0xff, 0x00)
         self.next_draw = cctime.monotonic_millis()

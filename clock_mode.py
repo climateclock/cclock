@@ -3,17 +3,17 @@ from ccinput import ButtonReader, DialReader, Press
 import cctime
 import ccui
 import fs
-from mode import Mode
 import prefs
 from updater import SoftwareUpdater
 import utils
 from utils import Cycle, log
 
 
-class ClockMode(Mode):
+class ClockMode:
     def __init__(self, app, network, button_map, dial_map):
         log('Starting ClockMode.__init__')
-        super().__init__(app)
+        self.app = app
+        self.frame = app.frame
         self.network = network
 
         self.deadline = None
