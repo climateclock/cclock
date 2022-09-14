@@ -108,13 +108,13 @@ class PrefEntryMode(Mode):
 
     def draw_menu(self):
         self.frame.clear(0, 11)
-        x = 5
+        x = 4
         for i, option in enumerate(self.menu):
             label, command, chars = option
 
             if self.menu_selected and i == self.menu_index:
                 x = self.frame.print(x, 11, label, FONT, cv=self.cursor_cv)
-                self.frame.print(5, 21, chars, FONT, cv=self.cv)
+                self.frame.print(4, 21, chars, FONT, cv=self.cv)
                 self.draw_char_cursor()
             else:
                 nx = self.frame.print(x, 11, label, FONT, cv=self.cv)
@@ -129,7 +129,7 @@ class PrefEntryMode(Mode):
         left = self.frame.measure(chars[:ci], FONT)
         w = self.frame.measure(chars[ci], FONT)
         self.frame.clear(0, 31)
-        self.frame.fill(5 + left, 31, w - 1, 1, cv=self.cursor_cv)
+        self.frame.fill(4 + left, 31, w - 1, 1, cv=self.cursor_cv)
 
     def receive(self, command, arg=None):
         if self.menu_selected:
