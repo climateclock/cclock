@@ -1,7 +1,6 @@
 import board
 import cctime
 import displayio
-import frame
 import framebufferio
 import microfont
 import rgbmatrix
@@ -40,7 +39,7 @@ def apply_brightness(brightness, r, g, b):
     )
 
 
-class MatrixFrame(frame.Frame):
+class MatrixFrame:
     def __init__(self, w, h, depth, matrix=None):
         """Creates a Frame with a given width and height.  Coordinates of the
         top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
@@ -96,6 +95,13 @@ class MatrixFrame(frame.Frame):
     def set(self, x, y, cv):
         self.bitmap[x, y] = cv
 
+    def clear(self, x=0, y=0, w=None, h=None):
+        if w is None:
+            w = self.w
+        if h is None:
+            h = self.h
+        self.fill(x, y, w, h, self.pack(0, 0, 0))
+
     def fill(self, x, y, w, h, cv):
         self.bitmap.fill(cv, x, y, x + w, y + h)
 
@@ -112,7 +118,7 @@ class MatrixFrame(frame.Frame):
         return LabelFrame(microfont.get(font_id), text)
 
 
-class LabelFrame(frame.Frame):
+class LabelFrame:
     def __init__(self, font, text):
         self.w, self.h = font.measure(text), font.h
         self.bitmap = displayio.Bitmap(self.w, self.h, 2)

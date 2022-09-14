@@ -1,7 +1,6 @@
 import cctime
 from ctypes import byref, c_char, c_void_p
 import displayio
-import frame
 import microfont
 from sdl2 import *
 
@@ -51,7 +50,7 @@ class SdlDial:
         pass
 
 
-class SdlFrame(frame.Frame):
+class SdlFrame:
     def __init__(self, w, h, fps, title='Frame', scale=8, pad=4):
         """Creates a Frame with a given width and height.  Coordinates of the
         top-left and bottom-right pixels are (0, 0) and (w - 1, h - 1)."""
@@ -136,8 +135,15 @@ class SdlFrame(frame.Frame):
         offset = self.get_offset(x, y)
         self.pixels[offset:offset + 3] = cv
 
+    def clear(self, x=0, y=0, w=None, h=None):
+        if w is None:
+            w = self.w
+        if h is None:
+            h = self.h
+        self.fill(x, y, w, h, self.pack(0, 0, 0))
+
     def fill(self, x, y, w, h, cv):
-        x, y, w, h = frame.clamp_rect(x, y, w, h, self.w, self.h)
+        x, y, w, h = clamp_rect(x, y, w, h, self.w, self.h)
         if w > 0 and h > 0:
             row = cv * w
             for y in range(y, y + h):
@@ -147,7 +153,7 @@ class SdlFrame(frame.Frame):
     def paste(self, x, y, source, sx=0, sy=0, w=None, h=None, bg=None, cv=None):
         if source.w == 0 or source.h == 0:
             return
-        x, y, sx, sy, w, h = frame.intersect(self, x, y, source, sx, sy, w, h)
+        x, y, sx, sy, w, h = intersect(self, x, y, source, sx, sy, w, h)
         for dy in range(h):
             i = self.get_offset(x, y + dy)
             si = (sx + (sy + dy) * source.w) * 3
@@ -176,10 +182,48 @@ class SdlFrame(frame.Frame):
         return LabelFrame(microfont.get(font_id), text)
 
 
-class LabelFrame(frame.Frame):
+class LabelFrame:
     def __init__(self, font, text):
         self.w, self.h = font.measure(text), font.h
         bitmap = displayio.Bitmap(self.w, self.h, 2)
         font.draw(text, bitmap)
         palette = b'\x00\x00\x00', b'\xff\xff\xff'
         self.pixels = b''.join(palette[p] for p in bitmap)
+
+
+def clamp(v, lo, hi):
+    return max(lo, min(v, hi))
+
+def clamp_rect(x, y, w, h, fw, fh):
+    xl = clamp(x, 0, fw)
+    xr = clamp(x + w, xl, fw)
+    yt = clamp(y, 0, fh)
+    yb = clamp(y + h, yt, fh)
+    return xl, yt, xr - xl, yb - yt
+
+def intersect(frame, x, y, source, sx, sy, w, h):
+    # Fill in defaults for the source rectangle.
+    sl = 0 if sx is None else sx
+    st = 0 if sy is None else sy
+    w = source.w if w is None else w
+    h = source.h if h is None else h
+
+    # Clamp the bottom-right corner to the bottom-right of both frames.
+    sr = min(sl + w, source.w, sl + frame.w - x)
+    sb = min(st + h, source.h, st + frame.h - y)
+
+    # Clamp the top-left corner to the top-left of both frames.
+    dx = max(-sl, -x)
+    if dx > 0:
+        x += dx
+        sl += dx
+    dy = max(-st, -y)
+    if dy > 0:
+        y += dy
+        st += dy
+
+    # Return the resulting rectangle if it is non-empty.
+    if x < frame.w and y < frame.h:
+        if sl < sr <= source.w and st < sb <= source.h:
+            return x, y, sl, st, sr - sl, sb - st
+    return 0, 0, 0, 0, 0, 0
