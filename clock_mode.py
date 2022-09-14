@@ -2,7 +2,9 @@ import ccapi
 from ccinput import ButtonReader, DialReader, Press
 import cctime
 import ccui
+import display
 import fs
+from microfont import small
 import prefs
 from updater import SoftwareUpdater
 import utils
@@ -13,7 +15,6 @@ class ClockMode:
     def __init__(self, app, network, button_map, dial_map):
         log('Starting ClockMode.__init__')
         self.app = app
-        self.frame = app.frame
         self.network = network
 
         self.deadline = None
@@ -62,9 +63,10 @@ class ClockMode:
                         pass
                 self.switch_lifeline(0)
 
-                display = defn.config.display
-                self.deadline_cv = self.frame.pack(*display.deadline.primary)
-                self.lifeline_cv = self.frame.pack(*display.lifeline.primary)
+                self.deadline_pi = display.get_pi(
+                    *defn.config.display.deadline.primary)
+                self.lifeline_pi = display.get_pi(
+                    *defn.config.display.lifeline.primary)
         except Exception as e:
             utils.report_error(e, 'Could not load API file')
         log('reload_definition')
@@ -76,12 +78,12 @@ class ClockMode:
                 if not prefs.get('custom_message'):
                     self.lifeline = self.lifelines.get(delta or 1)
             prefs.set('lifeline_id', self.lifeline.id)
-            self.frame.clear()
+            self.app.bitmap.fill(0)
 
     def start(self):
         self.reader.reset()
         self.dial_reader.reset()
-        self.frame.clear()
+        self.app.bitmap.fill(0)
 
         self.next_advance = None
         auto_cycling = prefs.get('auto_cycling')
@@ -106,20 +108,21 @@ class ClockMode:
                 self.next_advance = None
             self.switch_lifeline(1)
 
-        self.frame.clear()
+        bitmap = self.app.bitmap
+        bitmap.fill(0)
         if not (self.deadline or self.lifelines):
-            cv = self.frame.pack(255, 255, 255)
+            pi = display.get_pi(0x80, 0x80, 0x80)
             ssid = prefs.get('wifi_ssid')
-            self.frame.print(1, 0, f'Joining Wi-Fi network "{ssid}"...', 'kairon-10', cv)
+            small.draw(f'Joining Wi-Fi network "{ssid}"...', bitmap, 1, 0, pi)
         if self.deadline:
             ccui.render_deadline_module(
-                self.frame, 0, self.deadline,
-                self.deadline_cv, self.app.lang)
+                bitmap, 0, self.deadline,
+                self.deadline_pi, self.app.lang)
         if self.lifeline:
             ccui.render_lifeline_module(
-                self.frame, 16, self.lifeline,
-                self.lifeline_cv, self.app.lang)
-        self.frame.send()
+                bitmap, 16, self.lifeline,
+                self.lifeline_pi, self.app.lang)
+        display.send()
         if cctime.get_millis() > (self.updates_paused_until_millis or 0):
             self.updater.step()
 

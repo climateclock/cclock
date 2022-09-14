@@ -21,26 +21,35 @@ for path in os.listdir():
     if path.endswith('.mcf'):
         fs.write(path, open(path, 'rb').read())
 
-from unix_network import UnixNetwork
-network = UnixNetwork('climateclock', 'climateclock')
+import microfont
+microfont.init()
 
 import prefs
 prefs.init()
+
+import displayio
+bitmap = displayio.Bitmap(192, 32, 16)
+
+import sdl_display
+sdl_display.init(bitmap, 20)  # 20 fps is roughly what we get on the board
+
 import sdl2
-from sdl_frame import SdlFrame, SdlButton, SdlDial
-frame = SdlFrame(192, 32, 20)  # 20 fps is roughly what we get on the board
-up = SdlButton(frame, sdl2.SDL_SCANCODE_LSHIFT)
-down = SdlButton(frame, sdl2.SDL_SCANCODE_RSHIFT)
-enter = SdlButton(frame, sdl2.SDL_SCANCODE_RETURN)
-brightness = SdlDial(
-    frame, sdl2.SDL_SCANCODE_DOWN, sdl2.SDL_SCANCODE_UP, 0.0, 1.0, 1/8.0)
-selector = SdlDial(
-    frame, sdl2.SDL_SCANCODE_LEFT, sdl2.SDL_SCANCODE_RIGHT, -100000, 100000, 1)
+up = sdl_display.SdlButton(sdl2.SDL_SCANCODE_LSHIFT)
+down = sdl_display.SdlButton(sdl2.SDL_SCANCODE_RSHIFT)
+enter = sdl_display.SdlButton(sdl2.SDL_SCANCODE_RETURN)
+brightness = sdl_display.SdlDial(
+    sdl2.SDL_SCANCODE_DOWN, sdl2.SDL_SCANCODE_UP, 0.0, 1.0, 1/8.0)
+brightness.value = 1.0
+selector = sdl_display.SdlDial(
+    sdl2.SDL_SCANCODE_LEFT, sdl2.SDL_SCANCODE_RIGHT, -100000, 100000, 1)
+
+from unix_network import UnixNetwork
+network = UnixNetwork('climateclock', 'climateclock')
 
 import app
 app.run(
+    bitmap,
     network,
-    frame,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )

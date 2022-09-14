@@ -2,24 +2,23 @@ from array import array
 import displayio
 import fs
 
-dirs = ['']
-fonts = {}
+large = None
+small = None
 
 
-def set_dirs(*new_dirs):
-    dirs[:] = new_dirs
+def init(*dirs):
+    global large
+    global small
+    large = get('kairon-16', dirs or [''])
+    small = get('kairon-10', dirs or [''])
 
 
-def get(font_id):
-    if font_id not in fonts:
-        for dir in dirs:
-            path = dir + '/' + font_id + '.mcf'
-            if fs.isfile(path):
-                fonts[font_id] = Microfont(path)
-                break
-        else:
-            raise ValueError(font_id + ' not found.')
-    return fonts[font_id]
+def get(font_id, dirs):
+    for dir in dirs:
+        path = dir + '/' + font_id + '.mcf'
+        if fs.isfile(path):
+            return Microfont(path)
+    raise ValueError(font_id + ' not found.')
 
 
 class Microfont:
@@ -85,14 +84,14 @@ class Microfont:
         return sum(self.cws[self.get_index(ch)] for ch in text)
 
 
-    def draw(self, text, bitmap, x=0, y=0, cv=1):
+    def draw(self, text, bitmap, x=0, y=0, pi=1):
         for ch in text:
             i = self.get_index(ch)
             bitmap.freeblit(
                 x + self.dxs[i], y,
                 self.bitmap,
                 self.sxs[i], 0, self.sxs[i + 1] - self.sxs[i], self.h,
-                source_bg=0, dest_value=cv
+                source_bg=0, dest_value=pi
             )
             x += self.cws[i]
         return x

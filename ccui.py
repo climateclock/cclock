@@ -1,7 +1,9 @@
 """Functions for formatting and constructing the Climate Clock display."""
 
 import cctime
+from displayio import Bitmap
 import math
+from microfont import large, small
 
 
 def calc_countdown(deadline_module, now_millis):
@@ -49,7 +51,7 @@ def format_value(module, now_millis):
     return ''
 
 
-def render_deadline_module(frame, y, module, cv, lang='en'):
+def render_deadline_module(bitmap, y, module, pi, lang='en'):
     yr, d, h, m, s = calc_countdown(module, cctime.get_millis())
     texts = {
         'de': f'{yr} Jahre {d} Tage {h:02d}:{m:02d}:{s:02d}',
@@ -59,29 +61,29 @@ def render_deadline_module(frame, y, module, cv, lang='en'):
         'is': f'{yr} ár {d} dagar {h:02d}:{m:02d}:{s:02d}'
     }
     text = texts.get(lang, texts['en'])
-    frame.print(1, y, text, 'kairon-16', cv=cv)
+    large.draw(text, bitmap, 1, y, pi)
 
 
-def render_lifeline_module(frame, y, module, cv, lang='en'):
+def render_lifeline_module(bitmap, y, module, pi, lang='en'):
     if module.type == 'value':
-        render_value_module(frame, y, module, cv, lang)
+        render_value_module(bitmap, y, module, pi, lang)
     if module.type == 'newsfeed':
-        render_newsfeed_module(frame, y, module, cv, lang)
+        render_newsfeed_module(bitmap, y, module, pi, lang)
 
 
-def render_value_module(frame, y, module, cv, lang='en'):
+def render_value_module(bitmap, y, module, pi, lang='en'):
     value_text = format_value(module, cctime.get_millis())
     for label_text in module.labels:
-        label_w = frame.measure(label_text, 'kairon-10')
+        label_w = small.measure(label_text)
         for unit_text in module.unit_labels:
-            value_w = frame.measure(value_text + unit_text, 'kairon-16')
-            if value_w + label_w < frame.w:
+            value_w = large.measure(value_text + unit_text)
+            if value_w + label_w < bitmap.width:
                 break
-        if value_w + label_w < frame.w:
+        if value_w + label_w < bitmap.width:
             break
     x = 1
-    x = frame.print(x, y, value_text + unit_text, 'kairon-16', cv=cv)
-    frame.print(x + 4, y + 5, label_text, 'kairon-10', cv=cv)
+    x = large.draw(value_text + unit_text, bitmap, x, y, pi)
+    small.draw(label_text, bitmap, x + 4, y + 5, pi)
 
 
 DISPLAY_WIDTH = 192
@@ -102,7 +104,7 @@ def format_item(item):
     return f'{headline} ({item.source.strip()})' if item.source else headline
 
 
-def render_newsfeed_module(frame, y, module, cv, lang='en'):
+def render_newsfeed_module(bitmap, y, module, pi, lang='en'):
     global newsfeed_x
     global newsfeed_index
     global headline_label
@@ -119,20 +121,25 @@ def render_newsfeed_module(frame, y, module, cv, lang='en'):
 
     if n == 1:
         if not headline_label:
-            headline_label = frame.new_label(format_item(item), 'kairon-16')
-            if headline_label.w > DISPLAY_WIDTH:
+            text = format_item(item)
+            headline_width = large.measure(text)
+            if headline_width <= DISPLAY_WIDTH:
+                headline_label = Bitmap(headline_width, large.h, 2)
+                large.draw(text, headline_label)
+            else:
                 text = format_item(item) + ' \xb7 '
-                headline_width = frame.measure(text, 'kairon-16')
-                headline_label = frame.new_label(text + text, 'kairon-16')
+                headline_width = large.measure(text)
+                headline_label = Bitmap(headline_width * 2, large.h, 2)
+                large.draw(text + text, headline_label)
         if headline_label.w <= DISPLAY_WIDTH:
             # There is only one headline and it fits entirely; do not scroll.
             x = (DISPLAY_WIDTH - headline_label.w) // 2
-            frame.paste(x, y, headline_label, cv=cv)
+            bitmap.freeblit(x, y, headline_label, dest_value=pi)
             return
 
     if not headline_label:
         text = format_item(item) + ' \xb7 '
-        headline_width = frame.measure(text, 'kairon-16')
+        headline_width = large.measure(text)
 
         text_with_trail = text
         for attempt in range(3):
@@ -140,11 +147,13 @@ def render_newsfeed_module(frame, y, module, cv, lang='en'):
             item = module.items[i]
             trail = format_item(item) + ' \xb7 '
             text_with_trail += trail
-            headline_label = frame.new_label(text_with_trail, 'kairon-16')
-            if headline_label.w >= headline_width + DISPLAY_WIDTH:
+            text_with_trail_width = large.measure(text_with_trail)
+            if text_with_trail_width >= headline_width + DISPLAY_WIDTH:
+                headline_label = Bitmap(text_with_trail_width, large.h, 2)
+                large.draw(text_with_trail, headline_label)
                 break
 
-    frame.paste(newsfeed_x, y, headline_label, cv=cv)
+    bitmap.freeblit(newsfeed_x, y, headline_label, dest_value=pi)
 
     if newsfeed_x + headline_width < 0:
         newsfeed_x += headline_width

@@ -1,20 +1,19 @@
 from ccinput import ButtonReader, DialReader, Press
 import cctime
+import display
 import fs
+from microfont import small
 from network import State
 import os
 import prefs
 import utils
 
-FONT = 'kairon-10'
-
 
 class MenuMode:
     def __init__(self, app, button_map, dial_map):
         self.app = app
-        self.frame = app.frame
-        self.cv = self.frame.pack(0x80, 0x80, 0x80)
-        self.cursor_cv = self.frame.pack(0x00, 0xff, 0x00)
+        self.pi = display.get_pi(0x80, 0x80, 0x80)
+        self.cursor_pi = display.get_pi(0x00, 0xff, 0x00)
         self.next_draw = cctime.monotonic_millis()
 
         self.reader = ButtonReader({
@@ -132,19 +131,20 @@ class MenuMode:
         title, value, command, arg, children = self.node
         title = self.format_title(title, not children and value)
 
-        self.frame.clear()
-        self.frame.print(1 - self.offset, 0, title, FONT, cv=self.cv)
+        bitmap = self.app.bitmap
+        bitmap.fill(0)
+        small.draw(title, bitmap, 1 - self.offset, 0, self.pi)
         y = 0
         for index in range(self.top, self.top + 3):
             if index >= len(children):
                 break
             child_title, child_value, _, _, _ = children[index]
             child_title = self.format_title(child_title, child_value)
-            self.frame.print(64, y, child_title, FONT, cv=self.cv)
+            small.draw(child_title, bitmap, 64, y, self.pi)
             if index == self.index:
-                self.frame.print(58, y, '>', FONT, cv=self.cursor_cv)
+                small.draw('>', bitmap, 58, y, self.cursor_pi)
             y += 11
-        self.frame.send()
+        display.send()
 
     def step(self):
         if cctime.monotonic_millis() > self.next_draw:

@@ -2,6 +2,7 @@ import ccapi
 import cctime
 from ccinput import DialReader
 from clock_mode import ClockMode
+import display
 import gc
 from menu_mode import MenuMode
 import micropython
@@ -10,10 +11,10 @@ import utils
 
 
 class App:
-    def __init__(self, network, frame, button_map, dial_map):
+    def __init__(self, bitmap, network, button_map, dial_map):
         utils.log('Starting App.__init__')
+        self.bitmap = bitmap
         self.network = network
-        self.frame = frame
         self.frame_counter = FrameCounter()
 
         self.clock_mode = ClockMode(self, network, button_map, dial_map)
@@ -31,7 +32,7 @@ class App:
         utils.log('Finished App.__init__')
 
     def start(self):
-        self.frame.set_brightness(self.brightness_reader.value)
+        display.set_brightness(self.brightness_reader.value)
         self.mode.start()
 
     def step(self):
@@ -43,10 +44,10 @@ class App:
         print('[' + command + ('' if arg is None else ': ' + str(arg)) + ']')
         if command == 'BRIGHTNESS':
             delta, value = arg
-            self.frame.set_brightness(value)
+            display.set_brightness(value)
         if command == 'NEXT_LANGUAGE':
             self.lang = self.langs.get(1)
-            self.frame.clear()
+            self.bitmap.fill(0)
         if command == 'CLOCK_MODE':
             self.set_mode(self.clock_mode)
         if command == 'MENU_MODE':
@@ -66,17 +67,16 @@ class App:
             micropython.mem_info(1)
         if command == 'DUMP_FRAME':
             print('[[FRAME]]')
-            cvs = ['%02x%02x%02x' % self.frame.unpack(cv) for cv in range(16)]
+            rgbs = ['%02x%02x%02x' % display.get_rgb(pi) for pi in range(16)]
             for i in range(192*32):
-                print(cvs[self.frame.bitmap[i]], end='')
+                print(rgbs[self.bitmap[i]], end='')
             print()
             gc.collect()
 
         self.mode.receive(command, arg)
 
     def set_mode(self, mode):
-        self.frame.clear()
-        self.mode.end()
+        self.bitmap.fill(0)
         self.mode = mode
         mode.start()
 
@@ -113,10 +113,10 @@ class FrameCounter:
         return now_free
 
 
-def run(network, frame, button_map, dial_map):
+def run(bitmap, network, button_map, dial_map):
     utils.log('Starting run')
     cctime.enable_rtc()
-    app = App(network, frame, button_map, dial_map)
+    app = App(bitmap, network, button_map, dial_map)
     app.start()
     utils.log('First frame')
     while True:

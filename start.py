@@ -1,19 +1,20 @@
 # Show the startup message as soon as possible.
+import displayio
+bitmap = displayio.Bitmap(192, 32, 16)
+
+import display
+display.init(bitmap)
+title_pi = display.get_pi(0x00, 0xff, 0x00)
+text_pi = display.get_pi(0x80, 0x80, 0x80)
+
 import microfont
 import sys
-microfont.set_dirs(sys.path[0], '/')
-import prefs
-prefs.init()
-import matrix_frame
-display_frame = matrix_frame.new_display_frame(
-    192, 32, 16, prefs.get('rgb_pins'), prefs.get('addr_pins'))
+microfont.init(sys.path[0], '/')
 ver = sys.path[0].split('.')[0]
-title_cv = display_frame.pack(0x00, 0xff, 0x00)
-text_cv = display_frame.pack(0x80, 0x80, 0x80)
-display_frame.print(1, 0, 'ClimateClock.world', 'kairon-10', cv=title_cv)
-display_frame.print(1, 11, f'Action Clock {ver}', 'kairon-10', cv=text_cv)
-display_frame.print(1, 22, '#ActInTime', 'kairon-10', cv=text_cv)
-display_frame.send()
+microfont.small.draw('ClimateClock.world', bitmap, 1, 0, title_pi)
+microfont.small.draw(f'Action Clock {ver}', bitmap, 1, 11, text_pi)
+microfont.small.draw('#ActInTime', bitmap, 1, 22, text_pi)
+display.send()
 
 #IMPORTS#
 
@@ -33,8 +34,8 @@ utils.log('Created EspWifiNetwork')
 
 import app
 app.run(
+    bitmap,
     network,
-    display_frame,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )

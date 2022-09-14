@@ -1,7 +1,8 @@
 from ccinput import ButtonReader, DialReader, Press
+import display
+from microfont import small
 import prefs
 
-FONT = 'kairon-10'
 UP_ARROW = '\u2191'
 
 # ASCII characters only, for entering passwords and the like.
@@ -34,9 +35,8 @@ DISPLAY_TEXT_MENU = [
 class PrefEntryMode:
     def __init__(self, app, button_map, dial_map):
         self.app = app
-        self.frame = app.frame
-        self.cv = self.frame.pack(0x80, 0x80, 0x80)
-        self.cursor_cv = self.frame.pack(0x00, 0xff, 0x00)
+        self.pi = display.get_pi(0x80, 0x80, 0x80)
+        self.cursor_pi = display.get_pi(0x00, 0xff, 0x00)
 
         self.reader = ButtonReader({
             button_map['UP']: {
@@ -69,17 +69,17 @@ class PrefEntryMode:
     def start(self):
         self.reader.reset()
         self.dial_reader.reset()
-        self.frame.clear()
+        self.app.bitmap.fill(0)
 
-        self.frame.print(1, 0, self.pref_title, FONT, cv=self.cv)
+        small.draw(self.pref_title, self.app.bitmap, 1, 0, self.pi)
         self.text = prefs.get(self.pref_name)
         self.draw_field()
         self.draw_menu()
 
     def step(self):
-        # TODO: Currently every mode's step() method must call self.frame.send()
-        # in order for sdl_frame to detect events; fix this leaky abstraction.
-        self.frame.send()
+        # TODO: Currently every mode's step() method must call display.send()
+        # in order for sdl_display to detect events; fix this leaky abstraction.
+        display.send()
         # Handle input at the end of step(), because it might change modes.
         self.reader.step(self.app.receive)
         self.dial_reader.step(self.app.receive)
@@ -93,42 +93,44 @@ class PrefEntryMode:
     # Row 31: underline cursor for the selected character
 
     def draw_field(self):
-        self.frame.clear(0, 0, None, 11)
-        title_width = self.frame.measure(self.pref_title + ': ', FONT)
-        text_width = self.frame.measure(self.text, FONT)
+        bitmap = self.app.bitmap
+        bitmap.fill(0, 0, 0, None, 11)
+        title_width = small.measure(self.pref_title + ': ')
+        text_width = small.measure(self.text)
 
         # Shift text to the left if it's too long to fit.
         text_x = min(title_width, 192 - 5 - text_width)
-        cx = self.frame.print(text_x, 0, self.text, FONT, cv=self.cursor_cv)
-        self.frame.fill(cx, 10, 5, 1, cv=self.cursor_cv)
+        cx = small.draw(self.text, bitmap, text_x, 0, self.cursor_pi)
+        bitmap.fill(self.cursor_pi, cx, 10, cx + 5, 11)
 
-        self.frame.clear(0, 0, title_width, 11)
-        self.frame.print(0, 0, self.pref_title + ': ', FONT, cv=self.cv)
+        bitmap.fill(0, 0, 0, title_width, 11)
+        small.draw(self.pref_title + ': ', bitmap, 0, 0, self.pi)
 
     def draw_menu(self):
-        self.frame.clear(0, 11)
+        bitmap = self.app.bitmap
+        bitmap.fill(0, 0, 11)
         x = 4
         for i, option in enumerate(self.menu):
             label, command, chars = option
 
             if self.menu_selected and i == self.menu_index:
-                x = self.frame.print(x, 11, label, FONT, cv=self.cursor_cv)
-                self.frame.print(4, 21, chars, FONT, cv=self.cv)
+                x = small.draw(label, bitmap, x, 11, self.cursor_pi)
+                small.draw(chars, bitmap, 4, 21, self.pi)
                 self.draw_char_cursor()
             else:
-                nx = self.frame.print(x, 11, label, FONT, cv=self.cv)
+                nx = small.draw(label, bitmap, x, 11, self.pi)
                 if i == self.menu_index:
-                    self.frame.fill(x, 21, nx - x - 1, 1, cv=self.cursor_cv)
+                    bitmap.fill(self.cursor_pi, x, 21, nx - 1, 22)
                 x = nx
             x += 4
 
     def draw_char_cursor(self):
         label, command, chars = self.menu[self.menu_index]
         ci = self.char_indexes[self.menu_index]
-        left = self.frame.measure(chars[:ci], FONT)
-        w = self.frame.measure(chars[ci], FONT)
-        self.frame.clear(0, 31)
-        self.frame.fill(4 + left, 31, w - 1, 1, cv=self.cursor_cv)
+        left = small.measure(chars[:ci])
+        w = small.measure(chars[ci])
+        self.app.bitmap.fill(0, 0, 31)
+        self.app.bitmap.fill(self.cursor_pi, 4 + left, 31, 3 + left + w, 32)
 
     def receive(self, command, arg=None):
         if self.menu_selected:

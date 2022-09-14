@@ -41,6 +41,20 @@ class Bitmap(list):
         self[:] = bits
 
     # This is intended to be a direct Python translation of
+    # displayio_bitmap_obj_fill and common_hal_displayio_bitmap_fill.
+    def fill(self, pi=0, x1=0, y1=0, x2=None, y2=None):
+        x1 = min(max(x1, 0), self.width)
+        y1 = min(max(y1, 0), self.height)
+        x2 = self.width if x2 is None else x2
+        y2 = self.height if y2 is None else y2
+        x2 = min(max(x2, x1), self.width)
+        y2 = min(max(y2, y1), self.height)
+
+        for x in range(x1, x2):
+            for y in range(y1, y2):
+                self[x + y*self.width] = pi
+
+    # This is intended to be a direct Python translation of
     # common_hal_displayio_bitmap_freeblit.
     def freeblit(
         self, x, y,
