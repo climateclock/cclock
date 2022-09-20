@@ -43,7 +43,7 @@ def init(bitmap):
 
 
 # Updates the display to match the contents of the bitmap.
-def send(self):
+def send():
     fb_display.refresh(minimum_frames_per_second=0)
     # Display bug: refresh() doesn't cause a refresh unless we also set
     # auto_refresh = False (even though auto_refresh is already False!).
@@ -87,7 +87,7 @@ def get_pi(r, g, b):
 
 
 # Gets the RGB values for the given palette index.
-def get_rgb(self, pi):
+def get_rgb(pi):
     if pi < len(colours):
         return colours[pi]
     return colours[1]  # pi is out of range; just return colour 1
