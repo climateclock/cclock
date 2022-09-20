@@ -11,7 +11,7 @@ command = sys.argv[0]
 os.chdir(os.path.dirname(command))
 os.chdir('..')
 sys.path.append('.')
-sys.path.append('stubs')
+sys.path.append('simulator')
 
 # Copy data files to the simulated filesystem.
 import fs
