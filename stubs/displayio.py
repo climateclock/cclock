@@ -1,21 +1,3 @@
-class Group:
-    def __init__(self, x=0, y=0, scale=1):
-        pass
-
-    def append(self, item):
-        pass
-
-
-class Palette(list):
-    def __init__(self, n=1):
-        self[:] = [0] * n
-
-
-class TileGrid:
-    def __init__(self, *args, **kwargs):
-        self.x = self.y = 0
-
-
 class Bitmap(list):
     def __init__(self, w, h, depth):
         self.width = w

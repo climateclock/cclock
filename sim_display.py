@@ -62,12 +62,12 @@ class SimDisplay:
         SDL_SetWindowSize(self.window, self.pw * scale, self.ph * scale)
 
     def send(self):
-        rgbs = [(0, 0, 0)] * self.bitmap.depth
+        rgbs = [(0, 0, 0)] * len(display.shader)
 
         # Simulate the limited colour depth of the board.
         shift = 8 - self.bit_depth
         limit = 1 << self.bit_depth
-        for pi in range(self.bitmap.depth):
+        for pi in range(len(display.shader)):
             r = display.shader[pi] >> 16
             g = (display.shader[pi] >> 8) & 0xff
             b = display.shader[pi] & 0xff
