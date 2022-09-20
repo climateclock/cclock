@@ -11,9 +11,6 @@ os.environ['TZ'] = 'UTC'  # all times on the board are in UTC
 
 sys.path.append('.')
 sys.path.append('stubs')
-for name in os.listdir('.'):
-    if name.startswith('Adafruit_CircuitPython'):
-        sys.path.append(name)
 
 import fs
 fs.root = '/tmp/cclock'
@@ -30,26 +27,28 @@ prefs.init()
 import displayio
 bitmap = displayio.Bitmap(192, 32, 16)
 
-import sdl_display
-sdl_display.init(bitmap, 20)  # 20 fps is roughly what we get on the board
+import sim_display
+sim_display.init(bitmap, 20)  # 20 fps is roughly what we get on the board
 
 import sdl2
-up = sdl_display.SdlButton(sdl2.SDL_SCANCODE_LSHIFT)
-down = sdl_display.SdlButton(sdl2.SDL_SCANCODE_RSHIFT)
-enter = sdl_display.SdlButton(sdl2.SDL_SCANCODE_RETURN)
-brightness = sdl_display.SdlDial(
+up = sim_display.SimButton(sdl2.SDL_SCANCODE_LSHIFT)
+down = sim_display.SimButton(sdl2.SDL_SCANCODE_RSHIFT)
+enter = sim_display.SimButton(sdl2.SDL_SCANCODE_RETURN)
+brightness = sim_display.SimDial(
     sdl2.SDL_SCANCODE_DOWN, sdl2.SDL_SCANCODE_UP, 0.0, 1.0, 1/8.0)
 brightness.value = 1.0
-selector = sdl_display.SdlDial(
+selector = sim_display.SimDial(
     sdl2.SDL_SCANCODE_LEFT, sdl2.SDL_SCANCODE_RIGHT, -100000, 100000, 1)
 
-from unix_network import UnixNetwork
-network = UnixNetwork('climateclock', 'climateclock')
+import sim_esp
+esp_spi = sim_esp.SimEsp(b'climateclock', b'climateclock')
+import sim_socklib as socklib
 
 import app
 app.run(
     bitmap,
-    network,
+    esp_spi,
+    socklib,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )

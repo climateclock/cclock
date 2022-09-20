@@ -3,7 +3,6 @@ import cctime
 import display
 import fs
 from microfont import small
-from network import State
 import os
 import prefs
 import utils
@@ -35,7 +34,7 @@ class MenuMode:
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
 
         wifi_status = lambda: 'Status: ' + ['Online', 'Offline'][
-            self.app.network.state == State.OFFLINE]
+            self.app.net.state == 'OFFLINE']
         wifi_ssid = lambda: prefs.get('wifi_ssid')
 
         now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
@@ -44,8 +43,6 @@ class MenuMode:
             cctime.millis_to_isoformat(updater.api_fetched) or 'Not yet')
         index_fetched = lambda: (updater.index_fetched and
             cctime.millis_to_isoformat(updater.index_fetched) or 'Not yet')
-        esp_firmware_version = self.app.network.get_firmware_version()
-        esp_hardware_address = self.app.network.get_hardware_address()
         versions_present = ','.join(utils.versions_present() or ['None'])
 
         def auto_cycling():
@@ -75,14 +72,16 @@ class MenuMode:
             ]),
             (f'Auto update', auto_update, None, None, [
                 ('On', None, 'SET_UPDATES_PAUSED', None, []),
-                ('Pause for 4 hours', None, 'SET_UPDATES_PAUSED', 4*3600*1000, []),
-                ('Pause for 24 hours', None, 'SET_UPDATES_PAUSED', 24*3600*1000, []),
+                ('Pause for 4 hours', None,
+                    'SET_UPDATES_PAUSED', 4*3600*1000, []),
+                ('Pause for 24 hours', None,
+                    'SET_UPDATES_PAUSED', 24*3600*1000, []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Custom message', None, 'CUSTOM_MESSAGE_MODE', None, []),
             ('System info', None, None, None, [
                 (f'Time', now, None, None, []),
-                (f'MAC ID', esp_hardware_address, None, None, []),
+                (f'MAC ID', self.app.net.mac_address, None, None, []),
                 (f'Version', utils.version_running, None, None, []),
                 (f'Versions present', versions_present, None, None, []),
                 (f'Last API fetch', lambda: cctime.millis_to_isoformat(
@@ -90,7 +89,8 @@ class MenuMode:
                 (f'Last update fetch', lambda: cctime.millis_to_isoformat(
                     updater.index_fetched), None, None, []),
                 (f'Firmware', os.uname().version, None, None, []),
-                (f'ESP firmware', esp_firmware_version, None, None, []),
+                (f'ESP firmware', self.app.net.firmware_version,
+                    None, None, []),
                 (f'Free disk', lambda: f'{fs.free_kb()} kB', None, None, []),
                 (f'Free memory', utils.free, None, None, []),
                 (f'Uptime', self.app.frame_counter.uptime, None, None, []),

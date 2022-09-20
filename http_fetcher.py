@@ -1,5 +1,4 @@
 import cctime
-from network import State
 import prefs
 import utils
 
@@ -19,7 +18,6 @@ class HttpFetcher:
         self.network = network
         self.url = url
         self.ssl, self.hostname, self.path = utils.split_url(url)
-        self.online_started = None
         self.silence_started = None
 
         self.buffer = bytearray()
@@ -28,13 +26,13 @@ class HttpFetcher:
         self.read = self.connect_read
 
     def check_silence_timeout(self, is_silent):
-        now = cctime.get_millis()
+        now = cctime.monotonic_millis()
         if is_silent:
             if self.silence_started:
                 silence = int(now - self.silence_started)
                 if silence > SILENCE_TIMEOUT:
                     utils.log(f'Closing socket after {silence} s of silence.')
-                    self.network.close_step()
+                    self.network.close()
                     raise StopIteration
             else:
                 self.silence_started = now
@@ -42,27 +40,18 @@ class HttpFetcher:
             self.silence_started = None
 
     def connect_read(self):
+        self.network.step()
         if not self.hostname:
             raise ValueError(f'Invalid URL: {self.url}')
-        if self.network.state == State.OFFLINE:
-            self.online_started = None
-            self.network.enable_step(
-                prefs.get('wifi_ssid'),
-                prefs.get('wifi_password')
-            )
-        if self.network.state == State.ONLINE:
-            if not self.online_started:
-                self.online_started = cctime.get_millis()
-            if cctime.get_millis() > self.online_started + INITIAL_DELAY:
-                self.network.connect_step(self.hostname, ssl=self.ssl)
-        if self.network.state == State.CONNECTED:
-            self.read = self.request_read
-        return b''
-
-    def request_read(self):
-        if self.network.state == State.CONNECTED:
+        if self.network.state == 'OFFLINE':
+            self.network.join(
+                prefs.get('wifi_ssid'), prefs.get('wifi_password'))
+        if self.network.state == 'ONLINE':
+            if self.network.state_elapsed() > INITIAL_DELAY:
+                self.network.connect(self.hostname, ssl=self.ssl)
+        if self.network.state == 'CONNECTED':
             utils.log(f'Fetching {self.path} from {self.hostname}.')
-            self.network.send_step(
+            self.network.send(
                 b'GET ' + utils.to_bytes(self.path) + b' HTTP/1.1\r\n' +
                 b'Host: ' + utils.to_bytes(self.hostname) + b'\r\n' +
                 b'Connection: Close\r\n' +
@@ -72,7 +61,8 @@ class HttpFetcher:
         return b''
 
     def http_status_read(self):
-        data = self.network.receive_step(PACKET_LENGTH)
+        self.network.step()
+        data = self.network.receive(PACKET_LENGTH)
         self.buffer.extend(data)
         crlf = self.buffer.find(b'\r\n')
         self.check_silence_timeout(crlf < 0)
@@ -85,8 +75,9 @@ class HttpFetcher:
         return self.read(True)
 
     def http_headers_read(self, skip_receive=False):
+        self.network.step()
         if not skip_receive:
-            self.buffer.extend(self.network.receive_step(PACKET_LENGTH))
+            self.buffer.extend(self.network.receive(PACKET_LENGTH))
         double_crlf = self.buffer.find(b'\r\n\r\n')
         self.check_silence_timeout(double_crlf < 0)
         if double_crlf < 0:
@@ -98,17 +89,16 @@ class HttpFetcher:
         return self.read()
 
     def content_read(self):
+        self.network.step()
         if len(self.buffer):
             chunk = self.buffer[:PACKET_LENGTH]
             self.buffer[:PACKET_LENGTH] = b''
             print(f'Received {len(chunk)} bytes.')
             return bytes(chunk)
-        if self.network.state == State.CONNECTED:
-            chunk = self.network.receive_step(PACKET_LENGTH)
+        if self.network.state == 'CONNECTED':
+            chunk = self.network.receive(PACKET_LENGTH)
             self.check_silence_timeout(len(chunk) == 0)
             print(f'Received {len(chunk)} bytes.')
             return chunk
-        else:
-            utils.log('Remote server closed connection.')
-            self.network.close_step()
+        else:  # server closed the connection
             raise StopIteration

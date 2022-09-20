@@ -15,9 +15,9 @@ INTERVAL_AFTER_SUCCESS = 60 * 60 * 1000  # recheck for updates once an hour
 
 
 class SoftwareUpdater:
-    def __init__(self, app, network, clock_mode):
+    def __init__(self, app, net, clock_mode):
         self.app = app
-        self.network = network
+        self.net = net
         self.clock_mode = clock_mode
 
         self.api_url = prefs.get('api_url')
@@ -37,7 +37,7 @@ class SoftwareUpdater:
         self.retry_after(INITIAL_DELAY)
 
     def retry_after(self, delay):
-        self.network.close_step()
+        self.net.close()
         self.api_fetcher = None
         self.index_fetcher = None
         self.unpacker = None
@@ -47,7 +47,6 @@ class SoftwareUpdater:
 
     def wait_step(self):
         if cctime.monotonic_millis() > self.next_check:
-            addr = self.network.get_hardware_address()
             now = cctime.millis_to_isoformat(cctime.get_millis())
             v = utils.version_running()
             vp = ','.join(utils.versions_present())
@@ -55,8 +54,8 @@ class SoftwareUpdater:
             afetch = cctime.millis_to_isoformat(self.api_fetched) or ''
             ifetch = cctime.millis_to_isoformat(self.index_fetched) or ''
             fc = self.app.frame_counter
-            self.api_fetcher = HttpFetcher(self.network,
-                f'{self.api_url}?p=ac&mac={addr}&up={fc.uptime()}&v={v}&vp={vp}&t={now}&af={afetch}&if={ifetch}&fps={fc.fps:.1f}&mem={fc.min_free}&disk={fs.free_kb()}&fv={fv}')
+            self.api_fetcher = HttpFetcher(self.net,
+                f'{self.api_url}?p=ac&mac={self.net.mac_address}&up={fc.uptime()}&v={v}&vp={vp}&t={now}&af={afetch}&if={ifetch}&fps={fc.fps:.1f}&mem={fc.min_free}&disk={fs.free_kb()}&fv={fv}')
             self.step = self.api_fetch_step
 
     def api_fetch_step(self):
@@ -84,9 +83,9 @@ class SoftwareUpdater:
                 fetch_error = e
             if fetch_error:
                 utils.report_error(fetch_error, 'API fetch failed')
-                self.network.close_step()
+                self.net.close()
                 # Continue with software update anyway
-                self.index_fetcher = HttpFetcher(self.network, self.update_url)
+                self.index_fetcher = HttpFetcher(self.net, self.update_url)
                 self.step = self.index_fetch_step
                 return
 
@@ -95,7 +94,7 @@ class SoftwareUpdater:
         self.api_fetched = cctime.get_millis()
         self.clock_mode.reload_definition()
 
-        self.index_fetcher = HttpFetcher(self.network, self.update_url)
+        self.index_fetcher = HttpFetcher(self.net, self.update_url)
         self.step = self.index_fetch_step
 
     def index_fetch_step(self):
@@ -139,7 +138,7 @@ class SoftwareUpdater:
                 self.retry_after(INTERVAL_AFTER_SUCCESS)
             else:
                 self.index_fetcher = None
-                self.unpacker = Unpacker(HttpFetcher(self.network, url))
+                self.unpacker = Unpacker(HttpFetcher(self.net, url))
                 self.step = self.pack_fetch_step
         else:
             print(f'No enabled versions found.')

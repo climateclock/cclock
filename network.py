@@ -1,56 +1,108 @@
-class State:
-    OFFLINE = 'OFFLINE'  # networking is disabled
-    ONLINE = 'ONLINE'  # connected to the Internet, but not to any host
-    CONNECTED = 'CONNECTED'  # connected to a host, ready to send or receive
+import cctime
+import utils
 
 
 class Network:
-    """Non-blocking API for network operations.  Each *_step method should
-    aim to finish within 10 ms.  If the operation is incomplete, the state
-    will be unchanged and the client can call the same method again.
-    """
+    def __init__(self, esp, socklib):
+        self.esp = esp
+        self.socklib = socklib
+        self.firmware_version = str(bytes(self.esp.firmware_version), 'ascii')
+        self.mac_address = ':'.join('%02x' % b for b in self.esp.MAC_address)
+        # Don't set esp._debug!  It causes UDP to stop working. :(
 
-    # Implementations should shadow this with an instance variable.
-    state = State.OFFLINE
+        self.socket = None
+        self.set_state('OFFLINE')
 
-    def __init__(self):
-        """Sets the initial state to OFFLINE."""
-        raise NotImplementedError('Network is an abstract interface')
+    def set_state(self, new_state):
+        # Possible states are:
+        #     OFFLINE (inactive)
+        #     JOINING (trying to join a Wi-Fi network)
+        #     ONLINE (connected to a Wi-Fi network, but not to any host)
+        #     CONNECTED (connected to an HTTP server)
+        self.state = new_state
+        self.state_started = cctime.monotonic_millis()
+        utils.log(f'Network is now {self.state}.')
 
-    def get_firmware_version(self):
-        raise NotImplementedError
+    def state_elapsed(self):
+        return cctime.monotonic_millis() - self.state_started
 
-    def get_hardware_address(self):
-        raise NotImplementedError
+    def step(self):
+        if self.state == 'JOINING':
+            if self.esp.status == 3:
+                self.set_state('ONLINE')
+                cctime.ntp_sync(self.socklib, 'pool.ntp.org')
 
-    def enable_step(self, ssid, password):
-        """In state OFFLINE, connects to the Internet, resulting in state
-        OFFLINE (call again) or ONLINE."""
-        raise NotImplementedError
+            elif self.state_elapsed() > 20000:
+                utils.log(f'Could not join Wi-Fi network after 20 s; retrying.')
+                self.esp.disconnect()
+                self.join()
+            return
 
-    def connect_step(self, hostname, ssl=True):
-        """In state ONLINE, establishes a TCP or SSL connection, resulting in
-        state ONLINE (call again) or CONNECTED (ready to send or receive)."""
-        raise NotImplementedError
+        if (self.state == 'ONLINE' or self.state == 'CONNECTED'
+            ) and self.esp.status != 3:
+            utils.log('Wi-Fi network lost.')
+            self.close()
 
-    def send_step(self, data):
-        """In state CONNECTED, writes data (as bytes) to the current
-        connection, resulting in state CONNECTED (ready to send or receive
-        data) or ONLINE (other side has closed the connection)."""
-        raise NotImplementedError
+        if (self.state == 'CONNECTED' and
+            not self.esp.socket_connected(self.socket)):
+            utils.log('Remote server closed connection.')
+            self.close()
 
-    def receive_step(self, count):
-        """In state CONNECTED, reads and returns up to 'count' bytes from the
-        current connection, resulting in state CONNECTED (ready to send or
-        receive more data) or ONLINE or OFFLINE."""
-        raise NotImplementedError
+    def join(self, ssid=None, password=b''):
+        if ssid:
+            self.ssid = utils.to_bytes(ssid)
+            self.password = utils.to_bytes(password)
 
-    def close_step(self):
-        """In state CONNECTED, closes the connected socket, resulting in
-        state ONLINE."""
-        raise NotImplementedError
+        utils.log(f'Joining Wi-Fi network {repr(self.ssid)}.')
+        # NOTE: ssid and password must be bytes, not str!
+        self.esp.wifi_set_passphrase(self.ssid, self.password)
+        self.set_state('JOINING')
 
-    def disable_step(self):
-        """In any state, shuts down and releases all networking resources,
-        resulting in state OFFLINE."""
-        raise NotImplementedError
+    def connect(self, hostname, port=None, ssl=True):
+        if self.state != 'ONLINE':
+            print('Cannot connect() while network is {self.state}.')
+            return
+
+        try:
+            self.socket = self.esp.get_socket()
+        except TimeoutError as e:
+            utils.report_error(e, 'Failed to get socket; resetting')
+            self.esp.reset()
+            self.set_state('OFFLINE')
+
+        port = port or (443 if ssl else 80)
+        mode = self.esp.TLS_MODE if ssl else self.esp.TCP_MODE
+        utils.log(f'Connecting to {hostname} port {port}')
+        try:
+            # NOTE: hostname must be str, not bytes!
+            self.esp.socket_open(self.socket, hostname, port, mode)
+            if self.esp.socket_connected(self.socket):
+                self.set_state('CONNECTED')
+        except Exception as e:
+            utils.report_error(e, 'Failed to open socket; resetting')
+            self.esp.reset()
+            self.socket = None
+            self.set_state('OFFLINE')
+
+    def send(self, data):
+        if self.state == 'CONNECTED':
+            self.esp.socket_write(self.socket, data)
+
+    def receive(self, count):
+        data = b''
+        if self.state == 'CONNECTED' and self.esp.socket_available(self.socket):
+            data = self.esp.socket_read(self.socket, count)
+            if data == b'':
+                print('Server closed connection.')
+                self.close()
+        return data
+
+    def close(self):
+        if self.socket:
+            try:
+                self.esp.socket_close(self.socket)
+                utils.log('Socket closed.')
+            except Exception as e:
+                utils.report_error(e, 'Failed to close socket')
+        self.socket = None
+        self.set_state('ONLINE' if self.esp.status == 3 else 'OFFLINE')

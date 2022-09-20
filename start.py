@@ -28,14 +28,16 @@ selector = gpio.RotaryInput(board.A2, board.A3)
 utils.log('Created gpio objects')
 
 utils.log()
-import esp_wifi_network
-network = esp_wifi_network.EspWifiNetwork()
-utils.log('Created EspWifiNetwork')
+import esp
+esp_spi = esp.init_esp()
+utils.log('Initialized ESP')
+from adafruit_esp32spi import adafruit_esp32spi_socket as socklib
 
 import app
 app.run(
     bitmap,
-    network,
+    esp_spi,
+    socklib,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )

@@ -12,10 +12,9 @@ from utils import Cycle, log
 
 
 class ClockMode:
-    def __init__(self, app, network, button_map, dial_map):
+    def __init__(self, app, net, button_map, dial_map):
         log('Starting ClockMode.__init__')
         self.app = app
-        self.network = network
 
         self.deadline = None
         self.lifeline = None
@@ -24,7 +23,7 @@ class ClockMode:
             'custom_message', 'newsfeed', 'lifeline', [], [])
 
         self.reload_definition()
-        self.updater = SoftwareUpdater(app, network, self)
+        self.updater = SoftwareUpdater(app, net, self)
         log('Created SoftwareUpdater')
 
         self.reader = ButtonReader({

@@ -3,34 +3,23 @@ from ctypes import byref, c_char, c_void_p
 import display
 from sdl2 import *
 
-sdl_display = None
+sim_display = None
 
 
-class FrameTimer:
-    def __init__(self, fps):
-        self.interval = int(1000/fps)
-        self.next_frame = cctime.monotonic_millis() + self.interval
-
-    def wait(self):
-        """Waits until the next frame display time."""
-        cctime.sleep_millis(self.next_frame - cctime.monotonic_millis())
-        self.next_frame += self.interval
-
-
-class SdlButton:
+class SimButton:
     def __init__(self, scancode):
         self.scancode = scancode
 
     @property
     def pressed(self):
-        return self.scancode in sdl_display.pressed_scancodes
+        return self.scancode in sim_display.pressed_scancodes
 
 
-class SdlDial:
+class SimDial:
     def __init__(
         self, decr_scancode, incr_scancode, min_value, max_value, delta
     ):
-        sdl_display.key_handlers.append(self)
+        sim_display.key_handlers.append(self)
         self.decr_scancode = decr_scancode
         self.incr_scancode = incr_scancode
         self.min_value = min_value
@@ -49,16 +38,16 @@ class SdlDial:
 
 
 def init(bitmap, fps):
-    global sdl_display
-    sdl_display = SdlDisplay(bitmap, fps, display.BIT_DEPTH)
+    global sim_display
+    sim_display = SimDisplay(bitmap, fps, display.BIT_DEPTH)
     display.shader = [0]*bitmap.depth
-    display.send = sdl_display.send
+    display.send = sim_display.send
 
 
-class SdlDisplay:
+class SimDisplay:
     def __init__(self, bitmap, fps, bit_depth, title='Frame', scale=8, pad=4):
         self.bitmap = bitmap
-        self.timer = FrameTimer(fps)
+        self.fps = fps
         self.bit_depth = bit_depth
         self.scale = scale
         self.pad = pad
@@ -133,6 +122,6 @@ class SdlDisplay:
             self.pixels_cptr, len(self.pixels))
         surface = SDL_GetWindowSurface(self.window)
         SDL_BlitScaled(self.canvas, None, surface, None)
-        self.timer.wait()
+        cctime.sleep_millis(1000//self.fps)
         SDL_UpdateWindowSurface(self.window)
         self.flush_events()

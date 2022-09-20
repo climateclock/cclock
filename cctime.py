@@ -59,18 +59,18 @@ def enable_rtc():
         utils.report_error(e, 'Could not find an attached DS3231 RTC')
 
 
-def ntp_sync(socket, server):
+def ntp_sync(socklib, server):
     # Gets the time from an NTP server and sets the clock accordingly.
-    s = socket.socket(type=socket.SOCK_DGRAM)
+    sock = socklib.socket(type=socklib.SOCK_DGRAM)
+    sock.settimeout(1)
     try:
-        addr = socket.getaddrinfo(server, 123)[0][4]
-        s.connect(addr, conntype=1)  # esp.UDP_MODE == 1
+        addr = socklib.getaddrinfo(server, 123)[0][4]
+        sock.connect(addr, conntype=1)  # esp.UDP_MODE == 1
         packet = bytearray(48)
         packet[0] = 0b_00_100_011  # no leap second, NTP version 4, client mode
-        s.settimeout(0.5)
         send_millis = monotonic_millis()
-        s.send(packet)
-        if s.recv_into(packet) == 48:
+        sock.send(packet)
+        if sock.recv_into(packet) == 48:
             recv_millis = monotonic_millis()
             ntp_time = ((packet[40] << 24) + (packet[41] << 16) +
                 (packet[42] << 8) + packet[43]) - NTP_OFFSET
@@ -79,7 +79,7 @@ def ntp_sync(socket, server):
             print(f'Got NTP time {ntp_millis} with latency {latency_millis}')
             set_millis(ntp_millis - latency_millis)
     finally:
-        s.close()
+        sock.close()
 
 
 def get_tm():

@@ -6,18 +6,19 @@ import display
 import gc
 from menu_mode import MenuMode
 import micropython
+import network
 from pref_entry_mode import PrefEntryMode
 import utils
 
 
 class App:
-    def __init__(self, bitmap, network, button_map, dial_map):
+    def __init__(self, bitmap, net, button_map, dial_map):
         utils.log('Starting App.__init__')
         self.bitmap = bitmap
-        self.network = network
+        self.net = net
         self.frame_counter = FrameCounter()
 
-        self.clock_mode = ClockMode(self, network, button_map, dial_map)
+        self.clock_mode = ClockMode(self, net, button_map, dial_map)
         utils.log('Created ClockMode')
         self.menu_mode = MenuMode(self, button_map, dial_map)
         utils.log('Created MenuMode')
@@ -100,6 +101,7 @@ class FrameCounter:
             print('|\n', end='')
             if now_sec % 10 == 0:
                 utils.log(f'Up {self.uptime()} s ({self.fps:.1f} fps) on {utils.version_running()}')
+                self.min_free = min(self.min_free, utils.free())
         print('.', end='')
         self.last_tick = now
 
@@ -107,16 +109,12 @@ class FrameCounter:
         now = cctime.monotonic_millis()
         return (now - self.start)//1000
 
-    def mem(self):
-        now_free = utils.free()
-        self.min_free = min(self.min_free, now_free)
-        return now_free
 
-
-def run(bitmap, network, button_map, dial_map):
+def run(bitmap, esp, socklib, button_map, dial_map):
     utils.log('Starting run')
     cctime.enable_rtc()
-    app = App(bitmap, network, button_map, dial_map)
+    net = network.Network(esp, socklib)
+    app = App(bitmap, net, button_map, dial_map)
     app.start()
     utils.log('First frame')
     while True:
