@@ -243,21 +243,16 @@ For the record, though, here's how you build the firmware:
 
 ### Implementation notes
 
-The filesystem, display, and network subsystems are abstracted in
-interfaces called fs, Frame, and Network respectively.  Each one
-is implemented both for the MatrixPortal and for a Unix environment,
-and the appropriate implementation is passed in when the program starts.
-See `tools/sdl_run` and `tools/matrix_run` for details on how these
-implementations are instantiated and passed in.
+The filesystem, display, and network subsystems are abstracted in modules
+named fs, display, and network respectively.  Memory is tight on the
+MatrixPortal, so each module is implemented for the MatrixPortal by default,
+with hooks allowing it to be configured or monkey-patched to run in a Unix
+environment.   Memory conservation is also the reason that these are written
+as modules with global variables, rather than classes with instance variables.
 
-The display is provided through the abstract `Frame` interface, which
-represents a frame buffer of pixel data in memory.  Implementations of
-`Frame` are specialized for a particular display device, and may choose
-their own pixel representation to optimize for the target device.
+On the MatrixPortal, `start.py` initializes the app.  Its counterpart,
+`tools/sdl_run`, applies patches and starts the app in a Unix environment.
 
-`sdl_frame.py` is an implementation of `Frame` that will run on standard
-Python, using the SDL2 graphics library for display.
-
-`matrix_frame.py` is a partial implementation of `Frame` that runs on
-CircuitPython.  It's written for the Adafruit MatrixPortal M4, and
-assumes that there is an attached grid of 192 x 32 pixels (HUB75 panels).
+The display is backed by a displayio.Bitmap object, held by the App object.
+All the user interface routines paint into the app's bitmap and then call
+`display.send()` to show the contents of the bitmap on the display.
