@@ -19,82 +19,85 @@ class Press:
 
 
 class ButtonReader:
-    def __init__(self, command_map):
+    def __init__(self, buttons, command_map):
+        self.buttons = buttons
         self.map = command_map
-        self.immediate_buttons = set(
-            button for button, commands in self.map.items()
+        self.immediate_keys = set(
+            key for key, commands in self.map.items()
             if Press.LONG not in commands
             if Press.DOUBLE not in commands
         )
         self.reset()
 
     def reset(self):
-        self.debounce_started = {button: None for button in self.map}
-        self.was_pressed = {button: None for button in self.map}
-        self.action_started = {button: None for button in self.map}
-        self.last_clicked = {button: None for button in self.map}
-        self.next_repeat = {button: None for button in self.map}
+        self.debounce_started = {key: None for key in self.map}
+        self.was_pressed = {key: None for key in self.map}
+        self.action_started = {key: None for key in self.map}
+        self.last_clicked = {key: None for key in self.map}
+        self.next_repeat = {key: None for key in self.map}
         self.waiting_for_release = True
 
     def step(self, receiver):
         if self.waiting_for_release:
-            if any(b.pressed for b in self.map):
+            # .value goes low when button is pressed
+            if any(self.buttons[key].value == False for key in self.map):
                 return
             self.waiting_for_release = False
 
         if hasattr(sys.stdout, 'flush'):
             sys.stdout.flush()
         now = cctime.get_millis()
-        for button, commands in self.map.items():
-            if self.debounce_started[button]:
-                if now < self.debounce_started[button] + Press.DEBOUNCE_PERIOD:
+        for key, commands in self.map.items():
+            if self.debounce_started[key]:
+                if now < self.debounce_started[key] + Press.DEBOUNCE_PERIOD:
                     continue
-                self.debounce_started[button] = None
+                self.debounce_started[key] = None
 
-            now_pressed = button.pressed
-            if now_pressed != self.was_pressed[button]:
-                self.debounce_started[button] = now
+            # .value goes low when button is pressed
+            now_pressed = (self.buttons[key].value == False)
+            if now_pressed != self.was_pressed[key]:
+                self.debounce_started[key] = now
 
-            just_pressed = now_pressed and not self.was_pressed[button]
-            released = self.was_pressed[button] and not now_pressed
-            action_ended = self.action_started[button] and released
-            self.was_pressed[button] = now_pressed
+            just_pressed = now_pressed and not self.was_pressed[key]
+            released = self.was_pressed[key] and not now_pressed
+            action_ended = self.action_started[key] and released
+            self.was_pressed[key] = now_pressed
 
             if just_pressed:
-                self.action_started[button] = now
+                self.action_started[key] = now
             if released:
-                self.action_started[button] = None
+                self.action_started[key] = None
             long_pressed = (
-                self.action_started[button] and
-                now > self.action_started[button] + Press.LONG_PERIOD
+                self.action_started[key] and
+                now > self.action_started[key] + Press.LONG_PERIOD
             )
 
-            if button in self.immediate_buttons:
+            if key in self.immediate_keys:
                 if Press.SHORT in commands and just_pressed:
-                    receiver(commands[Press.SHORT])
-                elif Press.REPEAT in commands and self.next_repeat[button]:
+                    receiver.receive(commands[Press.SHORT])
+                elif Press.REPEAT in commands and self.next_repeat[key]:
                     if released:
-                        self.next_repeat[button] = None
-                    elif now > self.next_repeat[button]:
-                        receiver(commands[Press.REPEAT])
-                        self.next_repeat[button] = now + Press.REPEAT_INTERVAL
+                        self.next_repeat[key] = None
+                    elif now > self.next_repeat[key]:
+                        receiver.receive(commands[Press.REPEAT])
+                        self.next_repeat[key] = now + Press.REPEAT_INTERVAL
                 elif Press.REPEAT in commands and long_pressed:
-                    receiver(commands[Press.REPEAT])
-                    self.next_repeat[button] = now + Press.REPEAT_INTERVAL
+                    receiver.receive(commands[Press.REPEAT])
+                    self.next_repeat[key] = now + Press.REPEAT_INTERVAL
             elif Press.DOUBLE in commands and action_ended:
-                self.last_clicked[button] = now
-            elif Press.DOUBLE in commands and self.last_clicked[button]:
-                if now > self.last_clicked[button] + Press.MULTICLICK_INTERVAL:
-                    self.last_clicked[button] = None
+                self.last_clicked[key] = now
+            elif Press.DOUBLE in commands and self.last_clicked[key]:
+                if now > self.last_clicked[key] + Press.MULTICLICK_INTERVAL:
+                    self.last_clicked[key] = None
                     if Press.SHORT in commands:
-                        receiver(commands[Press.SHORT])
+                        receiver.receive(commands[Press.SHORT])
                 elif just_pressed:
-                    receiver(commands[Press.DOUBLE])
+                    receiver.receive(commands[Press.DOUBLE])
             elif Press.LONG in commands and long_pressed:
-                receiver(commands[Press.LONG])
-                self.action_started[button] = None
+                receiver.receive(commands[Press.LONG])
+                self.action_started[key] = None
             elif Press.SHORT in commands and action_ended:
-                receiver(commands[Press.SHORT])
+                receiver.receive(commands[Press.SHORT])
 
     def deinit(self):
         for io in self.ios:
@@ -112,18 +115,19 @@ class DialReader:
         self.reset()
 
     def reset(self):
-        self.last_value = self.dial.value
+        self.last_position = self.dial.position
 
     @property
     def value(self):
-        return self.dial.value
+        return self.dial.position
 
     def step(self, receiver):
-        value = self.dial.value
-        delta = value - self.last_value
-        if abs(delta) >= self.epsilon or value == self.min or value == self.max:
-            self.last_value = value
-            receiver(self.command, (delta, value))
+        position = self.dial.position
+        delta = position - self.last_position
+        if (abs(delta) >= self.epsilon or
+            position == self.min or position == self.max):
+            self.last_position = position
+            receiver.receive(self.command, (delta, position))
 
     def deinit(self):
         self.dial.deinit()

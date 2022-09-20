@@ -11,27 +11,28 @@ class SimButton:
         self.scancode = scancode
 
     @property
-    def pressed(self):
-        return self.scancode in sim_display.pressed_scancodes
+    def value(self):
+        # .value goes low when button is pressed
+        return not (self.scancode in sim_display.pressed_scancodes)
 
 
 class SimDial:
     def __init__(
-        self, decr_scancode, incr_scancode, min_value, max_value, delta
+        self, decr_scancode, incr_scancode, min_position, max_position, delta
     ):
         sim_display.key_handlers.append(self)
         self.decr_scancode = decr_scancode
         self.incr_scancode = incr_scancode
-        self.min_value = min_value
-        self.max_value = max_value
+        self.min_position = min_position
+        self.max_position = max_position
         self.delta = delta
-        self.value = min_value
+        self.position = min_position
 
     def key_down(self, scancode):
         if scancode == self.decr_scancode:
-            self.value = max(self.min_value, self.value - self.delta)
+            self.position = max(self.min_position, self.position - self.delta)
         if scancode == self.incr_scancode:
-            self.value = min(self.max_value, self.value + self.delta)
+            self.position = min(self.max_position, self.position + self.delta)
 
     def key_up(self, scancode):
         pass

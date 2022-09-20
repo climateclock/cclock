@@ -110,7 +110,6 @@ done
 cat <<EOF >>/tmp/imports.py
 gc.collect()
 now = str(time.monotonic_ns()//1000000)
-frame = display_frame
 print(f'[{now[:-3]}.{now[-3:]}: {gc.mem_free()} free] Finished imports')
 EOF
 if [ $debug_memory = 'yes' ]; then

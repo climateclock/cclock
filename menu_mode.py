@@ -15,18 +15,18 @@ class MenuMode:
         self.cursor_pi = display.get_pi(0x00, 0xff, 0x00)
         self.next_draw = cctime.monotonic_millis()
 
-        self.reader = ButtonReader({
-            button_map['UP']: {
+        self.reader = ButtonReader(button_map, {
+            'UP': {
                 Press.SHORT: 'PREV_OPTION',
                 Press.LONG: 'BACK',
                 Press.DOUBLE: 'DUMP_FRAME',
             },
-            button_map['DOWN']: {
+            'DOWN': {
                 Press.SHORT: 'NEXT_OPTION',
                 Press.LONG: 'GO',
                 Press.DOUBLE: 'DUMP_MEMORY',
             },
-            button_map['ENTER']: {
+            'ENTER': {
                 Press.SHORT: 'GO',
                 Press.LONG: 'BACK',
             }
@@ -150,9 +150,10 @@ class MenuMode:
         if cctime.monotonic_millis() > self.next_draw:
             self.draw()
             self.next_draw += 20
-        # Handle input at the end of step(), because it might change modes.
-        self.reader.step(self.app.receive)
-        self.dial_reader.step(self.app.receive)
+
+        # Input readers can switch modes, so they should be called last.
+        self.reader.step(self.app)
+        self.dial_reader.step(self.app)
 
     def receive(self, command, arg=None):
         if command == 'SELECTOR':

@@ -38,18 +38,18 @@ class PrefEntryMode:
         self.pi = display.get_pi(0x80, 0x80, 0x80)
         self.cursor_pi = display.get_pi(0x00, 0xff, 0x00)
 
-        self.reader = ButtonReader({
-            button_map['UP']: {
+        self.reader = ButtonReader(button_map, {
+            'UP': {
                 Press.SHORT: 'PREV_OPTION',
                 Press.LONG: 'BACK',
                 Press.DOUBLE: 'DUMP_FRAME',
             },
-            button_map['DOWN']: {
+            'DOWN': {
                 Press.SHORT: 'NEXT_OPTION',
                 Press.LONG: 'GO',
                 Press.DOUBLE: 'DUMP_MEMORY',
             },
-            button_map['ENTER']: {
+            'ENTER': {
                 Press.SHORT: 'GO',
                 Press.LONG: 'BACK',
             }
@@ -80,9 +80,10 @@ class PrefEntryMode:
         # TODO: Currently every mode's step() method must call display.send()
         # in order for sim_display to detect events; fix this leaky abstraction.
         display.send()
-        # Handle input at the end of step(), because it might change modes.
-        self.reader.step(self.app.receive)
-        self.dial_reader.step(self.app.receive)
+
+        # Input readers can switch modes, so they should be called last.
+        self.reader.step(self.app)
+        self.dial_reader.step(self.app)
 
     # Rows 0 to 9: pref_title and text being edited
     # Row 10: underline cursor for text being edited

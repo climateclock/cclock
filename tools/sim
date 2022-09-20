@@ -36,7 +36,7 @@ down = sim_display.SimButton(sdl2.SDL_SCANCODE_RSHIFT)
 enter = sim_display.SimButton(sdl2.SDL_SCANCODE_RETURN)
 brightness = sim_display.SimDial(
     sdl2.SDL_SCANCODE_DOWN, sdl2.SDL_SCANCODE_UP, 0.0, 1.0, 1/8.0)
-brightness.value = 1.0
+brightness.position = 1.0
 selector = sim_display.SimDial(
     sdl2.SDL_SCANCODE_LEFT, sdl2.SDL_SCANCODE_RIGHT, -100000, 100000, 1)
 

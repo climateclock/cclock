@@ -1,15 +1,15 @@
 import board
-import gpio
+import digitalio
 import neopixel
 import storage
 import supervisor
 
-up = gpio.Button(board.BUTTON_UP)
-down = gpio.Button(board.BUTTON_DOWN)
+up = digitalio.DigitalInOut(board.BUTTON_UP)
+down = digitalio.DigitalInOut(board.BUTTON_DOWN)
 
 # By default, the filesystem is writable from Python to let the software update
 # itself.  Hold either button on boot to make the filesystem writable over USB.
-production_mode = not(up.pressed or down.pressed)
+production_mode = up.value and down.value  # buttons are normally high (True)
 if production_mode:
     storage.remount('/', readonly=False)
     supervisor.disable_autoreload()

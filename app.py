@@ -38,7 +38,7 @@ class App:
 
     def step(self):
         self.frame_counter.tick()
-        self.brightness_reader.step(self.receive)
+        self.brightness_reader.step(self)
         self.mode.step()
 
     def receive(self, command, arg=None):
