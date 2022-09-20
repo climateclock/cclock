@@ -21,10 +21,11 @@ def init(bitmap):
     global shader
     global fb_display
 
-    displayio.release_displays()
     prefs.init()
     rgb_pin_names = prefs.get('rgb_pins').split()
     addr_pin_names = prefs.get('addr_pins').split()
+
+    displayio.release_displays()
     matrix = rgbmatrix.RGBMatrix(
         width=bitmap.width, height=bitmap.height, bit_depth=BIT_DEPTH,
         rgb_pins=[getattr(board, name) for name in rgb_pin_names],

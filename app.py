@@ -87,7 +87,6 @@ class FrameCounter:
         self.start = cctime.monotonic_millis()
         self.fps = 0
         self.last_tick = self.start
-        self.min_free = utils.free()
 
     def tick(self):
         now = cctime.monotonic_millis()
@@ -101,7 +100,6 @@ class FrameCounter:
             print('|\n', end='')
             if now_sec % 10 == 0:
                 utils.log(f'Up {self.uptime()} s ({self.fps:.1f} fps) on {utils.version_running()}')
-                self.min_free = min(self.min_free, utils.free())
         print('.', end='')
         self.last_tick = now
 

@@ -4,7 +4,7 @@ import board
 import digitalio
 
 
-def init_esp():
+def init():
     esp = esp32spi.ESP_SPIcontrol(
         board.SPI(),
         digitalio.DigitalInOut(board.ESP_CS),
@@ -12,4 +12,4 @@ def init_esp():
         digitalio.DigitalInOut(board.ESP_RESET)
     )
     socklib.set_interface(esp)
-    return esp
+    return esp, socklib

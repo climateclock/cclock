@@ -1,16 +1,18 @@
 from array import array
 import displayio
 import fs
+import sys
 
+dirs = [sys.path[0], '']
 large = None
 small = None
 
 
-def init(*dirs):
+def init():
     global large
     global small
-    large = get('kairon-16', dirs or [''])
-    small = get('kairon-10', dirs or [''])
+    large = get('kairon-16', dirs)
+    small = get('kairon-10', dirs)
 
 
 def get(font_id, dirs):
@@ -66,7 +68,6 @@ class Microfont:
             (self.w, self.h, self.bitmap, self.starts, self.stops, self.sxs,
                 self.dxs, self.cws) = w, h, bitmap, starts, stops, sxs, dxs, cws
 
-
     def get_index(self, ch):
         c = ord(ch)
         r, nr = 0, len(self.starts)
@@ -79,10 +80,8 @@ class Microfont:
             r += 1
         return 0
 
-
     def measure(self, text):
         return sum(self.cws[self.get_index(ch)] for ch in text)
-
 
     def draw(self, text, bitmap, x=0, y=0, pi=1):
         for ch in text:

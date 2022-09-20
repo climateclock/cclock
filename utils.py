@@ -33,13 +33,16 @@ def versions_present():
 
 last_ms = None
 last_mem = None
+min_mem = free()
 
 def log(message=None, dump=False):
     global last_ms
     global last_mem
+    global min_mem
     import time
     ms = time.monotonic_ns()//1000000
     mem = free()
+    min_mem = min(min_mem, mem)
     if message:
         msg = f'[{format_ms(ms)}: {mem} free] {message}'
         if last_ms:

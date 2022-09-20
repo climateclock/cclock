@@ -2,45 +2,15 @@ import cctime
 from ctypes import byref, c_char, c_void_p
 import display
 from sdl2 import *
-
-sim_display = None
-
-
-class SimButton:
-    def __init__(self, scancode):
-        self.scancode = scancode
-
-    @property
-    def value(self):
-        # .value goes low when button is pressed
-        return not (self.scancode in sim_display.pressed_scancodes)
+import sim_inputs
 
 
-class SimDial:
-    def __init__(
-        self, decr_scancode, incr_scancode, min_position, max_position, delta
-    ):
-        sim_display.key_handlers.append(self)
-        self.decr_scancode = decr_scancode
-        self.incr_scancode = incr_scancode
-        self.min_position = min_position
-        self.max_position = max_position
-        self.delta = delta
-        self.position = min_position
-
-    def key_down(self, scancode):
-        if scancode == self.decr_scancode:
-            self.position = max(self.min_position, self.position - self.delta)
-        if scancode == self.incr_scancode:
-            self.position = min(self.max_position, self.position + self.delta)
-
-    def key_up(self, scancode):
-        pass
+def install():
+    display.init = init
 
 
-def init(bitmap, fps):
-    global sim_display
-    sim_display = SimDisplay(bitmap, fps, display.BIT_DEPTH)
+def init(bitmap):
+    sim_display = SimDisplay(bitmap, 20, display.BIT_DEPTH)
     display.shader = [0]*bitmap.depth
     display.send = sim_display.send
 
@@ -69,26 +39,19 @@ class SimDisplay:
         self.canvas = SDL_CreateRGBSurface(
             0, self.pw, self.ph, 24, 0x0000ff, 0x00ff00, 0xff0000, 0)
         self.pressed_scancodes = set()
-        self.key_handlers = []
         self.flush_events()
 
     def flush_events(self):
         event = SDL_Event()
         while SDL_PollEvent(byref(event)):
+            sim_inputs.handle_event(event)
             scancode = event.key.keysym.scancode
             if event.type == SDL_KEYDOWN:
-                self.pressed_scancodes.add(scancode)
-                for key_handler in self.key_handlers:
-                    key_handler.key_down(scancode)
                 if scancode == SDL_SCANCODE_MINUS:
                     if self.scale > 1:
                         self.set_scale(self.scale - 1)
-                elif scancode == SDL_SCANCODE_EQUALS:
+                if scancode == SDL_SCANCODE_EQUALS:
                     self.set_scale(self.scale + 1)
-            if event.type == SDL_KEYUP:
-                self.pressed_scancodes -= {scancode}
-                for key_handler in self.key_handlers:
-                    key_handler.key_up(scancode)
             if scancode == SDL_SCANCODE_ESCAPE:
                 raise SystemExit()
             if event.type == SDL_QUIT:
@@ -113,7 +76,7 @@ class SimDisplay:
             g = (g >> shift) / limit
             b = (b >> shift) / limit
             # Apply gamma correction (LED values are linear due to PWM).
-            rgbs[pi] = int((r**0.6)*256), int((g**0.6)*256), int((b**0.6)*256)
+            rgbs[pi] = int((r**0.5)*256), int((g**0.5)*256), int((b**0.5)*256)
         for y in range(self.bitmap.height):
             for x in range(self.bitmap.width):
                 si = y * self.bitmap.width + x

@@ -1,54 +1,34 @@
 #!/usr/bin/env python3
 
 import os
-import re
 import sys
 
+# All times on the board are in UTC.
+os.environ['TZ'] = 'UTC'
+
+# Set the import paths relative to the parent of the tools/ directory.
 command = sys.argv[0]
 os.chdir(os.path.dirname(command))
 os.chdir('..')
-os.environ['TZ'] = 'UTC'  # all times on the board are in UTC
-
 sys.path.append('.')
 sys.path.append('stubs')
 
+# Copy data files to the simulated filesystem.
 import fs
 fs.root = '/tmp/cclock'
 for path in os.listdir():
     if path.endswith('.mcf'):
         fs.write(path, open(path, 'rb').read())
 
-import microfont
-microfont.init()
-
-import prefs
-prefs.init()
-
-import displayio
-bitmap = displayio.Bitmap(192, 32, 16)
-
+# Install monkey-patches.
 import sim_display
-sim_display.init(bitmap, 20)  # 20 fps is roughly what we get on the board
+sim_display.install()
 
-import sdl2
-up = sim_display.SimButton(sdl2.SDL_SCANCODE_LSHIFT)
-down = sim_display.SimButton(sdl2.SDL_SCANCODE_RSHIFT)
-enter = sim_display.SimButton(sdl2.SDL_SCANCODE_RETURN)
-brightness = sim_display.SimDial(
-    sdl2.SDL_SCANCODE_DOWN, sdl2.SDL_SCANCODE_UP, 0.0, 1.0, 1/8.0)
-brightness.position = 1.0
-selector = sim_display.SimDial(
-    sdl2.SDL_SCANCODE_LEFT, sdl2.SDL_SCANCODE_RIGHT, -100000, 100000, 1)
+import sim_inputs
+sim_inputs.install()
 
 import sim_esp
-esp_spi = sim_esp.SimEsp(b'climateclock', b'climateclock')
-import sim_socklib as socklib
+sim_esp.install(b'climateclock', b'climateclock')
 
-import app
-app.run(
-    bitmap,
-    esp_spi,
-    socklib,
-    {'UP': up, 'DOWN': down, 'ENTER': enter},
-    {'BRIGHTNESS': brightness, 'SELECTOR': selector}
-)
+# Off we go!
+import start

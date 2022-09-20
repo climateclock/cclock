@@ -1,11 +1,25 @@
 from adafruit_esp32spi import adafruit_esp32spi as esp32spi
 import cctime
+import esp
 import select
+import sim_socklib
 import socket
 import ssl
 from ssl import _create_unverified_context as create_ssl_context
+import utils
 
 WIFI_JOIN_DELAY = 5000  # how long it takes to connect to the simulated AP
+ap_credentials = None
+
+
+def install(ap_ssid, ap_password):
+    global ap_credentials
+    ap_credentials = (utils.to_bytes(ap_ssid), utils.to_bytes(ap_password))
+    esp.init = init
+
+
+def init():
+    return SimEsp(ap_credentials), sim_socklib
 
 
 class SimEsp:
@@ -14,8 +28,8 @@ class SimEsp:
     TCP_MODE = 1
     TLS_MODE = 2
 
-    def __init__(self, ap_ssid, ap_password):
-        self._ap_credentials = (ap_ssid, ap_password)
+    def __init__(self, ap_credentials):
+        self._ap_credentials = ap_credentials
         self.firmware_version = b'None'
         self.MAC_address = b'\x00\x00\x00\x00\x00\x00'
         self.reset()
@@ -44,6 +58,7 @@ class SimEsp:
         return self._status
 
     def reset(self):
+        cctime.sleep_millis(760)  # simulate the time it takes to reset
         self._client_credentials = None
         self._sockets = {}
         self._set_status(esp32spi.WL_IDLE_STATUS)

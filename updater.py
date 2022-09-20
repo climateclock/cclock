@@ -55,7 +55,7 @@ class SoftwareUpdater:
             ifetch = cctime.millis_to_isoformat(self.index_fetched) or ''
             fc = self.app.frame_counter
             self.api_fetcher = HttpFetcher(self.net,
-                f'{self.api_url}?p=ac&mac={self.net.mac_address}&up={fc.uptime()}&v={v}&vp={vp}&t={now}&af={afetch}&if={ifetch}&fps={fc.fps:.1f}&mem={fc.min_free}&disk={fs.free_kb()}&fv={fv}')
+                f'{self.api_url}?p=ac&mac={self.net.mac_address}&up={fc.uptime()}&v={v}&vp={vp}&t={now}&af={afetch}&if={ifetch}&fps={fc.fps:.1f}&mem={utils.min_mem}&disk={fs.free_kb()}&fv={fv}')
             self.step = self.api_fetch_step
 
     def api_fetch_step(self):
