@@ -78,7 +78,7 @@ class PrefEntryMode:
 
     def step(self):
         # TODO: Currently every mode's step() method must call display.send()
-        # in order for sdl_display to detect events; fix this leaky abstraction.
+        # in order for sim_display to detect events; fix this leaky abstraction.
         display.send()
         # Handle input at the end of step(), because it might change modes.
         self.reader.step(self.app.receive)

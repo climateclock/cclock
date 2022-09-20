@@ -52,10 +52,10 @@ to wipe the MatrixPortal and perform a clean installation.  The current
 code will be deployed as version 0 and preferences will be wiped (the
 equivalent of a "factory reset").
 
-Alternatively, during development, you can run the clock in a window on
-your computer with:
+Alternatively, during development, you can simulate the clock in a window
+on your computer with:
 
-    tools/sdl_run
+    tools/sim
 
 Or you can deploy the current code to a MatrixPortal (without resetting
 anything else) with:
@@ -92,7 +92,7 @@ to set up your Python virtual environment and install dependencies.
 
 To run the clock in a window on your computer:
 
-    tools/sdl_run
+    tools/sim
 
 This will substitute your computer's filesystem, network, and display, but
 otherwise run the same code that runs in production, so you can test and
@@ -251,7 +251,7 @@ environment.   Memory conservation is also the reason that these are written
 as modules with global variables, rather than classes with instance variables.
 
 On the MatrixPortal, `start.py` initializes the app.  Its counterpart,
-`tools/sdl_run`, applies patches and starts the app in a Unix environment.
+`tools/sim`, applies patches and starts the app in a Unix environment.
 
 The display is backed by a displayio.Bitmap object, held by the App object.
 All the user interface routines paint into the app's bitmap and then call
