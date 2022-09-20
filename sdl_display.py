@@ -110,13 +110,20 @@ class SdlDisplay:
 
     def send(self):
         rgbs = [(0, 0, 0)] * self.bitmap.depth
+
+        # Simulate the limited colour depth of the board.
         shift = 8 - self.bit_depth
-        k = 255 // ((1 << self.bit_depth) - 1)
+        limit = 1 << self.bit_depth
         for pi in range(self.bitmap.depth):
             r = display.shader[pi] >> 16
             g = (display.shader[pi] >> 8) & 0xff
             b = display.shader[pi] & 0xff
-            rgbs[pi] = (r >> shift) * k, (g >> shift) * k, (b >> shift) * k
+            # Quantize and convert to colour values between 0.0 and 1.0.
+            r = (r >> shift) / limit
+            g = (g >> shift) / limit
+            b = (b >> shift) / limit
+            # Apply gamma correction (LED values are linear due to PWM).
+            rgbs[pi] = int((r**0.6)*256), int((g**0.6)*256), int((b**0.6)*256)
         for y in range(self.bitmap.height):
             for x in range(self.bitmap.width):
                 si = y * self.bitmap.width + x
