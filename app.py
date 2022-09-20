@@ -108,10 +108,9 @@ class FrameCounter:
         return (now - self.start)//1000
 
 
-def run(bitmap, esp, socklib, button_map, dial_map):
+def run(bitmap, net, button_map, dial_map):
     utils.log('Starting run')
     cctime.enable_rtc()
-    net = network.Network(esp, socklib)
     app = App(bitmap, net, button_map, dial_map)
     app.start()
     utils.log('First frame')

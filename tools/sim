@@ -27,8 +27,8 @@ sim_display.install()
 import sim_inputs
 sim_inputs.install()
 
-import sim_esp
-sim_esp.install(b'climateclock', b'climateclock')
+import sim_network
+sim_network.install(b'climateclock', b'climateclock')
 
 # Off we go!
 import start

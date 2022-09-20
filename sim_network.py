@@ -1,6 +1,6 @@
 from adafruit_esp32spi import adafruit_esp32spi as esp32spi
 import cctime
-import esp
+import network
 import select
 import sim_socklib
 import socket
@@ -15,11 +15,11 @@ ap_credentials = None
 def install(ap_ssid, ap_password):
     global ap_credentials
     ap_credentials = (utils.to_bytes(ap_ssid), utils.to_bytes(ap_password))
-    esp.init = init
+    network.init = init
 
 
 def init():
-    return SimEsp(ap_credentials), sim_socklib
+    return network.Network(SimEsp(ap_credentials), sim_socklib)
 
 
 class SimEsp:

@@ -25,15 +25,13 @@ up, down, enter, brightness, selector = inputs.init()
 utils.log('Initialized inputs')
 
 utils.log()
-import esp
-esp_spi, socklib = esp.init()
-utils.log('Initialized ESP')
+import network
+net = network.init()
+utils.log('Initialized network')
 
 import app
 app.run(
-    bitmap,
-    esp_spi,
-    socklib,
+    bitmap, net,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )
