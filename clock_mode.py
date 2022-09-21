@@ -8,12 +8,11 @@ from microfont import small
 import prefs
 from updater import SoftwareUpdater
 import utils
-from utils import Cycle, log
 
 
 class ClockMode:
     def __init__(self, app, net, button_map, dial_map):
-        log('Starting ClockMode.__init__')
+        utils.log('Starting ClockMode.__init__')
         self.app = app
 
         self.deadline = None
@@ -24,7 +23,7 @@ class ClockMode:
 
         self.reload_definition()
         self.updater = SoftwareUpdater(app, net, self)
-        log('Created SoftwareUpdater')
+        utils.log('Created SoftwareUpdater')
 
         self.reader = ButtonReader(button_map, {
             'UP': {
@@ -41,10 +40,10 @@ class ClockMode:
             }
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
-        log('Finished ClockMode.__init__')
+        utils.log('Finished ClockMode.__init__')
 
     def reload_definition(self):
-        log()
+        utils.log()
         try:
             with fs.open('/cache/clock.json') as api_file:
                 defn = ccapi.load(api_file)
@@ -54,7 +53,7 @@ class ClockMode:
                 lifelines = [m for m in defn.modules if m.flavor == 'lifeline']
 
                 self.deadline = deadlines and deadlines[0] or None
-                self.lifelines = Cycle(*lifelines)
+                self.lifelines = utils.Cycle(*lifelines)
 
                 current = defn.module_dict.get(prefs.get('lifeline_id'))
                 if current in lifelines:
@@ -68,7 +67,7 @@ class ClockMode:
                     *defn.config.display.lifeline.primary)
         except Exception as e:
             utils.report_error(e, 'Could not load API file')
-        log('reload_definition')
+        utils.log('reload_definition')
 
     def switch_lifeline(self, delta):
         if self.lifelines:

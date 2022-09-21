@@ -1,6 +1,5 @@
 import fs
 import json
-import utils
 
 
 pairs = {

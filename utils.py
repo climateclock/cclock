@@ -1,4 +1,3 @@
-import fs
 import gc
 import micropython
 import os
@@ -22,6 +21,7 @@ def version_running():
 
 
 def versions_present():
+    import fs
     versions = []
     for name in fs.listdir():
         if name.startswith('v') and fs.isdir(name):
@@ -57,6 +57,7 @@ def log(message=None, dump=False):
     if dump or debug:
         gc.collect()
         micropython.mem_info(1)
+        print()
 
 
 def format_ms(ms):

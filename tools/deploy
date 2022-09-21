@@ -11,15 +11,22 @@
 cd $(dirname "$0")
 cd ..
 
-debug_memory=no
-if [ "$1" = '-d' ]; then
-  debug_memory=yes
+while [[ $1 = -* ]]; do
+  [[ $1 = -d ]] && debug_memory=yes
+  [[ $1 = -h || $1 = --help ]] && cat <<EOF && exit 1
+Usage: $0 [-d] [-q]
+
+Wipes the attached CircuitPython device and deploys the code in the current
+directory as v0, thus leaving the device in the factory reset state.  Also
+installs a current copy of clock.json, fetched from the API if possible.
+
+-d enables memory debugging: memory layout is dumped with every log message.
+
+-q does a quick deployment: the device is not wiped; code is deployed as v999.
+EOF
+  [[ $1 = -q ]] && quick_deploy=yes
   shift
-fi
-module="$1"
-module=${module%.py}
-target=/Volumes/CIRCUITPY
-unalias -a
+done
 
 echo 'Checking syntax...'
 python3 <<EOF || exit 1
@@ -32,106 +39,98 @@ for name in os.listdir():
         compile(open(name).read(), name, 'exec')
 EOF
 
-if [ ! -d "$target" ]; then
-    echo -n "Waiting for drive to appear at $target.."
-    while ! [ -d "$target" ]; do
+drive=/Volumes/CIRCUITPY
+target=/Volumes/CIRCUITPY
+
+if [[ ! -d $drive ]]; then
+    echo -n "Waiting for drive to appear at $drive.."
+    while [[ ! -d $drive ]]; do
         echo -n '.'
         sleep 0.05
     done
     sleep 0.5  # wait for drive to become writable after boot
 fi
 
-if [ ! -d "$target" ]; then
-    echo "No drive found at $target.  Is a CircuitPython device connected?"
+if [[ ! -d $drive ]]; then
+    echo "No drive found at $drive.  Is a CircuitPython device connected?"
     exit 1
 fi
 
-if ! touch "$target/test"; then
-    echo "$target appears to be in read-only mode."
+if ! touch "$drive/test"; then
+    echo "$drive appears to be in read-only mode."
     exit 1
 fi
 
-echo
-echo "This will wipe the attached MatrixPortal device and perform a factory"
-echo "reset, with the current Climate Clock codebase deployed as v0."
-echo
-echo -n "Proceed? "
-read confirm
-echo
+if [[ -n $quick_deploy ]]; then
+    target=$drive/v999
+    rm -rf $target
+    mkdir -p $target
+else
+    echo
+    echo "This will wipe the attached MatrixPortal device and perform a factory"
+    echo "reset, with the current Climate Clock codebase deployed as v0."
+    echo
+    echo -n "Proceed? "
+    read confirm
+    echo
 
-if ! [[ $confirm = y* ]]; then
-    exit 1
+    [[ $confirm = y* ]] || exit 1
+
+    echo 'Wiping the flash disk...'
+    rm -rf $target/*
 fi
 
-echo 'Wiping the flash disk...'
-rm -rf $target/*
-
-echo 'Installing program modules...'
-rm -f *.mpy
+echo "Installing program modules at $target..."
 for file in *.py; do
-    if [ $file = boot.py ] || [ $file = main.py ]; then
-        cp $file $target
+    if [[ $file = boot.py || $file = main.py ]]; then
+        cp $file $drive
     else
-        name=${file%.py}
-        env/bin/mpy-cross "$name.py"
-        cp "$name.mpy" $target/
+        env/bin/mpy-cross -o $target/${file%.py}.mpy $file
     fi
 done
 
-rm -f *.mpy /tmp/imports.py /tmp/start.py /tmp/start.mpy
-
-echo 'Scanning for imports...'
-
-if [ $debug_memory = 'yes' ]; then
-    echo 'import time; time.sleep(2)' >>/tmp/imports.py
-fi
-cat <<EOF >>/tmp/imports.py
-import time
-import gc
-now = str(time.monotonic_ns()//1000000)
-print(f'[{now[:-3]}.{now[-3:]}: {gc.mem_free()} free] Starting imports')
-EOF
-if [ $debug_memory = 'yes' ]; then
-    echo 'import micropython; micropython.mem_info(1)' >>/tmp/imports.py
-fi
-for module in $(tools/sort_imports start); do
-    if [ $debug_memory = 'yes' ]; then
-        cat <<EOF >>/tmp/imports.py
-gc.collect(); before = gc.mem_free()
-import $module
-gc.collect(); after = gc.mem_free()
-print(f'import $module,{before - after}')
-micropython.mem_info(1); print()
-EOF
-    else
-        echo "import $module" >>/tmp/imports.py
-    fi
-done
-cat <<EOF >>/tmp/imports.py
-gc.collect()
-now = str(time.monotonic_ns()//1000000)
-print(f'[{now[:-3]}.{now[-3:]}: {gc.mem_free()} free] Finished imports')
-EOF
-if [ $debug_memory = 'yes' ]; then
-    echo 'utils.debug = True; micropython.mem_info(1); print()' >>/tmp/imports.py
-fi
+echo 'Gathering imports...'
+# Do all the imports at once, to reduce memory fragmentation and get a
+# consistent measurement of the memory and time consumed by each import.
+(
+    [[ $debug_memory ]] && echo 'import time; time.sleep(2)'
+    echo 'import gc'
+    echo 'gc.collect(); before = gc.mem_free()'
+    echo 'import utils'
+    echo 'gc.collect(); after = gc.mem_free()'
+    echo "print(f'[{after} free] import utils [{before - after} used]')"
+    [[ $debug_memory ]] && echo 'utils.debug = 1'
+    echo "utils.log('Starting imports')"
+    for module in $(tools/sort_imports start); do
+        [[ $debug_memory ]] && echo 'utils.log()'
+        echo "import $module"
+        [[ $debug_memory ]] && echo "utils.log('import $module')"
+    done
+    echo "utils.log('Finished imports')"
+) >/tmp/imports.py
 
 sed -e /#IMPORTS#/r/tmp/imports.py <start.py >/tmp/start.py
-env/bin/mpy-cross /tmp/start.py
-cp /tmp/start.mpy $target/
-
-rm -f *.mpy /tmp/imports.py /tmp/start.py /tmp/start.mpy
+env/bin/mpy-cross -s start.py -o $target/start.mpy /tmp/start.py
+rm -f /tmp/imports.py /tmp/start.py
 
 echo 'Installing fonts...'
 cp *.mcf $target/
 
-echo 'Installing initial copy of clock.json...'
-mkdir $target/cache
-curl -s -o $target/cache/clock.json --connect-timeout 2 https://api.climateclock.world/v1/clock || cp cache/clock.json $target/cache/clock.json
+if [[ ! -f $drive/cache/clock.json ]]; then
+    echo 'Installing initial copy of clock.json...'
+    [[ -d $drive/cache ]] || mkdir $drive/cache
+    # Try to fetch it from the API; otherwise use the file cached by tools/setup.
+    curl -s -o $drive/cache/clock.json --connect-timeout 2 https://api.climateclock.world/v1/clock || \
+        cp cache/clock.json $drive/cache/clock.json
+fi
 
-version=v0.$(git describe --always --match='' --dirty)
-mkdir $target/$version
-touch $target/$version/@VALID
-touch $target/$version/@ENABLED
+if [[ ! $quick_deploy ]]; then
+    # Embed the git commit ID in the directory name to make it show up in the logs.
+    target=$drive/v0.$(git describe --always --match='' --dirty)
+    mkdir $target
+fi
+
+touch $target/@VALID
+touch $target/@ENABLED
 sync
 echo 'All done!'

@@ -52,19 +52,18 @@ to wipe the MatrixPortal and perform a clean installation.  The current
 code will be deployed as version 0 and preferences will be wiped (the
 equivalent of a "factory reset").
 
-Alternatively, during development, you can simulate the clock in a window
-on your computer with:
+Or you can deploy the current code without wiping the MatrixPortal:
 
-    tools/sim
-
-Or you can deploy the current code to a MatrixPortal (without resetting
-anything else) with:
-
-    tools/matrix_run
+    tools/deploy -q
 
 This is a quicker way to write small code changes during development.
 The clock should then automatically restart and run the updated code.
 If necessary, you can press the reset button once to restart.
+
+During development, the fastest way to try out your changes is to
+simulate the clock in a window on your computer with:
+
+    tools/sim
 
 ### Networking
 
@@ -100,21 +99,21 @@ develop the clock display and user interaction.
 
 ### Writing over USB
 
-After you run `tools/deploy` or `tools/matrix_run` for the first time
-and restart the board, they won't work a second time.  That's because
-the startup sequence sets the filesystem to be writable from CircuitPython,
-which makes it non-writable over the USB cable.
+After you run `tools/deploy` for the first time and restart the board, it
+won't work a second time.  That's because the startup sequence sets the
+filesystem to be writable from CircuitPython, which makes it non-writable
+over the USB cable.
 
 To enable writing over USB, press the reset button once and then hold
 down either of the other two buttons until the status light turns red.
 The red light indicates that the board is now writable, so you can
-run `tools/matrix_run` again to copy any of your local edits over
-to the board.  The status light can be red or purple; the mnemonic is:
+run `tools/deploy` again to copy any of your local edits over to the
+board.  The status light can be red or purple; the mnemonic is:
 
   - Red means you can wRite (or think of a red recording light)
   - PuRple means it's in PRoduction (non-writable over USB)
 
-When the light is red, `tools/deploy` or `tools/matrix_run` will work.
+When the light is red, `tools/deploy` will work.
 
 ### Communicating with the MatrixPortal
 
