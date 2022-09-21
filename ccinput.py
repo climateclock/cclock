@@ -93,6 +93,8 @@ class ButtonReader:
                         receiver.receive(commands[Press.SHORT])
                 elif just_pressed:
                     receiver.receive(commands[Press.DOUBLE])
+                    self.action_started[key] = None
+                    self.last_clicked[key] = None
             elif Press.LONG in commands and long_pressed:
                 receiver.receive(commands[Press.LONG])
                 self.action_started[key] = None
