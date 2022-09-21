@@ -5,7 +5,9 @@ import storage
 import supervisor
 
 up = digitalio.DigitalInOut(board.BUTTON_UP)
+up.pull = digitalio.Pull.UP
 down = digitalio.DigitalInOut(board.BUTTON_DOWN)
+down.pull = digitalio.Pull.UP
 
 # By default, the filesystem is writable from Python to let the software update
 # itself.  Hold either button on boot to make the filesystem writable over USB.
