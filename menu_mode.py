@@ -193,6 +193,7 @@ class MenuMode:
         if children:
             self.index = max(0, min(len(children) - 1, self.index + delta))
             self.top = max(self.index - 2, min(self.index, self.top))
+            print(f'Cursor moved to {repr(children[self.index][0])}')
         else:
             self.offset = max(0, self.offset + delta * 12)
         self.draw()

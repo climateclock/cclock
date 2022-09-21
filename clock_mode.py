@@ -12,7 +12,6 @@ import utils
 
 class ClockMode:
     def __init__(self, app, net, button_map, dial_map):
-        utils.log('Starting ClockMode.__init__')
         self.app = app
 
         self.deadline = None
@@ -40,7 +39,6 @@ class ClockMode:
             }
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
-        utils.log('Finished ClockMode.__init__')
 
     def reload_definition(self):
         utils.log()

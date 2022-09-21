@@ -49,6 +49,7 @@ if [[ ! -d $drive ]]; then
         sleep 0.05
     done
     sleep 0.5  # wait for drive to become writable after boot
+    echo
 fi
 
 if [[ ! -d $drive ]]; then

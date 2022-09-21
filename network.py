@@ -110,6 +110,7 @@ class Network:
             if data == b'':
                 print('Server closed connection.')
                 self.close()
+            print(f'Received {len(data)} bytes.')
         return data
 
     def close(self):

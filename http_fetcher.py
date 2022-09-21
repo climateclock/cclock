@@ -93,12 +93,10 @@ class HttpFetcher:
         if len(self.buffer):
             chunk = self.buffer[:PACKET_LENGTH]
             self.buffer[:PACKET_LENGTH] = b''
-            print(f'Received {len(chunk)} bytes.')
             return bytes(chunk)
         if self.network.state == 'CONNECTED':
             chunk = self.network.receive(PACKET_LENGTH)
             self.check_silence_timeout(len(chunk) == 0)
-            print(f'Received {len(chunk)} bytes.')
             return chunk
         else:  # server closed the connection
             raise StopIteration

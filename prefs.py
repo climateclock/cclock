@@ -33,6 +33,7 @@ def get(name):
 def set(name, value):
     if pairs.get(name) != value:
         pairs[name] = value
+        print(f'Set pref: {name} = {repr(value)}')
         save()
 
 
