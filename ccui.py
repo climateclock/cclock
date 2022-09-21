@@ -131,9 +131,9 @@ def render_newsfeed_module(bitmap, y, module, pi, lang='en'):
                 headline_width = large.measure(text)
                 headline_label = Bitmap(headline_width * 2, large.h, 2)
                 large.draw(text + text, headline_label)
-        if headline_label.w <= DISPLAY_WIDTH:
+        if headline_label.width <= DISPLAY_WIDTH:
             # There is only one headline and it fits entirely; do not scroll.
-            x = (DISPLAY_WIDTH - headline_label.w) // 2
+            x = (DISPLAY_WIDTH - headline_label.width) // 2
             bitmap.freeblit(x, y, headline_label, dest_value=pi)
             return
 
