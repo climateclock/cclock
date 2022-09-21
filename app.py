@@ -5,7 +5,6 @@ from clock_mode import ClockMode
 import display
 import gc
 from menu_mode import MenuMode
-import micropython
 import network
 from pref_entry_mode import PrefEntryMode
 import utils
@@ -64,14 +63,13 @@ class App:
                 'Custom message', 'custom_message', True)
             self.set_mode(self.pref_entry_mode)
         if command == 'DUMP_MEMORY':
-            gc.collect()
-            micropython.mem_info(1)
+            utils.log('Memory layout', True)
         if command == 'DUMP_FRAME':
-            print('[[FRAME]]')
+            utils.log('Frame dump')
             rgbs = ['%02x%02x%02x' % display.get_rgb(pi) for pi in range(16)]
             for i in range(192*32):
                 print(rgbs[self.bitmap[i]], end='')
-            print()
+            print('\n[[FRAME]]')
             gc.collect()
 
         self.mode.receive(command, arg)
