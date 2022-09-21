@@ -111,6 +111,9 @@ def render_newsfeed_module(bitmap, y, module, pi, lang='en'):
     global headline_width
     global last_newsfeed_module
 
+    if not module.items:
+        print('Newsfeed contains no items.')
+        return
     if module != last_newsfeed_module:
         headline_label = None
         last_newsfeed_module = module
