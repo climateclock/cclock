@@ -64,7 +64,8 @@ if name:
                 timestamp = cctime.get_millis()//1000
             except:
                 timestamp = int(time.time())
-            with open(f'{timestamp}-{run_time}.exc', 'w') as f:
+            filename = f'{timestamp}-{run_time}.exc'
+            with open(filename, 'w') as f:
                 f.write(traceback.format_exception(e, e, e.__traceback__))
             print(f'Wrote traceback to {filename}.')
         except Exception as ee:
