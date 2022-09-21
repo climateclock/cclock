@@ -2,13 +2,40 @@
 
 # Extracts and displays the last dumped screen frame in a screenlog file.
 
-# Find the line preceding the last occurrence of [[FRAME]].
-grep -B 1 '^\[\[FRAME\]\]' screenlog.0 | tail -2 | head -1 | \
-    # Convert the hex digits to bytes.
-    python -c 'import binascii, os, sys; os.fdopen(1, "wb").write(b"P6\n192 32\n255\n" + binascii.unhexlify(sys.stdin.read().strip()))' | \
-    # Convert the PNM file to a PNG.
-    pnmtopng >/tmp/frame.new 2>/dev/null && mv /tmp/frame.new /tmp/frame.png && \
-    # Move focus away from Preview, which prevents Preview from opening a new window on the same image.
-    open -a dock && \
-    # Tell Preview to view (or reload) the image.
-    open /tmp/frame.png
+function get_last_frame() {
+    # Find the line preceding the last occurrence of [[FRAME]].
+    grep -B 1 '^\[\[FRAME\]\]' screenlog.0 | tail -2 | head -1 | \
+        # Convert the hex digits to bytes.
+        python -c 'import binascii, os, sys; os.fdopen(1, "wb").write(b"P6\n192 32\n255\n" + binascii.unhexlify(sys.stdin.read().strip()))' | \
+        # Convert the PNM file to a PNG.
+        pnmtopng >/tmp/frame.new 2>/dev/null
+}
+
+if open -a dock; then
+    # This is a Mac; let's continuously show the last frame in Preview.
+    echo 'Make sure screen is running and sending a log to screenlog.0.'
+    echo 'Double-press UP to send a frame dump.  Watching for frame dumps...'
+    while true; do
+        if get_last_frame; then
+            # Check if the captured frame is new or different.
+            if [[ ! -f /tmp/frame.png ]] || ! diff -q /tmp/frame.new /tmp/frame.png >/dev/null; then
+                echo '*'
+                mv /tmp/frame.new /tmp/frame.png
+                # Switch focus, to stop Preview from opening duplicate windows.
+                open -a dock
+                # Tell Preview to view (or reload) the image.
+                open /tmp/frame.png
+            fi
+        fi
+        sleep 0.5
+        echo -n .
+    done
+else
+    # Just get the last frame once.
+    if get_last_frame; then
+        mv /tmp/frame.new /tmp/frame.png
+        open /tmp/frame.png
+    else
+        echo 'No frame dump found in screenlog.0.'
+    fi
+fi
