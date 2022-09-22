@@ -47,15 +47,17 @@ class SoftwareUpdater:
 
     def wait_step(self):
         if cctime.monotonic_millis() > self.next_check:
-            now = cctime.millis_to_isoformat(cctime.get_millis())
+            fc = self.app.frame_counter
             v = utils.version_running()
             vp = ','.join(utils.versions_present())
             fv = os.uname().version.split()[0]
+            now = cctime.millis_to_isoformat(cctime.get_millis())
             afetch = cctime.millis_to_isoformat(self.api_fetched) or ''
             ifetch = cctime.millis_to_isoformat(self.index_fetched) or ''
-            fc = self.app.frame_counter
-            self.api_fetcher = HttpFetcher(self.net,
-                f'{self.api_url}?p=ac&mac={self.net.mac_address}&up={fc.uptime()}&v={v}&vp={vp}&t={now}&af={afetch}&if={ifetch}&fps={fc.fps:.1f}&mem={utils.min_mem}&disk={fs.free_kb()}&fv={fv}')
+            self.api_fetcher = HttpFetcher(self.net, self.api_url +
+                f'?p=ac&mac={self.net.mac_address}&up={fc.uptime()}' +
+                f'&mem={utils.min_mem}&disk={fs.free()}&fps={fc.fps:.1f}' +
+                f'&v={v}&vp={vp}&fv={fv}&t={now}&af={afetch}&if={ifetch}')
             self.step = self.api_fetch_step
 
     def api_fetch_step(self):

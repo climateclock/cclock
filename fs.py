@@ -35,9 +35,9 @@ def destroy(relpath):  # removes a file or directory and all descendants
         os.rmdir(path)
 
 
-def free_kb():
+def free():
     _, frsize, _, _, bfree = os.statvfs(resolve(''))[:5]
-    return frsize*bfree//1000
+    return frsize*bfree
 
 
 def listdir():  # accept no arguments; only allow listing of /

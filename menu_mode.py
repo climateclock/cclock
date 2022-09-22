@@ -91,7 +91,7 @@ class MenuMode:
                 (f'Firmware', os.uname().version, None, None, []),
                 (f'ESP firmware', self.app.net.firmware_version,
                     None, None, []),
-                (f'Free disk', lambda: f'{fs.free_kb()} kB', None, None, []),
+                (f'Free disk', lambda: f'{fs.free()//1000} kB', None, None, []),
                 (f'Free memory', utils.free, None, None, []),
                 (f'Uptime', self.app.frame_counter.uptime, None, None, []),
                 ('Back', None, 'BACK', None, [])
