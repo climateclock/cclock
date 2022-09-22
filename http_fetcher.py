@@ -2,9 +2,6 @@ import cctime
 import prefs
 import utils
 
-# Wait this long after Wi-Fi is connected to attempt a fetch.
-INITIAL_DELAY = 1000
-
 # If the remote server has stopped sending data for this many milliseconds,
 # assume the HTTP response is finished.
 SILENCE_TIMEOUT = 10000
@@ -14,8 +11,8 @@ PACKET_LENGTH = 1500 - 20 - 20  # 1500 - IP header (20) - TCP header (20)
 
 
 class HttpFetcher:
-    def __init__(self, network, url):
-        self.network = network
+    def __init__(self, net, url):
+        self.net = net
         self.url = url
         self.ssl, self.hostname, self.path = utils.split_url(url)
         self.silence_started = None
@@ -32,7 +29,7 @@ class HttpFetcher:
                 silence = int(now - self.silence_started)
                 if silence > SILENCE_TIMEOUT:
                     utils.log(f'Closing socket after {silence} s of silence.')
-                    self.network.close()
+                    self.net.close()
                     raise StopIteration
             else:
                 self.silence_started = now
@@ -40,18 +37,17 @@ class HttpFetcher:
             self.silence_started = None
 
     def connect_read(self):
-        self.network.step()
+        self.net.step()
         if not self.hostname:
             raise ValueError(f'Invalid URL: {self.url}')
-        if self.network.state == 'OFFLINE':
-            self.network.join(
-                prefs.get('wifi_ssid'), prefs.get('wifi_password'))
-        if self.network.state == 'ONLINE':
-            if self.network.state_elapsed() > INITIAL_DELAY:
-                self.network.connect(self.hostname, ssl=self.ssl)
-        if self.network.state == 'CONNECTED':
+        if self.net.state == 'OFFLINE':
+            self.net.join(prefs.get('wifi_ssid'), prefs.get('wifi_password'))
+        elif self.net.state == 'ONLINE':
+            # connect() will raise if it fails; there's no risk of a retry loop
+            self.net.connect(self.hostname, ssl=self.ssl)
+        elif self.net.state == 'CONNECTED':
             utils.log(f'Fetching {self.path} from {self.hostname}.')
-            self.network.send(
+            self.net.send(
                 b'GET ' + utils.to_bytes(self.path) + b' HTTP/1.1\r\n' +
                 b'Host: ' + utils.to_bytes(self.hostname) + b'\r\n' +
                 b'Connection: Close\r\n' +
@@ -61,8 +57,8 @@ class HttpFetcher:
         return b''
 
     def http_status_read(self):
-        self.network.step()
-        data = self.network.receive(PACKET_LENGTH)
+        self.net.step()
+        data = self.net.receive(PACKET_LENGTH)
         self.buffer.extend(data)
         crlf = self.buffer.find(b'\r\n')
         self.check_silence_timeout(crlf < 0)
@@ -75,9 +71,9 @@ class HttpFetcher:
         return self.read(True)
 
     def http_headers_read(self, skip_receive=False):
-        self.network.step()
+        self.net.step()
         if not skip_receive:
-            self.buffer.extend(self.network.receive(PACKET_LENGTH))
+            self.buffer.extend(self.net.receive(PACKET_LENGTH))
         double_crlf = self.buffer.find(b'\r\n\r\n')
         self.check_silence_timeout(double_crlf < 0)
         if double_crlf < 0:
@@ -89,13 +85,13 @@ class HttpFetcher:
         return self.read()
 
     def content_read(self):
-        self.network.step()
+        self.net.step()
         if len(self.buffer):
             chunk = self.buffer[:PACKET_LENGTH]
             self.buffer[:PACKET_LENGTH] = b''
             return bytes(chunk)
-        if self.network.state == 'CONNECTED':
-            chunk = self.network.receive(PACKET_LENGTH)
+        if self.net.state == 'CONNECTED':
+            chunk = self.net.receive(PACKET_LENGTH)
             self.check_silence_timeout(len(chunk) == 0)
             return chunk
         else:  # server closed the connection

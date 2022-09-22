@@ -10,6 +10,7 @@ import utils
 
 # All durations are measured in milliseconds.
 INITIAL_DELAY = 1000  # wait this long after booting up
+WIFI_DELAY = 1000  # wait this long after joining Wi-Fi
 INTERVAL_AFTER_FAILURE = 30000  # try again after 30 seconds
 INTERVAL_AFTER_SUCCESS = 60 * 60 * 1000  # recheck for updates once an hour
 
@@ -47,6 +48,13 @@ class SoftwareUpdater:
 
     def wait_step(self):
         if cctime.monotonic_millis() > self.next_check:
+            self.step = self.join_wifi_step
+
+    def join_wifi_step(self):
+        self.net.step()
+        if self.net.state == 'OFFLINE':
+            self.net.join(prefs.get('wifi_ssid'), prefs.get('wifi_password'))
+        if self.net.state == 'ONLINE' and self.net.state_elapsed() > WIFI_DELAY:
             fc = self.app.frame_counter
             v = utils.version_running()
             vp = ','.join(utils.versions_present())
