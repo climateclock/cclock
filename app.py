@@ -6,7 +6,7 @@ import display
 import gc
 from menu_mode import MenuMode
 import network
-from pref_entry_mode import PrefEntryMode
+from edit_mode import EditMode
 import utils
 
 
@@ -21,8 +21,8 @@ class App:
         utils.log('Created ClockMode')
         self.menu_mode = MenuMode(self, button_map, dial_map)
         utils.log('Created MenuMode')
-        self.pref_entry_mode = PrefEntryMode(self, button_map, dial_map)
-        utils.log('Created PrefEntryMode')
+        self.edit_mode = EditMode(self, button_map, dial_map)
+        utils.log('Created EditMode')
         self.mode = self.clock_mode
 
         self.langs = utils.Cycle('en', 'es', 'de', 'fr', 'is')
@@ -53,15 +53,15 @@ class App:
         if command == 'MENU_MODE':
             self.set_mode(self.menu_mode)
         if command == 'WIFI_SSID_MODE':
-            self.pref_entry_mode.set_pref('Wi-Fi network name', 'wifi_ssid')
-            self.set_mode(self.pref_entry_mode)
+            self.edit_mode.set_pref('Wi-Fi network name', 'wifi_ssid')
+            self.set_mode(self.edit_mode)
         if command == 'WIFI_PASSWORD_MODE':
-            self.pref_entry_mode.set_pref('Wi-Fi password', 'wifi_password')
-            self.set_mode(self.pref_entry_mode)
+            self.edit_mode.set_pref('Wi-Fi password', 'wifi_password')
+            self.set_mode(self.edit_mode)
         if command == 'CUSTOM_MESSAGE_MODE':
-            self.pref_entry_mode.set_pref(
+            self.edit_mode.set_pref(
                 'Custom message', 'custom_message', True)
-            self.set_mode(self.pref_entry_mode)
+            self.set_mode(self.edit_mode)
         if command == 'DUMP_MEMORY':
             utils.log('Memory layout', True)
         if command == 'DUMP_FRAME':

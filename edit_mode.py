@@ -32,7 +32,7 @@ DISPLAY_TEXT_MENU = [
 ]
 
 
-class PrefEntryMode:
+class EditMode:
     def __init__(self, app, button_map, dial_map):
         self.app = app
         self.pi = display.get_pi(0x80, 0x80, 0x80)
