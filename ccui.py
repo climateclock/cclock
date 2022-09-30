@@ -88,10 +88,13 @@ def render_value_module(bitmap, y, module, pi, lang='en'):
 
 DISPLAY_WIDTH = 192
 last_newsfeed_module = None
-newsfeed_x = DISPLAY_WIDTH
-newsfeed_index = 0
-headline_label = None
-headline_width = None
+newsfeed_w = DISPLAY_WIDTH
+newsfeed_buffer = None
+newsfeed_static = False
+
+headline_index = 0
+headline_text = ''
+headline_next_char = 0
 
 
 def reset_newsfeed():
@@ -105,62 +108,64 @@ def format_item(item):
 
 
 def render_newsfeed_module(bitmap, y, module, pi, lang='en'):
-    global newsfeed_x
-    global newsfeed_index
-    global headline_label
-    global headline_width
+    global newsfeed_w
+    global newsfeed_buffer
+    global newsfeed_static
+    global headline_index
+    global headline_text
+    global headline_next_char
     global last_newsfeed_module
 
     if not module.items:
         print('Newsfeed contains no items.')
         return
+
+    if not newsfeed_buffer:
+        newsfeed_buffer = Bitmap(DISPLAY_WIDTH + 20, large.h, 2)
+
     if module != last_newsfeed_module:
-        headline_label = None
         last_newsfeed_module = module
+        newsfeed_w = DISPLAY_WIDTH
+        newsfeed_buffer.fill(0)
+        newsfeed_static = False
+        # Don't reset headline_index, so that we keep making progress to the
+        # next headline when flipping between the newsfeed and a custom message.
+        headline_text = ''
+        headline_next_char = 0
 
-    i = newsfeed_index
     n = len(module.items)
-    item = module.items[i % n]
+    item = module.items[headline_index % n]
 
-    if n == 1:
-        if not headline_label:
-            text = format_item(item)
-            headline_width = large.measure(text)
-            if headline_width <= DISPLAY_WIDTH:
-                headline_label = Bitmap(headline_width, large.h, 2)
-                large.draw(text, headline_label)
-            else:
-                text = format_item(item) + ' \xb7 '
-                headline_width = large.measure(text)
-                headline_label = Bitmap(headline_width * 2, large.h, 2)
-                large.draw(text + text, headline_label)
-        if headline_label.width <= DISPLAY_WIDTH:
+    if n == 1 and not headline_text:
+        headline_text = format_item(item)
+        newsfeed_w = large.measure(headline_text)
+        if newsfeed_w <= DISPLAY_WIDTH:
             # There is only one headline and it fits entirely; do not scroll.
-            x = (DISPLAY_WIDTH - headline_label.width) // 2
-            bitmap.freeblit(x, y, headline_label, dest_value=pi)
-            return
+            large.draw(headline_text, newsfeed_buffer)
+            newsfeed_static = True
+        else:
+            headline_text = ''
 
-    if not headline_label:
-        text = format_item(item) + ' \xb7 '
-        headline_width = large.measure(text)
+    if newsfeed_static:
+        x = (DISPLAY_WIDTH - newsfeed_w) // 2
+        bitmap.freeblit(x, y, newsfeed_buffer, dest_value=pi)
+        return
 
-        text_with_trail = text
-        for attempt in range(3):
-            i = (i + 1) % n
-            item = module.items[i]
-            trail = format_item(item) + ' \xb7 '
-            text_with_trail += trail
-            text_with_trail_width = large.measure(text_with_trail)
-            if text_with_trail_width >= headline_width + DISPLAY_WIDTH:
-                headline_label = Bitmap(text_with_trail_width, large.h, 2)
-                large.draw(text_with_trail, headline_label)
-                break
+    # The headline isn't static, so render it with a U+00B7 dot as a separator.
+    if not headline_text:
+        headline_text = format_item(item) + ' \xb7 '
 
-    bitmap.freeblit(newsfeed_x, y, headline_label, dest_value=pi)
+    # Move the headline over, then draw any more characters needed at the end.
+    newsfeed_buffer.freeblit(0, 0, newsfeed_buffer, 2, 0)
+    newsfeed_w -= 2
+    while newsfeed_w < DISPLAY_WIDTH:
+        if headline_next_char >= len(headline_text):
+            headline_index += 1
+            item = module.items[headline_index % n]
+            headline_text = format_item(item) + ' \xb7 '
+            headline_next_char = 0
+        ch = headline_text[headline_next_char]
+        headline_next_char += 1
+        newsfeed_w = large.draw(ch, newsfeed_buffer, newsfeed_w, 0)
 
-    if newsfeed_x + headline_width < 0:
-        newsfeed_x += headline_width
-        newsfeed_index = (i + 1) % n
-        headline_label = None
-    else:
-        newsfeed_x -= 2
+    bitmap.freeblit(0, y, newsfeed_buffer, dest_value=pi)
