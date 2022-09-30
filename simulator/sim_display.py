@@ -1,3 +1,4 @@
+import argparse
 import cctime
 from ctypes import byref, c_char, c_void_p
 import display
@@ -10,13 +11,21 @@ def install():
 
 
 def init(bitmap):
-    sim_display = SimDisplay(bitmap, 20, display.BIT_DEPTH)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-x', '--left', default=None, type=int)
+    parser.add_argument('-y', '--top', default=None, type=int)
+    parser.add_argument('-s', '--scale', default=8, type=int)
+    args = parser.parse_args()
+    sim_display = SimDisplay(
+        bitmap, 20, display.BIT_DEPTH,
+        scale=args.scale, left=args.left, top=args.top)
     display.shader = [0]*bitmap.depth
     display.send = sim_display.send
 
 
 class SimDisplay:
-    def __init__(self, bitmap, fps, bit_depth, title='Frame', scale=8, pad=4):
+    def __init__(self, bitmap, fps, bit_depth, title='Frame',
+            pad=4, scale=8, left=None, top=None):
         self.bitmap = bitmap
         self.fps = fps
         self.bit_depth = bit_depth
@@ -31,7 +40,8 @@ class SimDisplay:
         SDL_Init(SDL_INIT_VIDEO)
         self.window = SDL_CreateWindow(
             bytes(title, 'utf-8'),
-            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+            SDL_WINDOWPOS_CENTERED if left is None else left,
+            SDL_WINDOWPOS_CENTERED if top is None else top,
             (self.bitmap.width + pad*2) * scale,
             (self.bitmap.height + pad*2) * scale,
             SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
