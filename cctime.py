@@ -28,11 +28,13 @@ def set_millis(millis):
     print(f'Setting cctime clock to {millis} ({millis_to_isoformat(millis)})')
     ref_millis = millis - monotonic_millis()
     if rtc_setter:
-        # TODO: To set the RTC with sub-second precision, try waiting
-        # until the transition to the next second to set the RTC.
-        # In CircuitPython, time.localtime works in UTC.
-        tm = time.localtime(millis//1000)
+        # To set the RTC with sub-second precision, we wait until the
+        # transition to the next second to set it.  Allow an extra 50 ms to
+        # account for time passing while we're doing this work.
+        set_millis = ((millis + 50)//1000 + 1) * 1000
+        tm = time.localtime(set_millis//1000)
         print('Setting RTC to', tm)
+        sleep_millis(set_millis - millis)
         rtc_setter(tm)
 
 
@@ -66,8 +68,6 @@ def rtc_sync():
     if rtc_getter:
         now_millis = get_millis()
         now_sec = now_millis//1000
-        # TODO: To get sub-second precision from the RTC, try sampling it
-        # until we detect a transition to the next second.
         rtc_sec = int(time.mktime(rtc_getter()))
         if now_sec < rtc_sec:
             ref_millis += rtc_sec * 1000 - now_millis
