@@ -11,6 +11,7 @@ MIN_MILLIS = 946684800_000  # 2000-01-01 00:00:00 UTC represented as Unix time
 
 # Unix time in ms that corresponds to monotonic_ns() == 0
 ref_millis = MIN_MILLIS  # the board starts up with the clock set to 2000-01-01
+rtc_getter = None
 rtc_setter = None
 
 
@@ -37,7 +38,7 @@ def set_millis(millis):
 
 def enable_rtc():
     # Activates use of an attached DS3231 RTC as the time source.
-    global ref_millis, rtc_setter
+    global rtc_getter, rtc_setter
     try:
         import board
         from adafruit_bus_device.i2c_device import I2CDevice
@@ -49,14 +50,34 @@ def enable_rtc():
         register = BCDDateTimeRegister(0)
         class DS3231:
             i2c_device = I2CDevice(board.I2C(), 0x68)
+        rtc_getter = lambda: register.__get__(DS3231)
         rtc_setter = lambda tm: register.__set__(DS3231, tm)
-        rtc_datetime = register.__get__(DS3231)
-        # TODO: To get sub-second precision from the RTC, try sampling it
-        # until we detect a transition to the next second.
-        ref_millis = -monotonic_millis() + time.mktime(rtc_datetime)*1000
     except Exception as e:
+        rtc_getter = None
         rtc_setter = None
         utils.report_error(e, 'Could not find an attached DS3231 RTC')
+
+
+def rtc_sync():
+    # Updates the clock offset so that get_millis() is in sync with the RTC.
+    # time.monotonic_ns() is driven by an internal clock that can be off by
+    # as much as 1%, so we must call rtc_sync() often to avoid drift.
+    global ref_millis
+    if rtc_getter:
+        now_millis = get_millis()
+        now_sec = now_millis//1000
+        # TODO: To get sub-second precision from the RTC, try sampling it
+        # until we detect a transition to the next second.
+        rtc_sec = int(time.mktime(rtc_getter()))
+        if now_sec < rtc_sec:
+            ref_millis += rtc_sec * 1000 - now_millis
+            print('>', end='')
+        elif now_sec > rtc_sec:
+            # To prevent stuttering that would appear if the clock skips back
+            # repeatedly across a second boundary, rewind by an extra half-frame
+            # interval when rewinding the clock.
+            ref_millis -= now_millis - (rtc_sec + 1) * 1000 + 30
+            print('<', end='')
 
 
 def ntp_sync(socklib, server):

@@ -21,6 +21,9 @@ for path in os.listdir():
         fs.write(path, open(path, 'rb').read())
 
 # Install monkey-patches.
+import sim_cctime
+sim_cctime.install()
+
 import sim_display
 sim_display.install()
 

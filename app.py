@@ -37,6 +37,7 @@ class App:
 
     def step(self):
         self.frame_counter.tick()
+        cctime.rtc_sync()
         self.brightness_reader.step(self)
         self.mode.step()
 
