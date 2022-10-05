@@ -3,7 +3,6 @@ import displayio
 import fs
 import sys
 
-dirs = [sys.path[0], '']
 large = None
 small = None
 
@@ -11,8 +10,8 @@ small = None
 def init():
     global large
     global small
-    large = get('kairon-16', dirs)
-    small = get('kairon-10', dirs)
+    large = get('kairon-16', sys.path)
+    small = get('kairon-10', sys.path)
 
 
 def get(font_id, dirs):
