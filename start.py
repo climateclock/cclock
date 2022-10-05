@@ -10,7 +10,7 @@ text_pi = display.get_pi(0x80, 0x80, 0x80)
 import microfont
 import sys
 microfont.init()
-ver = sys.path[0].split('.')[0]
+ver = sys.path[0].split('.')[0].split('-')[0]
 microfont.small.draw('ClimateClock.world', bitmap, 1, 0, title_pi)
 microfont.small.draw(f'Action Clock {ver}', bitmap, 1, 11, text_pi)
 microfont.small.draw('#ActInTime', bitmap, 1, 22, text_pi)

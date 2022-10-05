@@ -17,7 +17,7 @@ if hasattr(gc, 'mem_free'):
 
 
 def version_running():
-    return sys.path[0]
+    return sys.path[0].split('.')[0].split('-')[0]
 
 
 def versions_present():
@@ -26,8 +26,8 @@ def versions_present():
     for name in fs.listdir():
         if name.startswith('v') and fs.isdir(name):
             pack_name = name.split('.')[0]
-            enabled_star = '*' if fs.isfile(name + '/@ENABLED') else ''
-            versions.append(enabled_star + pack_name)
+            enabled_flag = '@' if fs.isfile(name + '/@ENABLED') else ''
+            versions.append(enabled_flag + pack_name)
     return versions
 
 
