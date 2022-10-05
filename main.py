@@ -23,12 +23,10 @@ def get_latest_usable_version():
     #     @ENABLED: The version directory is enabled.
     #     @VALID: The version directory is completely downloaded and verified.
     #
-    # Every version directory also has a "@PATH" file, a whitespace-separated
-    # list of the entries that should go in sys.path.  For a complete version
-    # directory, it will be just the name of the directory itself; for a patch
-    # directory, it will have additional entries.  The "@PATH" file is an
-    # extension point; it can be included in the distributed software pack for
-    # simplicity, or it can be computed by other logic that we add later.
+    # Patch directories also contain a "@PATH" file, a whitespace-separated
+    # list of the entries that should be added to sys.path.  The "@PATH" file
+    # is an extension point; it can be included in the distributed software
+    # pack for simplicity, or computed by other logic that we add later.
     #
     # We will run the latest version that is @ENABLED and for which every
     # directory in its @PATH is @VALID.
@@ -43,9 +41,13 @@ def get_latest_usable_version():
             continue
         try:
             os.stat(name + '/@ENABLED')
-            path = open(name + '/@PATH').readline().split()
-            for parent in path:
-                os.stat(parent + '/@VALID')
+            path = [name]
+            try:
+                path += open(name + '/@PATH').readline().split()
+            except:
+                pass
+            for dir in path:
+                os.stat(dir + '/@VALID')
         except:
             continue
         version = (number, name, path)
@@ -60,8 +62,8 @@ def get_latest_usable_version():
 
 (number, name, path), count = get_latest_usable_version()
 if name:
-    print(f'\nRunning version {number} with path {path}.\n')
     sys.path[:] = path
+    print(f'\nRunning version {number} with path {sys.path}.\n')
     start_time = int(time.monotonic())
     try:
         microcontroller.install_monkey_patches()

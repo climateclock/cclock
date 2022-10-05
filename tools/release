@@ -1,0 +1,70 @@
+#!/bin/bash -e
+
+cd $(dirname "$0")
+cd ..
+
+version="$1"
+commit="$2"
+parent="$3"
+parent_commit="$4"
+pack_dir=/tmp/pack.$$
+parent_dir=/tmp/parent.$$
+
+if [[ ! $commit ]]; then
+    echo "Usage: $0 <version> <commit> [<parent> <parent-commit>]"
+    echo
+    echo "If only <version> and <commit> are specified, builds a pack file"
+    echo "named v<version>.<hash>.pk file containing the files at <commit>."
+    echo
+    echo "If <parent> and <parent-commit> are also specified, builds a pack"
+    echo "file named v<version>-<parent>.<hash>.pk containing only the files"
+    echo "that changed between <parent-commit> and <commit>."
+    echo
+    exit 1
+fi
+
+if ! git diff --quiet; then
+    echo "Working tree is dirty.  Please commit or stash before releasing."
+    exit 1
+fi
+
+current_commit=$(git rev-parse --abbrev-ref HEAD)
+
+# Make a directory containing the version to release.
+git checkout -q $commit
+echo "Releasing version $version at:"
+git log -n 1 --oneline
+mkdir -p $pack_dir
+cp *.py *.mcf $pack_dir
+
+if [[ $parent_commit ]]; then
+    # Make a directory containing the parent version.
+    git checkout -q $parent_commit
+    echo "Patching against version $parent at:"
+    git log -n 1 --oneline
+    mkdir -p $parent_dir
+    cp *.py *.mcf $parent_dir
+
+    # To find the hash of the parent version, build the parent pack.
+    eval $(tools/pack $parent_dir $parent_dir/pack 2>/dev/null)
+    echo v$parent.$hash > $pack_dir/@PATH
+    echo "Setting @PATH to: v$parent.$hash"
+
+    # Omit all the unchanged files from the patch pack.
+    for file in $(cd $pack_dir; echo *); do
+        if diff -q $parent_dir/$file $pack_dir/$file 2>/dev/null; then
+            rm $pack_dir/$file
+        fi
+    done
+
+    # Now build the patch pack.
+    echo
+    tools/pack $pack_dir v$version-$parent
+else
+    # Build a complete version pack.
+    echo
+    tools/pack $pack_dir v$version
+fi
+
+# Restore the working tree.
+git checkout -q $current_commit

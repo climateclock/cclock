@@ -138,7 +138,6 @@ fi
 
 touch "$target"/@VALID
 touch "$target"/@ENABLED
-echo $version > "$target"/@PATH
 echo
 sync
 echo 'All done!'
