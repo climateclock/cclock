@@ -43,7 +43,7 @@ class ClockMode:
     def reload_definition(self):
         utils.log()
         try:
-            with fs.open('/cache/clock.json') as api_file:
+            with fs.open('/data/clock.json') as api_file:
                 defn = ccapi.load(api_file)
                 defn.module_dict['custom_message'] = self.message_module
                 defn.modules.append(self.message_module)

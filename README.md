@@ -134,11 +134,11 @@ put you in an interactive Python interpreter.
 ### Connecting to an existing Wi-Fi network
 
 If you prefer to use an existing Wi-Fi network instead of creating a hotspot,
-you can edit `prefs.json` to customize the network name and password.
+you can edit `data/prefs.json` to customize the network name and password.
 
 First, put the board into writable mode by pressing the reset button and
 holding down one of the other buttons until the status light turns red
-(see the preceding section).  Then open `/Volumes/CIRCUITPY/prefs.json`
+(see the preceding section).  Then open `/Volumes/CIRCUITPY/data/prefs.json`
 in a text editor, edit the `wifi_ssid` and `wifi_password` values, and save
 the file.  Eject the `/Volumes/CIRCUITPY` drive from your computer, then
 press the reset button to restart the board.
@@ -219,10 +219,10 @@ The steps for publishing a new software update are as follows:
   - Publish the new index file at the HTTPS URL (the official update URL).
 
 The "official update URL" has not been designated yet; it is configured
-in `prefs.json` as the `update_url` entry.  For development, it defaults
+in `data/prefs.json` as the `update_url` entry.  For development, it defaults
 to `https://zestyping.github.io/cclock/packs.json`.  If you are working
 on this feature, you can set `update_url` to point to your own server by
-editing `prefs.json` on the Action Clock's flash drive.
+editing `data/prefs.json` on the Action Clock's flash drive.
 
 ### Building firmware
 

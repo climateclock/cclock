@@ -73,7 +73,7 @@ class SoftwareUpdater:
             data = self.api_fetcher.read()
             if data:
                 if not self.api_file:
-                    self.api_file = fs.open('/cache/clock.json.new', 'wb')
+                    self.api_file = fs.open('/data/clock.json.new', 'wb')
                 self.api_file.write(data)
             return
         except Exception as e:
@@ -85,7 +85,7 @@ class SoftwareUpdater:
             fetch_error = None
             if isinstance(e, StopIteration):
                 try:
-                    with fs.open('/cache/clock.json.new') as api_file:
+                    with fs.open('/data/clock.json.new') as api_file:
                         json.load(api_file)
                 except Exception as e:
                     fetch_error = e
@@ -99,7 +99,7 @@ class SoftwareUpdater:
                 self.step = self.index_fetch_step
                 return
 
-        fs.move('/cache/clock.json.new', '/cache/clock.json')
+        fs.move('/data/clock.json.new', '/data/clock.json')
         utils.log(f'API file successfully fetched!')
         self.api_fetched = cctime.get_millis()
         self.clock_mode.reload_definition()
@@ -112,7 +112,7 @@ class SoftwareUpdater:
             data = self.index_fetcher.read()
             if data:
                 if not self.index_file:
-                    self.index_file = fs.open('/cache/packs.json', 'wb')
+                    self.index_file = fs.open('/data/packs.json', 'wb')
                 self.index_file.write(data)
             return
         except Exception as e:
@@ -128,7 +128,7 @@ class SoftwareUpdater:
         utils.log(f'Index file successfully fetched!')
         self.index_fetched = cctime.get_millis()
         try:
-            with fs.open('/cache/packs.json') as index_file:
+            with fs.open('/data/packs.json') as index_file:
                 pack_index = json.load(index_file)
             self.index_name = pack_index['name']
             self.index_updated = pack_index['updated']

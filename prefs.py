@@ -16,11 +16,11 @@ pairs = {
 
 
 def init():
-    if not fs.isfile('/prefs.json'):
+    if not fs.isfile('/data/prefs.json'):
         print('Creating prefs.json.')
         save()
     try:
-        pairs.update(json.load(fs.open('/prefs.json')))
+        pairs.update(json.load(fs.open('/data/prefs.json')))
     except Exception as e:
         print(f'Could not read prefs.json: {e}')
         save()
@@ -39,8 +39,8 @@ def set(name, value):
 
 def save():
     try:
-        with fs.open('/prefs.json.new', 'wt') as file:
+        with fs.open('/data/prefs.json.new', 'wt') as file:
             json.dump(pairs, file)
-        fs.move('/prefs.json.new', '/prefs.json')
+        fs.move('/data/prefs.json.new', '/data/prefs.json')
     except Exception as e:
         print(f'Could not write prefs.json: {e}')
