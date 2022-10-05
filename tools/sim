@@ -6,32 +6,13 @@ import sys
 # All times on the board are in UTC.
 os.environ['TZ'] = 'UTC'
 
-# Set the import paths relative to the parent of the tools/ directory.
-command = sys.argv[0]
-os.chdir(os.path.dirname(command))
-os.chdir('..')
-sys.path.append('.')
-sys.path.append('simulator')
-
-# Copy data files to the simulated filesystem.
-import fs
-fs.root = '/tmp/cclock'
-for path in os.listdir():
-    if path.endswith('.mcf'):
-        fs.write(path, open(path, 'rb').read())
-
-# Install monkey-patches.
-import sim_cctime
-sim_cctime.install()
-
-import sim_display
-sim_display.install()
-
-import sim_inputs
-sim_inputs.install()
-
-import sim_network
-sim_network.install(b'climateclock', b'climateclock')
+# microcontroller.py is the hook that installs monkey-patches.
+os.environ['CCLOCK_SIMULATOR'] = os.getcwd() + '/simulator'
+with open('/tmp/cclock/microcontroller.py', 'w') as opt:
+    with open('simulator/microcontroller.py') as ipt:
+        opt.write(ipt.read())
 
 # Off we go!
-import start
+os.chdir('/tmp/cclock')
+sys.path = ['.'] + sys.path
+import main
