@@ -63,8 +63,8 @@ def get_latest_usable_version():
 if name:
     print(f'\nRunning version {number} with path {path}.\n')
     try:
-        import sim
-        sim.init(path)
+        import simulator_init
+        simulator_init.init(path)
     except:
         sys.path[:0] = path  # sys.path cannot be reassigned in CircuitPython
     start_time = int(time.monotonic())

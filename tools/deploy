@@ -55,26 +55,16 @@ EOF
 drive=/Volumes/CIRCUITPY
 [[ $CCLOCK_SIMULATOR_MODE ]] && mkdir -p /tmp/cclock && drive=/tmp/cclock
 
-if [[ ! -d $drive ]]; then
-    echo -n "Waiting for drive to appear at $drive.."
-    while [[ ! -d $drive ]]; do
+if [[ ! -d $drive ]] || ! touch "$drive/test" 2>/dev/null; then
+    echo -n "Waiting for $drive to be writable.."
+    while [[ ! -d $drive ]] || ! touch "$drive/test" 2>/dev/null; do
         echo -n '.'
         sleep 0.05
     done
     sleep 0.5  # wait for drive to become writable after boot
+    rm -f "$drive/test"
     echo
 fi
-
-if [[ ! -d $drive ]]; then
-    echo "No drive found at $drive.  Is a CircuitPython device connected?"
-    exit 1
-fi
-
-if ! touch "$drive/test"; then
-    echo "$drive appears to be in read-only mode."
-    exit 1
-fi
-rm -f "$drive/test"
 
 if [[ $wipe ]]; then
     echo "Wiping $drive..."
