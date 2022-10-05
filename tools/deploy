@@ -64,6 +64,7 @@ if ! touch "$drive/test"; then
     echo "$drive appears to be in read-only mode."
     exit 1
 fi
+rm -f "$drive/test"
 
 if [[ -n $quick_deploy ]]; then
     version=v999
@@ -92,11 +93,11 @@ mkdir -p $target
 echo "Installing program modules at $target..."
 for file in *.py; do
     if [[ $file = boot.py || $file = main.py ]]; then
-        cp $file $drive
+        cp $file "$drive"
     elif [[ $simulator ]]; then
-        cp $file $target
+        cp $file "$target"
     else
-        env/bin/mpy-cross -o $target/${file%.py}.mpy $file
+        env/bin/mpy-cross -o "$target"/${file%.py}.mpy $file
     fi
 done
 
@@ -121,23 +122,23 @@ echo 'Gathering imports...'
 ) >/tmp/imports.py
 
 sed -e /#IMPORTS#/r/tmp/imports.py <start.py >/tmp/start.py
-env/bin/mpy-cross -s start.py -o $target/start.mpy /tmp/start.py
+env/bin/mpy-cross -s start.py -o "$target"/start.mpy /tmp/start.py
 rm -f /tmp/imports.py /tmp/start.py
 
 echo 'Installing fonts...'
-cp *.mcf $target/
+cp *.mcf "$target"/
 
-if [[ ! -f $drive/data/clock.json ]]; then
+if [[ ! -f "$drive"/data/clock.json ]]; then
     echo 'Installing initial copy of clock.json...'
-    mkdir -p $drive/data
+    mkdir -p "$drive"/data
     # Try to fetch it from the API, or use the file cached by tools/setup.
-    curl -s -o $drive/data/clock.json --connect-timeout 2 https://api.climateclock.world/v1/clock || \
-        cp cache/clock.json $drive/data/clock.json
+    curl -s -o "$drive"/data/clock.json --connect-timeout 2 https://api.climateclock.world/v1/clock || \
+        cp cache/clock.json "$drive"/data/clock.json
 fi
 
-touch $target/@VALID
-touch $target/@ENABLED
-echo $version > $target/@PATH
+touch "$target"/@VALID
+touch "$target"/@ENABLED
+echo $version > "$target"/@PATH
 echo
 sync
 echo 'All done!'
