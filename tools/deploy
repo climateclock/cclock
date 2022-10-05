@@ -13,6 +13,7 @@ cd ..
 
 while [[ $1 = -* ]]; do
   [[ $1 = -d ]] && debug_memory=yes
+  [[ $1 = -s ]] && simulator=yes
   [[ $1 = -h || $1 = --help ]] && cat <<EOF && exit 1
 Usage: $0 [-d] [-q]
 
@@ -23,6 +24,8 @@ installs a current copy of clock.json, fetched from the API if possible.
 -d enables memory debugging: memory layout is dumped with every log message.
 
 -q does a quick deployment: the device is not wiped; code is deployed as v999.
+
+-s deploys to a simulated filesystem at /tmp/cclock instead of a real device.
 EOF
   [[ $1 = -q ]] && quick_deploy=yes
   shift
@@ -40,7 +43,7 @@ for name in os.listdir():
 EOF
 
 drive=/Volumes/CIRCUITPY
-target=/Volumes/CIRCUITPY
+[[ $simulator ]] && mkdir -p /tmp/cclock && drive=/tmp/cclock
 
 if [[ ! -d $drive ]]; then
     echo -n "Waiting for drive to appear at $drive.."
@@ -63,13 +66,11 @@ if ! touch "$drive/test"; then
 fi
 
 if [[ -n $quick_deploy ]]; then
-    target=$drive/v999
-    rm -rf $target
-    mkdir -p $target
+    version=v999
 else
     echo
-    echo "This will wipe the attached MatrixPortal device and perform a factory"
-    echo "reset, with the current Climate Clock codebase deployed as v0."
+    echo "This will wipe $drive and perform a factory reset,"
+    echo "with the current Climate Clock codebase deployed as v0."
     echo
     echo -n "Proceed? "
     read confirm
@@ -77,14 +78,23 @@ else
 
     [[ $confirm = y* ]] || exit 1
 
-    echo 'Wiping the flash disk...'
-    rm -rf $target/*
+    echo "Wiping $drive..."
+    rm -rf $drive/*
+
+    # Embed the git commit ID in the directory name so it shows up in the logs.
+    version=v0.$(git describe --always --match='' --dirty)
 fi
+
+target=$drive/$version
+rm -rf $target
+mkdir -p $target
 
 echo "Installing program modules at $target..."
 for file in *.py; do
     if [[ $file = boot.py || $file = main.py ]]; then
         cp $file $drive
+    elif [[ $simulator ]]; then
+        cp $file $target
     else
         env/bin/mpy-cross -o $target/${file%.py}.mpy $file
     fi
@@ -117,21 +127,17 @@ rm -f /tmp/imports.py /tmp/start.py
 echo 'Installing fonts...'
 cp *.mcf $target/
 
-if [[ ! -f $drive/cache/clock.json ]]; then
+if [[ ! -f $drive/data/clock.json ]]; then
     echo 'Installing initial copy of clock.json...'
-    [[ -d $drive/cache ]] || mkdir $drive/cache
-    # Try to fetch it from the API; otherwise use the file cached by tools/setup.
-    curl -s -o $drive/cache/clock.json --connect-timeout 2 https://api.climateclock.world/v1/clock || \
-        cp cache/clock.json $drive/cache/clock.json
-fi
-
-if [[ ! $quick_deploy ]]; then
-    # Embed the git commit ID in the directory name to make it show up in the logs.
-    target=$drive/v0.$(git describe --always --match='' --dirty)
-    mkdir $target
+    mkdir -p $drive/data
+    # Try to fetch it from the API, or use the file cached by tools/setup.
+    curl -s -o $drive/data/clock.json --connect-timeout 2 https://api.climateclock.world/v1/clock || \
+        cp cache/clock.json $drive/data/clock.json
 fi
 
 touch $target/@VALID
 touch $target/@ENABLED
+echo $version > $target/@PATH
+echo
 sync
 echo 'All done!'
