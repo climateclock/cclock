@@ -4,49 +4,75 @@ import sys
 import time
 import traceback
 
-# Directories containing software versions are named v1.<hash>, v2.<hash>,
-# etc.  We need a way to mark software versions as enabled, disabled, or
-# partial, and we can't atomically move directories (os.rename doesn't work
-# on directories in CircuitPython), so we mark each directory by creating
-# empty files to indicate its status.  There can be two such files:
-#
-#     @ENABLED: The software version is enabled.
-#     @VALID: The software version is completely downloaded and verified.
-
 # The current directory should never be changed from '/'.
-os.chdir('/')
+#
+# Directories containing software versions have names of the form:
+#     v<N>.<hash>, e.g. v2.68b329da9893e34099c7d8ad5cb9c940
+#         for a complete directory (all files in version N)
+#     v<N>-<M>.<hash>, e.g. v4-1.401b30e3b8b5d629635a5c613cdb7919
+#         for a patch directory (just files that differ from version M to N)
+#
+# In all distributions, a complete v0 directory will be present, and a
+# a factory reset will remove all other versions, leaving only v0.
 
-def get_latest_enabled_version():
-    versions = []
+
+def get_latest_usable_version():
+    # The status of each software version directory is marked by the presence
+    # or absence of two empty files that are not part of the downloaded pack:
+    #
+    #     @ENABLED: The version directory is enabled.
+    #     @VALID: The version directory is completely downloaded and verified.
+    #
+    # Every version directory also has a "@PATH" file, a whitespace-separated
+    # list of the entries that should go in sys.path.  For a complete version
+    # directory, it will be just the name of the directory itself; for a patch
+    # directory, it will have additional entries.  The "@PATH" file is an
+    # extension point; it can be included in the distributed software pack for
+    # simplicity, or it can be computed by other logic that we add later.
+    #
+    # We will run the latest version that is @ENABLED and for which every
+    # directory in its @PATH is @VALID.
+    latest_version = (-1, '', [])
+    count = 0
     for name in os.listdir():
         try:
             assert name.startswith('v')
             pack_name = name.split('.')[0]
-            number = int(pack_name[1:])
+            number = int(pack_name[1:].split('-')[0])
         except:
             continue
         try:
-            os.stat(name + '/@VALID')
             os.stat(name + '/@ENABLED')
-        except OSError:
+            path = open(name + '/@PATH').readline().split()
+            for parent in path:
+                os.stat(parent + '/@VALID')
+        except:
             continue
-        versions.append((number, name))
-    number = name = None
-    if versions:
-        number, name = max(versions)
-    return number, name, len(versions)
+        version = (number, name, path)
+        if version > latest_version:
+            # It just so happens that '-' sorts before '.', so when there are
+            # multiple versions with the same number, we will prefer a complete
+            # directory (when available) over a patch directory.
+            latest_version = version
+        count += 1
+    return latest_version, count
 
-number, name, count = get_latest_enabled_version()
+
+(number, name, path), count = get_latest_usable_version()
 if name:
-    print(f'\nRunning /{name} (version {number}).\n')
-    sys.path[:0] = [name]
+    print(f'\nRunning version {number} with path {path}.\n')
+    sys.path[:] = path
     start_time = int(time.monotonic())
+    try:
+        microcontroller.install_monkey_patches()
+    except:
+        pass
     try:
         import start
     except Exception as e:
         run_time = int(time.monotonic()) - start_time
 
-        # Downgrade to the previous enabled version.
+        # Downgrade to the previous usable version.
         if count > 1:
             print(f'\nDisabling /{name} due to crash: {e}\n')
             try:
@@ -54,7 +80,7 @@ if name:
             except Exception as ee:
                 print(f'Could not disable /{name}: {ee}')
         else:
-            print(f'\n/{name} is the last available version; not disabling.\n')
+            print(f'\n/{name} is the last usable version; not disabling.\n')
 
         # Print and log the exception.
         try:
@@ -79,4 +105,4 @@ if name:
             time.sleep(5)
             microcontroller.reset()
 else:
-    print('\nNo valid, enabled versions found.\n')
+    print('\nNo usable versions found.\n')
