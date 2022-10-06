@@ -63,12 +63,12 @@ if [[ $parent_commit ]]; then
     # To find the hash of the parent version, build the parent pack.
     eval $(tools/pack $parent_dir $parent_dir/pack 2>/dev/null)
     [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -f $pack_filename
-    echo v$parent.$pack_hash > $pack_dir/@PATH
-    echo "Setting @PATH to: v$parent.$pack_hash"
+    echo $parent.$pack_hash > $pack_dir/@PATH
+    echo "Setting @PATH to: $parent.$pack_hash"
 
     # Omit all the unchanged files from the patch pack.
     for file in $(cd $pack_dir; echo *); do
-        if diff -q $parent_dir/$file $pack_dir/$file 2>/dev/null; then
+        if diff -q $parent_dir/$file $pack_dir/$file >/dev/null 2>&1; then
             rm $pack_dir/$file
         fi
     done
