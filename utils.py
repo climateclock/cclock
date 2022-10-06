@@ -17,7 +17,7 @@ if hasattr(gc, 'mem_free'):
 
 
 def version_running():
-    return sys.path[0].split('.')[0].split('-')[0]
+    return sys.path[0]
 
 
 def versions_present():
