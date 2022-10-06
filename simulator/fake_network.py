@@ -8,7 +8,7 @@ import ssl
 from ssl import _create_unverified_context as create_ssl_context
 import utils
 
-WIFI_JOIN_DELAY = 5000  # how long it takes to connect to the simulated AP
+WIFI_JOIN_DELAY = 2000  # how long it takes to connect to the simulated AP
 ap_credentials = None
 
 
