@@ -20,4 +20,4 @@ cd "$1"
 ) >/tmp/imports.$$
 
 sed -i -e /#IMPORTS#/r/tmp/imports.$$ start.py
-rm -f /tmp/imports.$$
+[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -f /tmp/imports.$$

@@ -95,4 +95,4 @@ EOF
 # Restore the working tree.
 git checkout -q $current_commit
 
-rm -rf "$pack_dir" "$parent_dir"
+[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf "$pack_dir" "$parent_dir"
