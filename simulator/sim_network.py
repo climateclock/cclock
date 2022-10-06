@@ -81,7 +81,7 @@ class SimEsp:
 
     def socket_open(self, sid, hostname, port, mode):
         sock = socket.create_connection((hostname, port), 2)
-        if ssl:
+        if mode == self.TLS_MODE:
             context = create_ssl_context()
             sock = context.wrap_socket(sock, server_hostname=hostname)
         self._sockets[sid] = sock
