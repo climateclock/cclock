@@ -176,7 +176,7 @@ def get_latest_enabled_version(index_packs):
             assert pack_hash
             assert url
             assert pack_name.startswith('v')
-            num = int(pack_name[1:])
+            num = int(pack_name[1:].split('-')[0])
         except:
             print(f'Ignoring invalid pack entry: {pack_name}')
             continue
