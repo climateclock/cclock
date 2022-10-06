@@ -2,6 +2,7 @@ import argparse
 import cctime
 from ctypes import byref, c_char, c_void_p
 import display
+import prefs
 from sdl2 import *
 import sim_inputs
 
@@ -15,6 +16,8 @@ def init(bitmap):
     parser.add_argument('-x', '--left', default=None, type=int)
     parser.add_argument('-y', '--top', default=None, type=int)
     parser.add_argument('-s', '--scale', default=8, type=int)
+
+    prefs.init()
     args = parser.parse_args()
     sim_display = SimDisplay(
         bitmap, 20, display.BIT_DEPTH,
