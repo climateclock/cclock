@@ -86,7 +86,8 @@ pack_dir=/tmp/pack.$$
 mkdir -p $pack_dir
 cp *.py *.mcf $pack_dir
 eval $(tools/pack $pack_dir $vname 2>/dev/null)
-version=$vname.$hash
+[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir $pack_filename
+version=$vname.$pack_hash
 target=$drive/$version
 
 if [[ ! -f "$drive"/boot.py || ! -f "$drive"/main.py ]]; then

@@ -62,8 +62,9 @@ if [[ $parent_commit ]]; then
 
     # To find the hash of the parent version, build the parent pack.
     eval $(tools/pack $parent_dir $parent_dir/pack 2>/dev/null)
-    echo v$parent.$hash > $pack_dir/@PATH
-    echo "Setting @PATH to: v$parent.$hash"
+    [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -f $pack_filename
+    echo v$parent.$pack_hash > $pack_dir/@PATH
+    echo "Setting @PATH to: v$parent.$pack_hash"
 
     # Omit all the unchanged files from the patch pack.
     for file in $(cd $pack_dir; echo *); do
@@ -79,13 +80,13 @@ fi
 # Now build the pack.
 echo
 eval $(tools/pack $pack_dir $pack_name)
-echo Pack file: $filename
+echo Pack file: $pack_filename
 
 [[ $url ]] && cat <<EOF
 
     "$pack_name": {
-      "url": "$url/$filename",
-      "hash": "$hash",
+      "url": "$url/$pack_filename",
+      "hash": "$pack_hash",
       "published": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
       "enabled": true
     }

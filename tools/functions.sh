@@ -27,4 +27,6 @@ function deploy_to() {
         [[ $name = boot.py || $name = main.py ]] && continue
         maybe_compile $file "$target"
     done
+
+    [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $prep_dir
 }

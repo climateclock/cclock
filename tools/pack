@@ -64,8 +64,8 @@ def main(source_dir, pack_name):
     sys.stderr.write(f'Wrote {os.path.getsize(pack_filename)} bytes.\n')
 
     # Print information to stdout for use by bash scripts.
-    print(f'filename={pack_filename}')
-    print(f'hash={pack_hash}')
+    print(f'pack_filename={pack_filename}')
+    print(f'pack_hash={pack_hash}')
 
 if __name__ == '__main__':
     main(*sys.argv[1:])
