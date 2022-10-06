@@ -102,7 +102,7 @@ class SoftwareUpdater:
         fs.move('/data/clock.json.new', '/data/clock.json')
         utils.log(f'API file successfully fetched!')
         self.api_fetched = cctime.get_millis()
-        self.clock_mode.reload_definition()
+        self.clock_mode.load_definition()
 
         self.index_fetcher = HttpFetcher(self.net, self.update_url)
         self.step = self.index_fetch_step

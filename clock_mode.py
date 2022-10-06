@@ -20,7 +20,7 @@ class ClockMode:
         self.message_module = ccapi.Newsfeed(
             'custom_message', 'newsfeed', 'lifeline', [], [])
 
-        self.reload_definition()
+        self.load_definition()
         self.updater = SoftwareUpdater(app, net, self)
         utils.log('Created SoftwareUpdater')
 
@@ -40,32 +40,39 @@ class ClockMode:
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
 
-    def reload_definition(self):
+    def load_definition(self):
         utils.log()
         try:
-            with fs.open('/data/clock.json') as api_file:
-                defn = ccapi.load(api_file)
-                defn.module_dict['custom_message'] = self.message_module
-                defn.modules.append(self.message_module)
-                deadlines = [m for m in defn.modules if m.flavor == 'deadline']
-                lifelines = [m for m in defn.modules if m.flavor == 'lifeline']
-
-                self.deadline = deadlines and deadlines[0] or None
-                self.lifelines = utils.Cycle(*lifelines)
-
-                current = defn.module_dict.get(prefs.get('lifeline_id'))
-                if current in lifelines:
-                    while self.lifelines.get(1) != current:
-                        pass
-                self.switch_lifeline(0)
-
-                self.deadline_pi = display.get_pi(
-                    *defn.config.display.deadline.primary)
-                self.lifeline_pi = display.get_pi(
-                    *defn.config.display.lifeline.primary)
+            self.load_path('/data/clock.json')
         except Exception as e:
             utils.report_error(e, 'Could not load API file')
-        utils.log('reload_definition')
+            try:
+                self.load_path('/clock.json')
+            except Exception as e:
+                utils.report_error(e, 'Could not load API file')
+
+    def load_path(self, path):
+        with fs.open(path) as api_file:
+            defn = ccapi.load(api_file)
+            defn.module_dict['custom_message'] = self.message_module
+            defn.modules.append(self.message_module)
+            deadlines = [m for m in defn.modules if m.flavor == 'deadline']
+            lifelines = [m for m in defn.modules if m.flavor == 'lifeline']
+
+            self.deadline = deadlines and deadlines[0] or None
+            self.lifelines = utils.Cycle(*lifelines)
+
+            current = defn.module_dict.get(prefs.get('lifeline_id'))
+            if current in lifelines:
+                while self.lifelines.get(1) != current:
+                    pass
+            self.switch_lifeline(0)
+
+            self.deadline_pi = display.get_pi(
+                *defn.config.display.deadline.primary)
+            self.lifeline_pi = display.get_pi(
+                *defn.config.display.lifeline.primary)
+        utils.log(f'Loaded {path}')
 
     def switch_lifeline(self, delta):
         if self.lifelines:

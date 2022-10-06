@@ -26,9 +26,8 @@ if [[ $help || ! $vname ]]; then
     cat <<EOF && exit 1
 Usage: $0 [-d] [-s] [-w] <vname>
 
-Deploys the code in the current directory to the attached CircuitPython device.
-Also installs data/clock.json if it isn't present, fetching an up-to-date copy
-from the API if possible.
+Deploys the code in the current directory to the attached CircuitPython device,
+then installs clock.json, fetching an up-to-date copy from the API if possible.
 
 <vname> should be a version name in the form v1, v2, etc.
 
@@ -66,16 +65,6 @@ if [[ ! -d $drive ]] || ! touch "$drive/test" 2>/dev/null; then
     echo
 fi
 
-if [[ $wipe ]]; then
-    echo "Wiping $drive..."
-    rm -rf $drive/*
-fi
-
-if [[ ! -f "$drive"/boot.py || ! -f "$drive"/main.py ]]; then
-    echo "Installing bootstrap code to $drive..."
-    cp boot.py main.py "$drive"
-fi
-
 echo "Building $vname..."
 pack_dir=/tmp/pack.$$
 build_to $pack_dir
@@ -84,19 +73,23 @@ eval $(tools/pack -n $vname $pack_dir)
 version=$vname.$pack_hash
 target=$drive/$version
 
+if [[ $wipe ]]; then
+    echo "Wiping $drive and installing bootstrap code..."
+    rm -rf $drive/*
+    cp boot.py main.py "$drive"
+    mkdir -p "$drive"/data
+fi
+
 echo "Installing $vname at $target..."
 mkdir -p "$target"
 cp $pack_dir/* "$target"
 [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir
 
-if [[ ! -f "$drive"/data/clock.json ]]; then
-    echo 'Installing initial copy of clock.json...'
-    mkdir -p "$drive"/data
-    # Try to fetch it from the API, or use the file cached by tools/setup.
-    url=https://api.climateclock.world/v1/clock
-    curl -s -o "$drive"/data/clock.json --connect-timeout 2 $url || \
-        cp cache/clock.json "$drive"/data/clock.json
-fi
+echo 'Installing factory copy of clock.json...'
+# Try to fetch it from the API, or use the file cached by tools/setup.
+url=https://api.climateclock.world/v1/clock
+curl -s -o "$drive"/clock.json --connect-timeout 2 $url || \
+    cp cache/clock.json "$drive"/clock.json
 
 touch "$target"/@VALID
 touch "$target"/@ENABLED
