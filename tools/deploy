@@ -9,27 +9,37 @@
 # be installed by the software update mechanism.
 
 cd $(dirname "$0")
+source functions.sh
 cd ..
 
 while [[ $1 = -* ]]; do
-  [[ $1 = -d ]] && debug_memory=yes
-  [[ $1 = -s ]] && simulator=yes
-  [[ $1 = -h || $1 = --help ]] && cat <<EOF && exit 1
-Usage: $0 [-d] [-q] [-s]
+    [[ $1 = -d ]] && export CCLOCK_MEMORY_DEBUGGING=1
+    [[ $1 = -h || $1 = --help ]] && help=yes
+    [[ $1 = -s ]] && export CCLOCK_SIMULATOR_MODE=1
+    [[ $1 = -w ]] && wipe=yes
+    shift
+done
+vname="$1"
+[[ $wipe ]] && vname=v0
 
-Wipes the attached CircuitPython device and deploys the code in the current
-directory as v0, thus leaving the device in the factory reset state.  Also
-installs a current copy of clock.json, fetched from the API if possible.
+if [[ $help || ! $vname ]]; then
+    cat <<EOF && exit 1
+Usage: $0 [-d] [-s] [-w] <vname>
+
+Deploys the code in the current directory to the attached CircuitPython device.
+Also installs data/clock.json if it isn't present, fetching an up-to-date copy
+from the API if possible.
+
+<vname> should be a version name in the form v1, v2, etc.
 
 -d enables memory debugging: memory layout is dumped with every log message.
 
--q does a quick deployment: the device is not wiped; code is deployed as v999.
-
 -s deploys to a simulated filesystem at /tmp/cclock instead of a real device.
+
+-w wipes the device and deploys v0, leaving the device in a factory reset state.
+
 EOF
-  [[ $1 = -q ]] && quick_deploy=yes
-  shift
-done
+fi
 
 echo 'Checking syntax...'
 python3 <<EOF || exit 1
@@ -43,7 +53,7 @@ for name in os.listdir():
 EOF
 
 drive=/Volumes/CIRCUITPY
-[[ $simulator ]] && mkdir -p /tmp/cclock && drive=/tmp/cclock
+[[ $CCLOCK_SIMULATOR_MODE ]] && mkdir -p /tmp/cclock && drive=/tmp/cclock
 
 if [[ ! -d $drive ]]; then
     echo -n "Waiting for drive to appear at $drive.."
@@ -66,20 +76,7 @@ if ! touch "$drive/test"; then
 fi
 rm -f "$drive/test"
 
-if [[ $quick_deploy ]]; then
-    name=v999
-else
-    name=v0
-    echo
-    echo "This will wipe $drive and perform a factory reset,"
-    echo "with the current Climate Clock codebase deployed as v0."
-    echo
-    echo -n "Proceed? "
-    read confirm
-    echo
-
-    [[ $confirm = y* ]] || exit 1
-
+if [[ $wipe ]]; then
     echo "Wiping $drive..."
     rm -rf $drive/*
 fi
@@ -88,56 +85,24 @@ fi
 pack_dir=/tmp/pack.$$
 mkdir -p $pack_dir
 cp *.py *.mcf $pack_dir
-eval $(tools/pack $pack_dir $name 2>/dev/null)
-version=$name.$hash
-
+eval $(tools/pack $pack_dir $vname 2>/dev/null)
+version=$vname.$hash
 target=$drive/$version
-rm -rf $target
-mkdir -p $target
 
-echo "Installing program modules at $target..."
-for file in *.py; do
-    if [[ $file = boot.py || $file = main.py ]]; then
-        cp $file "$drive"
-    elif [[ $simulator ]]; then
-        cp $file "$target"
-    else
-        env/bin/mpy-cross -o "$target"/${file%.py}.mpy $file
-    fi
-done
+if [[ ! -f "$drive"/boot.py || ! -f "$drive"/main.py ]]; then
+    echo "Installing bootstrap code to $drive..."
+    cp boot.py main.py "$drive"
+fi
 
-echo 'Gathering imports...'
-# Do all the imports at once, to reduce memory fragmentation and get a
-# consistent measurement of the memory and time consumed by each import.
-(
-    [[ $debug_memory ]] && echo 'import time; time.sleep(2)'
-    echo 'import gc'
-    echo 'gc.collect(); before = gc.mem_free()'
-    echo 'import utils'
-    echo 'gc.collect(); after = gc.mem_free()'
-    echo "print(f'[{after} free] import utils [{before - after} used]')"
-    [[ $debug_memory ]] && echo 'utils.debug = 1'
-    echo "utils.log('Starting imports')"
-    for module in $(tools/sort_imports start); do
-        [[ $debug_memory ]] && echo 'utils.log()'
-        echo "import $module"
-        [[ $debug_memory ]] && echo "utils.log('import $module')"
-    done
-    echo "utils.log('Finished imports')"
-) >/tmp/imports.py
-
-sed -e /#IMPORTS#/r/tmp/imports.py <start.py >/tmp/start.py
-env/bin/mpy-cross -s start.py -o "$target"/start.mpy /tmp/start.py
-rm -f /tmp/imports.py /tmp/start.py
-
-echo 'Installing fonts...'
-cp *.mcf "$target"/
+echo "Installing $vname modules at $target..."
+deploy_to "$target"
 
 if [[ ! -f "$drive"/data/clock.json ]]; then
     echo 'Installing initial copy of clock.json...'
     mkdir -p "$drive"/data
     # Try to fetch it from the API, or use the file cached by tools/setup.
-    curl -s -o "$drive"/data/clock.json --connect-timeout 2 https://api.climateclock.world/v1/clock || \
+    url=https://api.climateclock.world/v1/clock
+    curl -s -o "$drive"/data/clock.json --connect-timeout 2 $url || \
         cp cache/clock.json "$drive"/data/clock.json
 fi
 

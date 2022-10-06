@@ -1,0 +1,23 @@
+#!/bin/bash -e
+
+cd $(dirname "$0")
+tools_dir=$(pwd)
+cd "$1"
+
+# Do all the imports at once, to reduce memory fragmentation and get a
+# consistent measurement of the memory and time consumed by each import.
+(
+    [[ $CCLOCK_MEMORY_DEBUGGING ]] && echo 'import time; time.sleep(2)'
+    echo 'import utils'
+    [[ $CCLOCK_MEMORY_DEBUGGING ]] && echo 'utils.debug = 1'
+    echo "utils.log('Starting imports')"
+    for module in $($tools_dir/sort_imports start); do
+        [[ $CCLOCK_MEMORY_DEBUGGING ]] && echo 'utils.log()'
+        echo "import $module"
+        [[ $CCLOCK_MEMORY_DEBUGGING ]] && echo "utils.log('import $module')"
+    done
+    echo "utils.log('Finished imports')"
+) >/tmp/imports.$$
+
+sed -i -e /#IMPORTS#/r/tmp/imports.$$ start.py
+rm -f /tmp/imports.$$
