@@ -15,7 +15,7 @@ while [[ $1 = -* ]]; do
   [[ $1 = -d ]] && debug_memory=yes
   [[ $1 = -s ]] && simulator=yes
   [[ $1 = -h || $1 = --help ]] && cat <<EOF && exit 1
-Usage: $0 [-d] [-q]
+Usage: $0 [-d] [-q] [-s]
 
 Wipes the attached CircuitPython device and deploys the code in the current
 directory as v0, thus leaving the device in the factory reset state.  Also
@@ -66,9 +66,10 @@ if ! touch "$drive/test"; then
 fi
 rm -f "$drive/test"
 
-if [[ -n $quick_deploy ]]; then
-    version=v999
+if [[ $quick_deploy ]]; then
+    name=v999
 else
+    name=v0
     echo
     echo "This will wipe $drive and perform a factory reset,"
     echo "with the current Climate Clock codebase deployed as v0."
@@ -81,10 +82,14 @@ else
 
     echo "Wiping $drive..."
     rm -rf $drive/*
-
-    # Embed the git commit ID in the directory name so it shows up in the logs.
-    version=v0.$(git describe --always --match='' --dirty)
 fi
+
+# To figure out the version hash, we have to build the pack.
+pack_dir=/tmp/pack.$$
+mkdir -p $pack_dir
+cp *.py *.mcf $pack_dir
+eval $(tools/pack $pack_dir $name 2>/dev/null)
+version=$name.$hash
 
 target=$drive/$version
 rm -rf $target
