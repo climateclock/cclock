@@ -31,6 +31,8 @@ def check_for_factory_reset():
     # reset is unlikely to be triggered by a short or other electrical problem.
     if 5000 < elapsed < 10000:
         factory_reset()
+    if elapsed > 0:
+        time.sleep(1)  # allow time to release buttons and see reset status
 
 
 def factory_reset():
@@ -55,7 +57,6 @@ def factory_reset():
                 print(f'Removing {name}: {e}')
 
     pixel.fill((0, 255, 0) if errors == 0 else (255, 0, 0))
-    time.sleep(2)
 
 
 def check_for_development_mode():
