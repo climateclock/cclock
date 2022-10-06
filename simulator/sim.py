@@ -5,7 +5,12 @@ import sys
 def init(path):
     sys.path = path + [os.environ['CCLOCK_SIMULATOR_PATH']] + sys.path
 
-    # Install monkey-patches.
+    # In CircuitPython, traceback.format_exception returns a string.
+    import traceback
+    format_exception = traceback.format_exception
+    traceback.format_exception = lambda *args: ''.join(format_exception(*args))
+
+    # TODO: Remove fs, since we use the cwd now?
     import fs
     fs.root = '/tmp/cclock'
 
