@@ -8,7 +8,7 @@ import rgbmatrix
 # control (higher than 5 doesn't help because the hardware colour depth appears
 # to be 5 red, 6 green, 5 blue).  If memory is tight, though, we sometimes need
 # to set BIT_DEPTH lower to avoid MemoryErrors.
-BIT_DEPTH = 4
+BIT_DEPTH = 5
 
 brightness = 1.0
 colours = [(0, 0, 0)]

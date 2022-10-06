@@ -28,7 +28,7 @@ class App:
         self.langs = utils.Cycle('en', 'es', 'de', 'fr', 'is')
         self.lang = self.langs.get()
         self.brightness_reader = DialReader(
-            'BRIGHTNESS', dial_map['BRIGHTNESS'], 3/32.0, 0.01, 0.99)
+            'BRIGHTNESS', dial_map['BRIGHTNESS'], 9/256, 1/256, 255/256)
         utils.log('Finished App.__init__')
 
     def start(self):

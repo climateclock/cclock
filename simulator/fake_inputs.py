@@ -14,7 +14,7 @@ def init():
     down = FakeButton(SDL_SCANCODE_RSHIFT)
     enter = FakeButton(SDL_SCANCODE_RETURN)
     brightness = FakeDial(
-        SDL_SCANCODE_DOWN, SDL_SCANCODE_UP, 1/8.0, 1.0, 0.0, 1.0)
+        SDL_SCANCODE_DOWN, SDL_SCANCODE_UP, 5/256, 1.0, 0.0, 1.0)
     selector = FakeDial(
         SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, 1, 0, -100000, 100000)
     return up, down, enter, brightness, selector
