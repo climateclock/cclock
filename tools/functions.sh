@@ -14,7 +14,7 @@ function deploy_to() {
 
     # Let the tools/preprocess script do whatever it wants to the code; it's
     # a separate script because we want functions.sh to stay stable.
-    prep_dir=/tmp/deploy.$$
+    prep_dir=/tmp/prep.$$
     mkdir -p $prep_dir
     cp *.mcf *.py $prep_dir
     tools/preprocess $prep_dir

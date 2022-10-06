@@ -19,5 +19,5 @@ cd "$1"
     echo "utils.log('Finished imports')"
 ) >/tmp/imports.$$
 
-sed -i -e /#IMPORTS#/r/tmp/imports.$$ start.py
+sed -i '' -e /#IMPORTS#/r/tmp/imports.$$ start.py
 [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -f /tmp/imports.$$
