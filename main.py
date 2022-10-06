@@ -1,4 +1,3 @@
-import microcontroller
 import os
 import sys
 import time
@@ -62,13 +61,13 @@ def get_latest_usable_version():
 
 (number, name, path), count = get_latest_usable_version()
 if name:
-    sys.path[:] = path
-    print(f'\nRunning version {number} with path {sys.path}.\n')
-    start_time = int(time.monotonic())
+    print(f'\nRunning version {number} with path {path}.\n')
     try:
-        microcontroller.install_monkey_patches()
+        import sim
+        sim.init(path)
     except:
-        pass
+        sys.path = path
+    start_time = int(time.monotonic())
     try:
         import start
     except Exception as e:
@@ -105,6 +104,7 @@ if name:
         else:
             print(f'\nRunning time was {run_time}s; restarting in 5 seconds.\n')
             time.sleep(5)
+            import microcontroller
             microcontroller.reset()
 else:
     print('\nNo usable versions found.\n')

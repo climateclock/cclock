@@ -6,10 +6,10 @@ import sys
 # All times on the board are in UTC.
 os.environ['TZ'] = 'UTC'
 
-# microcontroller.py is the hook that installs monkey-patches.
-os.environ['CCLOCK_SIMULATOR'] = os.getcwd() + '/simulator'
-with open('/tmp/cclock/microcontroller.py', 'w') as opt:
-    with open('simulator/microcontroller.py') as ipt:
+# sim.py installs the simulator monkey-patches.
+os.environ['CCLOCK_SIMULATOR_PATH'] = os.getcwd() + '/simulator'
+with open('/tmp/cclock/sim.py', 'w') as opt:
+    with open('simulator/sim.py') as ipt:
         opt.write(ipt.read())
 
 # Off we go!
