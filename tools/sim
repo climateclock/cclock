@@ -6,10 +6,10 @@ import sys
 # All times on the board are in UTC.
 os.environ['TZ'] = 'UTC'
 
-# sim.py installs the simulator monkey-patches.
+# simulator_init.py installs the simulator monkey-patches.
 os.environ['CCLOCK_SIMULATOR_PATH'] = os.getcwd() + '/simulator'
-with open('/tmp/cclock/sim.py', 'w') as opt:
-    with open('simulator/sim.py') as ipt:
+with open('/tmp/cclock/simulator_init.py', 'w') as opt:
+    with open('simulator/simulator_init.py') as ipt:
         opt.write(ipt.read())
 
 # Off we go!
