@@ -26,8 +26,7 @@ if [[ $help || ! $vname ]]; then
     cat <<EOF && exit 1
 Usage: $0 [-d] [-s] [-w] <vname>
 
-Deploys the code in the current directory to the attached CircuitPython device,
-then installs clock.json, fetching an up-to-date copy from the API if possible.
+Deploys the code in the current directory to the attached CircuitPython device.
 
 <vname> should be a version name in the form v1, v2, etc.
 
@@ -35,7 +34,8 @@ then installs clock.json, fetching an up-to-date copy from the API if possible.
 
 -s deploys to a simulated filesystem at /tmp/cclock instead of a real device.
 
--w wipes the device and deploys v0, leaving the device in a factory reset state.
+-w wipes the device, deploys v0, and installs clock.json (fetching it from the
+API if possible).  This leaves the device in a factory reset state.
 
 EOF
 fi
@@ -85,14 +85,24 @@ mkdir -p "$target"
 cp $pack_dir/* "$target"
 [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir
 
-echo 'Installing factory copy of clock.json...'
-# Try to fetch it from the API, or use the file cached by tools/setup.
-url=https://api.climateclock.world/v1/clock
-curl -s -o "$drive"/clock.json --connect-timeout 2 $url || \
-    cp cache/clock.json "$drive"/clock.json
+if [[ $wipe ]]; then
+    echo 'Installing factory copy of clock.json...'
+    # Try to fetch it from the API, or use the file cached by tools/setup.
+    url=https://api.climateclock.world/v1/clock
+    curl -s -o "$drive"/clock.json --connect-timeout 2 $url || \
+        cp cache/clock.json "$drive"/clock.json
+fi
 
 touch "$target"/@VALID
 touch "$target"/@ENABLED
-echo
 sync
+
+# Occasionally, I've seen filesystem corruption.  I'm not sure if it happens
+# during deployment, but unmounting might reduce the risk.
+if [[ $wipe && ! $CCLOCK_SIMULATOR_MODE ]]; then
+    [ -f /usr/bin/hdiutil ] && hdiutil eject $drive
+    [ -e $drive ] && [ -f /*bin/umount ] && umount $drive
+fi
+
+echo
 echo 'All done!'
