@@ -126,10 +126,20 @@ device that newly appears when you plug in the USB cable.  For example:
     screen /dev/tty.usbmodem1101 115200
 
 If you are on MacOS, the utility `tools/serial` will do this for you.
+The session will be continuously logged to `screenlog.0`.
 
 `print` statements will print to this serial console.  You can also
 press Ctrl-C in the console to stop the running program, which will
 put you in an interactive Python interpreter.
+
+### Taking a screenshot of the display
+
+You can get a screenshot of the display by double-clicking the UP button
+on the MatrixPortal while the serial console is running.  This will dump
+the screenshot as a long string of hex digits; running `tools/last_frame`
+will then extract the last screenshot from `screenlog.0` and display it
+on your computer screen.  This lets you see what would be on the display
+even when you don't have any LED matrix boards attached.
 
 ### Connecting to an existing Wi-Fi network
 
