@@ -86,12 +86,11 @@ if [[ ! -f "$drive"/boot.py || ! -f "$drive"/main.py ]]; then
     cp boot.py main.py "$drive"
 fi
 
-# To figure out the version hash, we have to build the pack.
 echo "Building $vname..."
 pack_dir=/tmp/pack.$$
 build_to $pack_dir
-eval $(tools/pack $pack_dir $pack_dir/$vname 2>/dev/null)
-[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -f $pack_filename
+# Use tools/pack to find the pack hash, which goes in the directory name.
+eval $(tools/pack -n $vname $pack_dir)
 version=$vname.$pack_hash
 target=$drive/$version
 

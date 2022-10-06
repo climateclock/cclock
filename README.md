@@ -209,11 +209,11 @@ is merely a simple space-saving measure.)
 
 The steps for publishing a new software update are as follows:
 
-  - Run `tools/pack` with a directory path as the first argument and
-    a version name (a "v" followed by a version number, such as "v17")
+  - Run `tools/pack` with a version name (a "v" followed by a version
+    number, such as "v17") as the first argument and a directory path
     as the second argument; for example:
 
-        tools/pack /tmp/folder v17
+        tools/pack v17 /tmp/folder
 
     A file with a name like `v17.d41d8cd98f00b204e9800998ecf8427e.pk'
     will be created, containing all the files in the specified folder.

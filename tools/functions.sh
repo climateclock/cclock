@@ -25,7 +25,6 @@ function build_to() {
     for file in $prep_dir/*.py; do
         name=$(basename $file)
         [[ $name = boot.py || $name = main.py ]] && continue
-        echo maybe_compile $file "$target"
         maybe_compile $file "$target"
     done
 

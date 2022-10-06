@@ -55,17 +55,25 @@ def write_block(file, block_type, content):
     file.write(to_short(len(content)))
     file.write(to_bytes(content))
 
-def main(source_dir, pack_name):
+def main(pack_name, source_dir, dry_run=False):
     fd, temp_path = tempfile.mkstemp()
     with os.fdopen(fd, 'wb') as file:
         pack_hash = pack(source_dir, pack_name, file)
     pack_filename = f'{pack_name}.{pack_hash}.pk'
-    os.rename(temp_path, pack_filename)
-    sys.stderr.write(f'Wrote {os.path.getsize(pack_filename)} bytes.\n')
-
-    # Print information to stdout for use by bash scripts.
-    print(f'pack_filename={pack_filename}')
-    print(f'pack_hash={pack_hash}')
+    print(f'pack_hash={pack_hash}')  # output for use by bash scripts
+    if dry_run:
+        os.remove(temp_path)
+    else:
+        os.rename(temp_path, pack_filename)
+        sys.stderr.write(f'Wrote {os.path.getsize(pack_filename)} bytes.\n')
+        print(f'pack_filename={pack_filename}')  # output for use by scripts
 
 if __name__ == '__main__':
-    main(*sys.argv[1:])
+    args = sys.argv[1:]
+
+    dry_run = False
+    if args[0] == '-n':
+        args.pop(0)
+        dry_run = True
+
+    main(*args, dry_run=dry_run)
