@@ -1,8 +1,8 @@
 from adafruit_esp32spi import adafruit_esp32spi as esp32spi
 import cctime
+import fake_socklib
 import network
 import select
-import sim_socklib
 import socket
 import ssl
 from ssl import _create_unverified_context as create_ssl_context
@@ -19,10 +19,10 @@ def install(ap_ssid, ap_password):
 
 
 def init():
-    return network.Network(SimEsp(ap_credentials), sim_socklib)
+    return network.Network(FakeEsp(ap_credentials), fake_socklib)
 
 
-class SimEsp:
+class FakeEsp:
     """Simulates an instance of ESP_SPIcontrol with a nearby Wi-Fi AP."""
 
     TCP_MODE = 1

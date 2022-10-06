@@ -2,9 +2,9 @@ import argparse
 import cctime
 from ctypes import byref, c_char, c_void_p
 import display
+import fake_inputs
 import prefs
 from sdl2 import *
-import sim_inputs
 
 
 def install():
@@ -19,14 +19,14 @@ def init(bitmap):
 
     prefs.init()
     args = parser.parse_args()
-    sim_display = SimDisplay(
+    fake_display = FakeDisplay(
         bitmap, 20, display.BIT_DEPTH,
         scale=args.scale, left=args.left, top=args.top)
     display.shader = [0]*bitmap.depth
-    display.send = sim_display.send
+    display.send = fake_display.send
 
 
-class SimDisplay:
+class FakeDisplay:
     def __init__(self, bitmap, fps, bit_depth, title='Frame',
             pad=4, scale=8, left=None, top=None):
         self.bitmap = bitmap
@@ -57,7 +57,7 @@ class SimDisplay:
     def flush_events(self):
         event = SDL_Event()
         while SDL_PollEvent(byref(event)):
-            sim_inputs.handle_event(event)
+            fake_inputs.handle_event(event)
             scancode = event.key.keysym.scancode
             if event.type == SDL_KEYDOWN:
                 if scancode == SDL_SCANCODE_MINUS:

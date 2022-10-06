@@ -1,3 +1,6 @@
+# This file is copied to /tmp/cclock and run from there; it puts simulator/
+# on sys.path so the rest of the simulator modules can be imported.
+
 import os
 import sys
 
@@ -14,14 +17,14 @@ def init(path):
     import fs
     fs.root = '/tmp/cclock'
 
-    import sim_cctime
-    sim_cctime.install()
+    import fake_cctime
+    fake_cctime.install()
 
-    import sim_display
-    sim_display.install()
+    import fake_display
+    fake_display.install()
 
-    import sim_inputs
-    sim_inputs.install()
+    import fake_inputs
+    fake_inputs.install()
 
-    import sim_network
-    sim_network.install(b'climateclock', b'climateclock')
+    import fake_network
+    fake_network.install(b'climateclock', b'climateclock')
