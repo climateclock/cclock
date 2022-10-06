@@ -3,7 +3,7 @@ import sys
 
 
 def init(path):
-    sys.path = path + [os.environ['CCLOCK_SIMULATOR_PATH']] + sys.path
+    sys.path[:0] = path + [os.environ['CCLOCK_SIMULATOR_PATH']]
 
     # In CircuitPython, traceback.format_exception returns a string.
     import traceback

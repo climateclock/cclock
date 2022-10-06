@@ -94,7 +94,7 @@ eval $(tools/pack -n $vname $pack_dir)
 version=$vname.$pack_hash
 target=$drive/$version
 
-echo "Installing $vname modules at $target..."
+echo "Installing $vname at $target..."
 mkdir -p "$target"
 cp $pack_dir/* "$target"
 [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir

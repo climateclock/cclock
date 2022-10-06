@@ -66,7 +66,7 @@ if name:
         import sim
         sim.init(path)
     except:
-        sys.path[:] = path  # sys.path cannot be assigned in CircuitPython
+        sys.path[:0] = path  # sys.path cannot be reassigned in CircuitPython
     start_time = int(time.monotonic())
     try:
         import start
