@@ -14,17 +14,19 @@ cd ..
 
 while [[ $1 = -* ]]; do
     [[ $1 = -d ]] && export CCLOCK_MEMORY_DEBUGGING=1
+    [[ $1 = -f ]] && factory=yes
     [[ $1 = -h || $1 = --help ]] && help=yes
+    [[ $1 = -p ]] && shift && wifi_password="$1"
     [[ $1 = -s ]] && export CCLOCK_SIMULATOR_MODE=1
-    [[ $1 = -w ]] && wipe=yes
-    shift
+    [[ $1 = -w ]] && shift && wifi_ssid="$1"
+    shift || break
 done
 vname="$1"
-[[ $wipe ]] && vname=v0
+[[ $factory ]] && vname=v0
 
 if [[ $help || ! $vname ]]; then
     cat <<EOF && exit 1
-Usage: $0 [-d] [-s] [-w] <vname>
+Usage: $0 [-d] [-f] [-s] [-w <network> -p <password>] <vname>
 
 Deploys the code in the current directory to the attached CircuitPython device.
 
@@ -32,11 +34,12 @@ Deploys the code in the current directory to the attached CircuitPython device.
 
 -d enables memory debugging: memory layout is dumped with every log message.
 
+-f factory-resets the device by wiping the flash disk, deploying v0, and
+installing clock.json (fetching an up-to-date copy from the API if possible).
+
 -s deploys to a simulated filesystem at /tmp/cclock instead of a real device.
 
--w wipes the device, deploys v0, and installs clock.json (fetching it from the
-API if possible).  This leaves the device in a factory reset state.
-
+-w and -p set the initial Wi-Fi network and password when factory-resetting.
 EOF
 fi
 
@@ -73,11 +76,18 @@ eval $(tools/pack -n $vname $pack_dir)
 version=$vname.$pack_hash
 target=$drive/$version
 
-if [[ $wipe ]]; then
+if [[ $factory ]]; then
     echo "Wiping $drive and installing bootstrap code..."
     rm -rf $drive/*
     cp boot.py main.py "$drive"
     mkdir -p "$drive"/data
+    if [[ $wifi_ssid || $wifi_password ]]; then
+        echo -n 'Setting Wi-Fi network to "'$wifi_ssid'" and '
+        echo 'password to "'$wifi_password'"...'
+        cat <<EOF >"$drive"/data/prefs.json
+{"wifi_ssid": "$wifi_ssid", "wifi_password": "$wifi_password"}
+EOF
+    fi
 fi
 
 echo "Installing $vname at $target..."
@@ -85,7 +95,7 @@ mkdir -p "$target"
 cp $pack_dir/* "$target"
 [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir
 
-if [[ $wipe ]]; then
+if [[ $factory ]]; then
     echo 'Installing factory copy of clock.json...'
     # Try to fetch it from the API, or use the file cached by tools/setup.
     url=https://api.climateclock.world/v1/clock
@@ -99,7 +109,7 @@ sync
 
 # Occasionally, I've seen filesystem corruption.  I'm not sure if it happens
 # during deployment, but unmounting might reduce the risk.
-if [[ $wipe && ! $CCLOCK_SIMULATOR_MODE ]]; then
+if [[ $factory && ! $CCLOCK_SIMULATOR_MODE ]]; then
     [ -f /usr/bin/hdiutil ] && hdiutil eject $drive
     [ -e $drive ] && [ -f /*bin/umount ] && umount $drive
 fi
