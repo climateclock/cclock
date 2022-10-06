@@ -9,7 +9,7 @@ function maybe_compile() {
     fi
 }
 
-function deploy_to() {
+function build_to() {
     target="$1"
 
     # Let the tools/preprocess script do whatever it wants to the code; it's
@@ -25,6 +25,7 @@ function deploy_to() {
     for file in $prep_dir/*.py; do
         name=$(basename $file)
         [[ $name = boot.py || $name = main.py ]] && continue
+        echo maybe_compile $file "$target"
         maybe_compile $file "$target"
     done
 

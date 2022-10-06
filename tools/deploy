@@ -81,22 +81,24 @@ if [[ $wipe ]]; then
     rm -rf $drive/*
 fi
 
-# To figure out the version hash, we have to build the pack.
-pack_dir=/tmp/pack.$$
-mkdir -p $pack_dir
-cp *.py *.mcf $pack_dir
-eval $(tools/pack $pack_dir $vname 2>/dev/null)
-[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir $pack_filename
-version=$vname.$pack_hash
-target=$drive/$version
-
 if [[ ! -f "$drive"/boot.py || ! -f "$drive"/main.py ]]; then
     echo "Installing bootstrap code to $drive..."
     cp boot.py main.py "$drive"
 fi
 
+# To figure out the version hash, we have to build the pack.
+echo "Building $vname..."
+pack_dir=/tmp/pack.$$
+build_to $pack_dir
+eval $(tools/pack $pack_dir $pack_dir/$vname 2>/dev/null)
+[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -f $pack_filename
+version=$vname.$pack_hash
+target=$drive/$version
+
 echo "Installing $vname modules at $target..."
-deploy_to "$target"
+mkdir -p "$target"
+cp $pack_dir/* "$target"
+[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir
 
 if [[ ! -f "$drive"/data/clock.json ]]; then
     echo 'Installing initial copy of clock.json...'
