@@ -95,8 +95,8 @@ def report_error(e, message):
 def split_url(url):
     proto, rest = url.split(':', 1)
     if proto == 'http' or proto == 'https':
-        hostname, path = rest.lstrip('/').split('/', 1)
-        return proto == 'https', hostname, '/' + path
+        host, path = rest.lstrip('/').split('/', 1)
+        return proto == 'https', host, '/' + path
     return None, None, None
 
 

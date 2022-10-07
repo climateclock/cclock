@@ -15,9 +15,10 @@ class HttpFetcher:
         self.net = net
         self.buffer = bytearray()
 
-    def go(self, url):
-        self.ssl, self.hostname, self.path = utils.split_url(url)
-        if not self.hostname:
+    def go(self, url, req_etag=None):
+        self.ssl, self.host, self.path = utils.split_url(url)
+        self.req_etag = req_etag
+        if not self.host:
             raise ValueError(f'Invalid URL: {url}')
         self.start()
 
@@ -36,7 +37,7 @@ class HttpFetcher:
                 if silence > SILENCE_TIMEOUT:
                     utils.log(f'Closing socket after {silence} s of silence.')
                     self.net.close()
-                    raise StopIteration
+                    raise StopIteration(self.resp_etag)
             else:
                 self.silence_started = now
         else:
@@ -48,13 +49,15 @@ class HttpFetcher:
             self.net.join(prefs.get('wifi_ssid'), prefs.get('wifi_password'))
         elif self.net.state == 'ONLINE':
             # connect() will raise if it fails; there's no risk of a retry loop
-            self.net.connect(self.hostname, ssl=self.ssl)
+            self.net.connect(self.host, ssl=self.ssl)
         elif self.net.state == 'CONNECTED':
-            utils.log(f'Fetching {self.path} from {self.hostname}.')
+            etag = utils.to_bytes(self.req_etag or b'')
+            utils.log(f'Fetching {self.path} from {self.host} (ETag {etag}).')
             self.net.send(
                 b'GET ' + utils.to_bytes(self.path) + b' HTTP/1.1\r\n' +
-                b'Host: ' + utils.to_bytes(self.hostname) + b'\r\n' +
+                b'Host: ' + utils.to_bytes(self.host) + b'\r\n' +
                 b'Connection: Close\r\n' +
+                (b'If-None-Match: "' + etag + b'"\r\n' if etag else b'') +
                 b'\r\n'
             )
             self.read = self.http_status_read
@@ -68,9 +71,13 @@ class HttpFetcher:
         if crlf > 0:
             status = bytes(self.buffer[:crlf]).split(b' ')[1]
             self.buffer[:crlf + 2] = b''
+            utils.log(f'HTTP status: {status}')
+            if status == b'304':
+                raise StopIteration(304)
             if status != b'200' and status != b'301' and status != b'302':
                 raise ValueError(f'HTTP status {status}')
             self.content_length = -1
+            self.resp_etag = None
             self.read = self.http_headers_read
 
     def http_headers_read(self):
@@ -80,22 +87,23 @@ class HttpFetcher:
         if crlf > 0:
             colon = self.buffer.find(b':')
             if 0 < colon < crlf:
-                key = self.buffer[:colon].lower()
-                value = self.buffer[colon + 1:crlf].strip()
-                if key == b'location':
-                    self.net.close()
-                    loc = utils.to_str(bytes(value))
-                    utils.log(f'Redirection: {loc}')
-                    if loc.startswith('http:') or loc.startswith('https:'):
-                        self.go(loc)
-                    elif loc.startswith('/'):
-                        self.path = loc
-                        self.start()
-                    else:
-                        self.path = self.path.rsplit('/', 1)[0] + '/' + loc
-                        self.start()
+                key = bytes(self.buffer[:colon]).lower()
+                value = utils.to_str(bytes(self.buffer[colon + 1:crlf])).strip()
                 if key == b'content-length':
                     self.content_length = int(value)
+                if key == b'etag':
+                    self.resp_etag = value.strip('"')
+                if key == b'location':
+                    self.net.close()
+                    utils.log(f'Redirection: {value}')
+                    if value.startswith('http:') or value.startswith('https:'):
+                        self.go(value)
+                    elif value.startswith('/'):
+                        self.path = value
+                        self.start()
+                    else:
+                        self.path = self.path.rsplit('/', 1)[0] + '/' + value
+                        self.start()
             self.buffer[:crlf + 2] = b''
         elif crlf == 0:
             self.buffer[:2] = b''
@@ -108,7 +116,7 @@ class HttpFetcher:
         self.net.step()
         if (self.received_length >= self.content_length > 0 or  # file completed
             self.net.state != 'CONNECTED'):  # server closed the connection
-            raise StopIteration
+            raise StopIteration(self.resp_etag)
         if len(self.buffer):
             chunk = self.buffer[:PACKET_LENGTH]
             self.buffer[:PACKET_LENGTH] = b''

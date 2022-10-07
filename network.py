@@ -73,7 +73,7 @@ class Network:
         self.esp.wifi_set_passphrase(self.ssid, self.password)
         self.set_state('JOINING')
 
-    def connect(self, hostname, port=None, ssl=True):
+    def connect(self, host, port=None, ssl=True):
         if self.state != 'ONLINE':
             print('Cannot connect() while network is {self.state}.')
             return
@@ -87,10 +87,10 @@ class Network:
 
         port = port or (443 if ssl else 80)
         mode = self.esp.TLS_MODE if ssl else self.esp.TCP_MODE
-        utils.log(f'Connecting to {hostname} port {port}')
+        utils.log(f'Connecting to {host} port {port}')
         try:
-            # NOTE: hostname must be str, not bytes!
-            self.esp.socket_open(self.socket, hostname, port, mode)
+            # NOTE: host must be str, not bytes!
+            self.esp.socket_open(self.socket, host, port, mode)
             if self.esp.socket_connected(self.socket):
                 self.set_state('CONNECTED')
         except Exception as e:

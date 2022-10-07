@@ -79,11 +79,11 @@ class FakeEsp:
         self._sockets[sid] = None
         return sid
 
-    def socket_open(self, sid, hostname, port, mode):
-        sock = socket.create_connection((hostname, port), 2)
+    def socket_open(self, sid, host, port, mode):
+        sock = socket.create_connection((host, port), 2)
         if mode == self.TLS_MODE:
             context = create_ssl_context()
-            sock = context.wrap_socket(sock, server_hostname=hostname)
+            sock = context.wrap_socket(sock, server_hostname=host)
         self._sockets[sid] = sock
 
     def socket_connected(self, sid):

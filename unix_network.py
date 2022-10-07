@@ -44,13 +44,13 @@ class UnixNetwork:
             elif ssid == self.ssid and password == self.password:
                 self.wifi_connect_time = now + self.wifi_connect_delay
 
-    def connect(self, hostname, port=None, ssl=True):
+    def connect(self, host, port=None, ssl=True):
         port = port or (443 if ssl else 80)
-        print(f'Connecting to', hostname, 'port', port)
-        sock = socket.create_connection((hostname, port))
+        print(f'Connecting to', host, 'port', port)
+        sock = socket.create_connection((host, port))
         if ssl:
             context = create_ssl_context()
-            sock = context.wrap_socket(sock, server_hostname=hostname)
+            sock = context.wrap_socket(sock, server_hostname=host)
         self.socket = sock
         self.set_state('CONNECTED')
 

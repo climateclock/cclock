@@ -63,7 +63,8 @@ class SoftwareUpdater:
             self.fetcher.go(self.api_url +
                 f'?p=ac&mac={self.net.mac_address}&up={fc.uptime()}' +
                 f'&mem={utils.min_mem}&disk={fs.free()}&fps={fc.fps:.1f}' +
-                f'&v={v}&vp={vp}&fv={fv}&t={now}&af={afetch}&if={ifetch}')
+                f'&v={v}&vp={vp}&fv={fv}&t={now}&af={afetch}&if={ifetch}',
+                prefs.get('api_etag'))
             self.step = self.api_fetch_step
 
     def api_fetch_step(self):
@@ -74,32 +75,35 @@ class SoftwareUpdater:
                     self.api_file = fs.open('/data/clock.json.new', 'wb')
                 self.api_file.write(data)
             return
-        except Exception as e:
+        except Exception as error:
             self.net.close()
             if self.api_file:
                 self.api_file.close()
                 self.api_file = None
 
-            fetch_error = None
-            if isinstance(e, StopIteration):
-                try:
-                    with fs.open('/data/clock.json.new') as api_file:
-                        json.load(api_file)
-                except Exception as e:
-                    fetch_error = e
-            else:
-                fetch_error = e
-            if fetch_error:
-                utils.report_error(fetch_error, 'API fetch failed')
-                # Continue with software update anyway
-                self.fetcher.go(self.update_url)
-                self.step = self.index_fetch_step
-                return
+            received_new_file = False
+            if isinstance(error, StopIteration):
+                if error.value == 304:
+                    error = None  # treat 304 Not Modified as success (no error)
+                else:
+                    try:
+                        with fs.open('/data/clock.json.new') as api_file:
+                            json.load(api_file)
+                        received_new_file = True
+                        prefs.set('api_etag', error.value or '')
+                        error = None
+                    except Exception as e:
+                        error = e
 
-        fs.move('/data/clock.json.new', '/data/clock.json')
-        utils.log(f'API file successfully fetched!')
-        self.api_fetched = cctime.get_millis()
-        self.clock_mode.load_definition()
+            if error:
+                utils.report_error(error, 'API fetch failed')
+            else:
+                utils.log(f'API file successfully fetched!')
+                self.api_fetched = cctime.get_millis()
+
+        if received_new_file:
+            fs.move('/data/clock.json.new', '/data/clock.json')
+            self.clock_mode.load_definition()
 
         self.fetcher.go(self.update_url)
         self.step = self.index_fetch_step
