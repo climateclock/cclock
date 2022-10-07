@@ -13,7 +13,7 @@ import utils
 INITIAL_DELAY = 1000  # wait this long after booting up
 WIFI_DELAY = 1000  # wait this long after joining Wi-Fi
 INTERVAL_AFTER_FAILURE = 30000  # try again after 30 seconds
-INTERVAL_AFTER_SUCCESS = 60 * 60 * 1000  # recheck for updates once an hour
+INTERVAL_AFTER_SUCCESS = 30 * 60 * 1000  # recheck for updates twice an hour
 
 
 class SoftwareUpdater:
@@ -171,6 +171,8 @@ class SoftwareUpdater:
             # Restart with the new version, unless the clock was just turned on.
             if self.app.frame_counter.uptime() > 900:
                 microcontroller.reset()
+            else:
+                utils.log('New version is ready to run.')
         self.retry_after(INTERVAL_AFTER_SUCCESS)
 
 
