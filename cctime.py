@@ -99,6 +99,8 @@ def ntp_sync(socklib, server):
             latency_millis = (recv_millis - send_millis)//2
             print(f'Got NTP time {ntp_millis} with latency {latency_millis}')
             set_millis(ntp_millis - latency_millis)
+    except Exception as e:
+        utils.report_error(e, 'Failed to get NTP time')
     finally:
         sock.close()
 
