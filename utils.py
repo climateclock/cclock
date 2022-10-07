@@ -16,7 +16,11 @@ if hasattr(gc, 'mem_free'):
         return gc.mem_free()
 
 
-def version_running():
+def version_num():
+    return int(sys.path[0][1:].split('.')[0].split('-')[0])
+
+
+def version_dir():
     return sys.path[0]
 
 

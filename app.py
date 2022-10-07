@@ -98,7 +98,7 @@ class FrameCounter:
         if now_sec > last_sec:
             print('|\n', end='')
             if now_sec % 10 == 0:
-                utils.log(f'Up {self.uptime()} s ({self.fps:.1f} fps) on {utils.version_running()}')
+                utils.log(f'Up {self.uptime()} s ({self.fps:.1f} fps) on {utils.version_dir()}')
         print('.', end='')
         self.last_tick = now
 

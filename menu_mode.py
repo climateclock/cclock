@@ -82,7 +82,7 @@ class MenuMode:
             ('System info', None, None, None, [
                 (f'Time', now, None, None, []),
                 (f'MAC ID', self.app.net.mac_address, None, None, []),
-                (f'Version', utils.version_running, None, None, []),
+                (f'Version', utils.version_dir, None, None, []),
                 (f'Versions present', versions_present, None, None, []),
                 (f'Last API fetch', lambda: cctime.millis_to_isoformat(
                     updater.api_fetched), None, None, []),

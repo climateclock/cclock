@@ -5,16 +5,15 @@ bitmap = displayio.Bitmap(192, 32, 16)
 import display
 display.init(bitmap)
 title_pi = display.get_pi(0x00, 0xff, 0x00)
-text_pi = display.get_pi(0x80, 0x80, 0x80)
+pi = display.get_pi(0x80, 0x80, 0x80)
 
 import microfont
-import sys
+import utils
 microfont.init()
-ver = sys.path[0].split('.')[0].split('-')[0]
 microfont.small.draw('ClimateClock.world', bitmap, 1, 0, title_pi)
-microfont.small.draw(f'Action Clock {ver}', bitmap, 1, 11, text_pi)
+microfont.small.draw(f'Action Clock {utils.version_num()}', bitmap, 1, 11, pi)
 w = microfont.small.measure('#ActInTime')
-microfont.small.draw('#ActInTime', bitmap, 192 - w, 0, text_pi)
+microfont.small.draw('#ActInTime', bitmap, 192 - w, 0, pi)
 display.send()
 
 #IMPORTS#

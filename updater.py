@@ -2,6 +2,7 @@ import cctime
 import fs
 import json
 from http_fetcher import HttpFetcher
+import microcontroller
 import os
 import prefs
 from unpacker import Unpacker
@@ -56,7 +57,7 @@ class SoftwareUpdater:
             self.net.join(prefs.get('wifi_ssid'), prefs.get('wifi_password'))
         if self.net.state == 'ONLINE' and self.net.state_elapsed() > WIFI_DELAY:
             fc = self.app.frame_counter
-            v = utils.version_running()
+            v = utils.version_dir()
             vp = ','.join(utils.versions_present())
             fv = os.uname().version.split()[0]
             now = cctime.millis_to_isoformat(cctime.get_millis())
@@ -140,12 +141,11 @@ class SoftwareUpdater:
 
         version = get_latest_enabled_version(self.index_packs)
         if version:
-            latest, url, dir_name = version
+            num, url, dir_name = version
             print(f'Latest enabled version is {dir_name} at {url}.')
             if fs.isfile(dir_name + '/@VALID'):
                 print(f'{dir_name} already exists and is valid.')
-                write_enabled_flags(self.index_packs)
-                self.retry_after(INTERVAL_AFTER_SUCCESS)
+                self.finish_update()
             else:
                 self.index_fetcher = None
                 self.unpacker = Unpacker(HttpFetcher(self.net, url))
@@ -162,8 +162,15 @@ class SoftwareUpdater:
             self.retry_after(INTERVAL_AFTER_FAILURE)
         else:
             if done:
-                write_enabled_flags(self.index_packs)
-                self.retry_after(INTERVAL_AFTER_SUCCESS)
+                self.finish_update()
+
+    def finish_update(self):
+        latest_num = write_enabled_flags(self.index_packs)
+        if latest_num > utils.version_num():
+            # Restart with the new version, unless the clock was just turned on.
+            if self.app.frame_counter.uptime() > 900:
+                microcontroller.reset()
+        self.retry_after(INTERVAL_AFTER_SUCCESS)
 
 
 def get_latest_enabled_version(index_packs):
@@ -188,6 +195,7 @@ def get_latest_enabled_version(index_packs):
 
 
 def write_enabled_flags(index_packs):
+    latest_num = 0
     for pack_name, props in index_packs.items():
         enabled = props.get('enabled')
         pack_hash = props.get('hash', '')
@@ -197,5 +205,8 @@ def write_enabled_flags(index_packs):
             if enabled:
                 print('Enabled:', dir_name)
                 fs.write(dir_name + '/@ENABLED', b'')
+                num = int(pack_name[1:].split('-')[0])
+                latest_num = max(latest_num, num)
             else:
                 print('Disabled:', dir_name)
+    return latest_num
