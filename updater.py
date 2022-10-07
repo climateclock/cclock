@@ -207,8 +207,16 @@ def write_enabled_flags(index_packs):
                 print('Enabled:', dir_name)
                 with open(dir_name + '/@ENABLED', 'wb') as file:
                     pass
-                num = int(pack_name[1:].split('-')[0])
-                latest_num = max(latest_num, num)
+                usable = True
+                if fs.isfile(dir_name + '/@PATH'):
+                    with open(dir_name + '/@PATH') as file:
+                        for dir in file.readline().split():
+                            if not fs.isfile(dir + '/@VALID'):
+                                usable = False
+                if usable:
+                    num = int(pack_name[1:].split('-')[0])
+                    latest_num = max(latest_num, num)
             else:
                 print('Disabled:', dir_name)
+    print(f'Latest usable version: v{latest_num}')
     return latest_num
