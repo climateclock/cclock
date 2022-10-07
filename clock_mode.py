@@ -45,11 +45,11 @@ class ClockMode:
         try:
             self.load_path('/data/clock.json')
         except Exception as e:
-            utils.report_error(e, 'Could not load API file')
+            print(f'Could not load /data/clock.json: {e}')
             try:
                 self.load_path('/clock.json')
             except Exception as e:
-                utils.report_error(e, 'Could not load API file')
+                print(f'Could not load /clock.json: {e}')
 
     def load_path(self, path):
         with fs.open(path) as api_file:

@@ -22,7 +22,11 @@ def init():
     try:
         pairs.update(json.load(fs.open('/data/prefs.json')))
     except Exception as e:
-        print(f'Could not read prefs.json: {e}')
+        print(f'Could not load /data/prefs.json: {e}')
+        try:
+            pairs.update(json.load(fs.open('/prefs.json')))
+        except Exception as e:
+            print(f'Could not load /prefs.json: {e}')
         save()
 
 
