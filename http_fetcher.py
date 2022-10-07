@@ -11,15 +11,21 @@ PACKET_LENGTH = 1500 - 20 - 20  # 1500 - IP header (20) - TCP header (20)
 
 
 class HttpFetcher:
-    def __init__(self, net, url):
+    def __init__(self, net):
         self.net = net
-        self.url = url
-        self.ssl, self.hostname, self.path = utils.split_url(url)
-        self.silence_started = None
-
         self.buffer = bytearray()
-        # Calling read() returns anywhere from zero to PACKET_LENGTH bytes; a
-        # zero-byte result does not indicate EOF.  StopIteration indicates EOF.
+
+    def go(self, url):
+        self.ssl, self.hostname, self.path = utils.split_url(url)
+        if not self.hostname:
+            raise ValueError(f'Invalid URL: {url}')
+        self.start()
+
+    def start(self):
+        self.buffer[:] = b''
+        self.silence_started = None
+        # Calling read() returns anywhere from zero to PACKET_LENGTH bytes, or
+        # None; b'' or None does not indicate EOF.  StopIteration indicates EOF.
         self.read = self.connect_read
 
     def check_silence_timeout(self, is_silent):
@@ -38,8 +44,6 @@ class HttpFetcher:
 
     def connect_read(self):
         self.net.step()
-        if not self.hostname:
-            raise ValueError(f'Invalid URL: {self.url}')
         if self.net.state == 'OFFLINE':
             self.net.join(prefs.get('wifi_ssid'), prefs.get('wifi_password'))
         elif self.net.state == 'ONLINE':
@@ -54,7 +58,6 @@ class HttpFetcher:
                 b'\r\n'
             )
             self.read = self.http_status_read
-        return b''
 
     def http_status_read(self):
         self.net.step()
@@ -62,37 +65,56 @@ class HttpFetcher:
         self.buffer.extend(data)
         crlf = self.buffer.find(b'\r\n')
         self.check_silence_timeout(crlf < 0)
-        if crlf < 0:
-            return b''
-        words = bytes(self.buffer[:crlf]).split(b' ')
-        if words[1] != b'200':
-            raise ValueError(f'HTTP status {words[1]}')
-        self.read = self.http_headers_read
-        return self.read(True)
+        if crlf > 0:
+            status = bytes(self.buffer[:crlf]).split(b' ')[1]
+            self.buffer[:crlf + 2] = b''
+            if status != b'200' and status != b'301' and status != b'302':
+                raise ValueError(f'HTTP status {status}')
+            self.content_length = -1
+            self.read = self.http_headers_read
 
-    def http_headers_read(self, skip_receive=False):
+    def http_headers_read(self):
         self.net.step()
-        if not skip_receive:
+        crlf = self.buffer.find(b'\r\n')
+        self.check_silence_timeout(crlf < 0)
+        if crlf > 0:
+            colon = self.buffer.find(b':')
+            if 0 < colon < crlf:
+                key = self.buffer[:colon].lower()
+                value = self.buffer[colon + 1:crlf].strip()
+                if key == b'location':
+                    self.net.close()
+                    loc = utils.to_str(bytes(value))
+                    utils.log(f'Redirection: {loc}')
+                    if loc.startswith('http:') or loc.startswith('https:'):
+                        self.go(loc)
+                    elif loc.startswith('/'):
+                        self.path = loc
+                        self.start()
+                    else:
+                        self.path = self.path.rsplit('/', 1)[0] + '/' + loc
+                        self.start()
+                if key == b'content-length':
+                    self.content_length = int(value)
+            self.buffer[:crlf + 2] = b''
+        elif crlf == 0:
+            self.buffer[:2] = b''
+            self.received_length = 0
+            self.read = self.content_read
+        else:
             self.buffer.extend(self.net.receive(PACKET_LENGTH))
-        double_crlf = self.buffer.find(b'\r\n\r\n')
-        self.check_silence_timeout(double_crlf < 0)
-        if double_crlf < 0:
-            # Keep the last 4 bytes so we don't miss the b'\r\n\r\n' sequence.
-            self.buffer[:-4] = b''
-            return b''
-        self.buffer[:double_crlf + 4] = b''
-        self.read = self.content_read
-        return self.read()
 
     def content_read(self):
         self.net.step()
+        if (self.received_length >= self.content_length > 0 or  # file completed
+            self.net.state != 'CONNECTED'):  # server closed the connection
+            raise StopIteration
         if len(self.buffer):
             chunk = self.buffer[:PACKET_LENGTH]
             self.buffer[:PACKET_LENGTH] = b''
+            self.received_length += len(chunk)
             return bytes(chunk)
-        if self.net.state == 'CONNECTED':
-            chunk = self.net.receive(PACKET_LENGTH)
-            self.check_silence_timeout(len(chunk) == 0)
-            return chunk
-        else:  # server closed the connection
-            raise StopIteration
+        chunk = self.net.receive(PACKET_LENGTH)
+        self.received_length += len(chunk)
+        self.check_silence_timeout(len(chunk) == 0)
+        return chunk

@@ -21,14 +21,13 @@ class SoftwareUpdater:
         self.app = app
         self.net = net
         self.clock_mode = clock_mode
+        self.fetcher = HttpFetcher(net)
 
         self.api_url = prefs.get('api_url')
-        self.api_fetcher = None
         self.api_file = None
         self.api_fetched = None
 
         self.update_url = prefs.get('update_url')
-        self.index_fetcher = None
         self.index_file = None
         self.index_name = None
         self.index_updated = None
@@ -40,8 +39,6 @@ class SoftwareUpdater:
 
     def retry_after(self, delay):
         self.net.close()
-        self.api_fetcher = None
-        self.index_fetcher = None
         self.unpacker = None
         self.next_check = cctime.monotonic_millis() + delay
         self.step = self.wait_step
@@ -63,7 +60,7 @@ class SoftwareUpdater:
             now = cctime.millis_to_isoformat(cctime.get_millis())
             afetch = cctime.millis_to_isoformat(self.api_fetched) or ''
             ifetch = cctime.millis_to_isoformat(self.index_fetched) or ''
-            self.api_fetcher = HttpFetcher(self.net, self.api_url +
+            self.fetcher.go(self.api_url +
                 f'?p=ac&mac={self.net.mac_address}&up={fc.uptime()}' +
                 f'&mem={utils.min_mem}&disk={fs.free()}&fps={fc.fps:.1f}' +
                 f'&v={v}&vp={vp}&fv={fv}&t={now}&af={afetch}&if={ifetch}')
@@ -71,14 +68,14 @@ class SoftwareUpdater:
 
     def api_fetch_step(self):
         try:
-            data = self.api_fetcher.read()
+            data = self.fetcher.read()
             if data:
                 if not self.api_file:
                     self.api_file = fs.open('/data/clock.json.new', 'wb')
                 self.api_file.write(data)
             return
         except Exception as e:
-            self.api_fetcher = None
+            self.net.close()
             if self.api_file:
                 self.api_file.close()
                 self.api_file = None
@@ -94,9 +91,8 @@ class SoftwareUpdater:
                 fetch_error = e
             if fetch_error:
                 utils.report_error(fetch_error, 'API fetch failed')
-                self.net.close()
                 # Continue with software update anyway
-                self.index_fetcher = HttpFetcher(self.net, self.update_url)
+                self.fetcher.go(self.update_url)
                 self.step = self.index_fetch_step
                 return
 
@@ -105,22 +101,23 @@ class SoftwareUpdater:
         self.api_fetched = cctime.get_millis()
         self.clock_mode.load_definition()
 
-        self.index_fetcher = HttpFetcher(self.net, self.update_url)
+        self.fetcher.go(self.update_url)
         self.step = self.index_fetch_step
 
     def index_fetch_step(self):
         try:
-            data = self.index_fetcher.read()
+            data = self.fetcher.read()
             if data:
                 if not self.index_file:
                     self.index_file = fs.open('/data/packs.json', 'wb')
                 self.index_file.write(data)
             return
         except Exception as e:
-            self.index_fetcher = None
+            self.net.close()
             if self.index_file:
                 self.index_file.close()
                 self.index_file = None
+
             if not isinstance(e, StopIteration):
                 utils.report_error(e, 'Index fetch aborted')
                 self.retry_after(INTERVAL_AFTER_FAILURE)
@@ -147,8 +144,8 @@ class SoftwareUpdater:
                 print(f'{dir_name} already exists and is valid.')
                 self.finish_update()
             else:
-                self.index_fetcher = None
-                self.unpacker = Unpacker(HttpFetcher(self.net, url))
+                self.fetcher.go(url)
+                self.unpacker = Unpacker(self.fetcher)
                 self.step = self.pack_fetch_step
         else:
             print(f'No enabled versions found.')

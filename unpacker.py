@@ -32,7 +32,7 @@ class Unpacker:
     def extend_buffer(self, target_length):
         if len(self.buffer) < target_length:
             count = max(MAX_CHUNK_LENGTH, target_length - len(self.buffer))
-            self.buffer.extend(self.stream.read())
+            self.buffer.extend(self.stream.read() or b'')
         return len(self.buffer) >= target_length
 
     def magic_step(self):
