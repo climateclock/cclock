@@ -1,6 +1,5 @@
 import gc
 import micropython
-import os
 import sys
 
 debug = False

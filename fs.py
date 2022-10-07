@@ -1,42 +1,29 @@
 import os
 
-# root is absolute and always starts with '/' unless it is empty
-root = ''
-open_file = open
+builtin_open = open
 
 
-def resolve(relpath):
-    return root + '/' + relpath.strip('/')
+def open(path, mode='rb'):
+    make_parent(path)
+    return builtin_open(path, mode)
 
 
-def open(relpath, mode='rb'):
-    make_parent(relpath)
-    return open_file(resolve(relpath), mode)
+def move(path, newpath):
+    destroy(newpath)
+    os.rename(path, newpath)
 
 
-def write(relpath, content, mode='wb'):
-    make_parent(relpath)
-    with open(relpath, mode) as file:
-        file.write(content)
-
-
-def move(relpath, newrelpath):
-    destroy(newrelpath)
-    os.rename(resolve(relpath), resolve(newrelpath))
-
-
-def destroy(relpath):  # removes a file or directory and all descendants
-    path = resolve(relpath)
-    if isfile(relpath):
-        os.remove(path)
-    if isdir(relpath):
+def destroy(path):  # removes a file or directory and all descendants
+    if isdir(path):
         for file in os.listdir(path):
-            destroy(relpath + '/' + file)
+            destroy(path + '/' + file)
         os.rmdir(path)
+    if isfile(path):
+        os.remove(path)
 
 
 def free():
-    _, frsize, _, _, bfree = os.statvfs(resolve(''))[:5]
+    _, frsize, _, _, bfree = os.statvfs('.')[:5]
     return frsize*bfree
 
 
@@ -44,28 +31,27 @@ def listdir():  # accept no arguments; only allow listing of /
     return os.listdir()
 
 
-def isdir(relpath):
-    return get_mode(relpath) & 0x4000
+def isdir(path):
+    return get_mode(path) & 0x4000
 
 
-def isfile(relpath):
-    return get_mode(relpath) & 0x8000
+def isfile(path):
+    return get_mode(path) & 0x8000
 
 
-def get_mode(relpath):
+def get_mode(path):
     try:
-        return os.stat(resolve(relpath))[0]
+        return os.stat(path)[0]
     except:
         return 0
 
 
-def make_parent(relpath):
-    parts = relpath.strip('/').split('/')
-    relpath = ''
-    for part in parts:
-        path = resolve(relpath)
-        if isfile(relpath):
+def make_parent(path):
+    parts = path.strip('/').split('/')
+    path = parts[0]
+    for part in parts[1:]:
+        if isfile(path):
             os.remove(path)
-        if not isdir(relpath):
+        if not isdir(path):
             os.mkdir(path)
-        relpath += '/' + part
+        path += '/' + part

@@ -72,7 +72,7 @@ class SoftwareUpdater:
             data = self.fetcher.read()
             if data:
                 if not self.api_file:
-                    self.api_file = fs.open('/data/clock.json.new', 'wb')
+                    self.api_file = fs.open('data/clock.json.new', 'wb')
                 self.api_file.write(data)
             return
         except Exception as error:
@@ -87,7 +87,7 @@ class SoftwareUpdater:
                     error = None  # treat 304 Not Modified as success (no error)
                 else:
                     try:
-                        with fs.open('/data/clock.json.new') as api_file:
+                        with fs.open('data/clock.json.new') as api_file:
                             json.load(api_file)
                         received_new_file = True
                         prefs.set('api_etag', error.value or '')
@@ -102,7 +102,7 @@ class SoftwareUpdater:
                 self.api_fetched = cctime.get_millis()
 
         if received_new_file:
-            fs.move('/data/clock.json.new', '/data/clock.json')
+            fs.move('data/clock.json.new', 'data/clock.json')
             self.clock_mode.load_definition()
 
         self.fetcher.go(self.update_url)
@@ -113,7 +113,7 @@ class SoftwareUpdater:
             data = self.fetcher.read()
             if data:
                 if not self.index_file:
-                    self.index_file = fs.open('/data/packs.json', 'wb')
+                    self.index_file = fs.open('data/packs.json', 'wb')
                 self.index_file.write(data)
             return
         except Exception as e:
@@ -130,7 +130,7 @@ class SoftwareUpdater:
         utils.log(f'Index file successfully fetched!')
         self.index_fetched = cctime.get_millis()
         try:
-            with fs.open('/data/packs.json') as index_file:
+            with fs.open('data/packs.json') as index_file:
                 pack_index = json.load(index_file)
             self.index_name = pack_index['name']
             self.index_updated = pack_index['updated']
@@ -205,7 +205,8 @@ def write_enabled_flags(index_packs):
             fs.destroy(dir_name + '/@ENABLED')
             if enabled:
                 print('Enabled:', dir_name)
-                fs.write(dir_name + '/@ENABLED', b'')
+                with open(dir_name + '/@ENABLED', 'wb') as file:
+                    pass
                 num = int(pack_name[1:].split('-')[0])
                 latest_num = max(latest_num, num)
             else:

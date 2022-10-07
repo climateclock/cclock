@@ -13,10 +13,6 @@ def init(path):
     format_exception = traceback.format_exception
     traceback.format_exception = lambda *args: ''.join(format_exception(*args))
 
-    # TODO: Remove fs, since we use the cwd now?
-    import fs
-    fs.root = '/tmp/cclock'
-
     import fake_cctime
     fake_cctime.install()
 

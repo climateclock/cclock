@@ -43,11 +43,11 @@ class ClockMode:
     def load_definition(self):
         utils.log()
         try:
-            self.load_path('/data/clock.json')
+            self.load_path('data/clock.json')
         except Exception as e:
             print(f'Could not load /data/clock.json: {e}')
             try:
-                self.load_path('/clock.json')
+                self.load_path('clock.json')
             except Exception as e:
                 print(f'Could not load /clock.json: {e}')
 
