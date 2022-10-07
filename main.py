@@ -8,7 +8,7 @@ import traceback
 # Directories containing software versions have names of the form:
 #     v<N>.<hash>, e.g. v2.68b329da9893e34099c7d8ad5cb9c940
 #         for a complete directory (all files in version N)
-#     v<N>-<M>.<hash>, e.g. v4-1.401b30e3b8b5d629635a5c613cdb7919
+#     v<N>-v<M>.<hash>, e.g. v4-v1.401b30e3b8b5d629635a5c613cdb7919
 #         for a patch directory (just files that differ from version M to N)
 #
 # In all distributions, a complete v0 directory will be present, and a

@@ -71,7 +71,7 @@ if [[ $parent_commit ]]; then
             rm $pack_dir/$file
         fi
     done
-    pack_name=$vname-${parent#v}
+    pack_name=$vname-${parent}
 else
     pack_name=$vname
 fi
