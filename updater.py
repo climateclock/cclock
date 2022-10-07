@@ -10,10 +10,11 @@ import utils
 
 
 # All durations are measured in milliseconds.
-INITIAL_DELAY = 1000  # wait this long after booting up
-WIFI_DELAY = 1000  # wait this long after joining Wi-Fi
-INTERVAL_AFTER_FAILURE = 30000  # try again after 30 seconds
-INTERVAL_AFTER_SUCCESS = 30 * 60 * 1000  # recheck for updates twice an hour
+INITIAL_DELAY = prefs.get_int('updater_initial_delay', 1000)
+WIFI_DELAY = prefs.get_int('updater_wifi_delay', 1000)
+FAILURE_DELAY = prefs.get_int('updater_failure_delay', 30 * 1000)
+SUCCESS_DELAY = prefs.get_int('updater_success_delay', 30 * 60 * 1000)
+MIN_RESTART_UPTIME = prefs.get_int('min_restart_uptime', 60 * 60 * 1000)
 
 
 class SoftwareUpdater:
@@ -124,7 +125,7 @@ class SoftwareUpdater:
 
             if not isinstance(e, StopIteration):
                 utils.report_error(e, 'Index fetch aborted')
-                self.retry_after(INTERVAL_AFTER_FAILURE)
+                self.retry_after(FAILURE_DELAY)
                 return
         # StopIteration means fetch was successfully completed
         utils.log(f'Index file successfully fetched!')
@@ -137,7 +138,7 @@ class SoftwareUpdater:
             self.index_packs = pack_index['packs']
         except Exception as e:
             utils.report_error(e, 'Unreadable index file')
-            self.retry_after(INTERVAL_AFTER_FAILURE)
+            self.retry_after(FAILURE_DELAY)
             return
 
         version = get_latest_enabled_version(self.index_packs)
@@ -153,14 +154,14 @@ class SoftwareUpdater:
                 self.step = self.pack_fetch_step
         else:
             print(f'No enabled versions found.')
-            self.retry_after(INTERVAL_AFTER_SUCCESS)
+            self.retry_after(SUCCESS_DELAY)
 
     def pack_fetch_step(self):
         try:
             done = self.unpacker.step()
         except Exception as e:
             utils.report_error(e, 'Pack fetch aborted')
-            self.retry_after(INTERVAL_AFTER_FAILURE)
+            self.retry_after(FAILURE_DELAY)
         else:
             if done:
                 self.finish_update()
@@ -168,12 +169,12 @@ class SoftwareUpdater:
     def finish_update(self):
         latest_num = write_enabled_flags(self.index_packs)
         if latest_num > utils.version_num():
-            # Restart with the new version, unless the clock was just turned on.
-            if self.app.frame_counter.uptime() > 900:
+            # Restart with the new version if the clock has been up long enough.
+            if self.app.frame_counter.uptime()*1000 > MIN_RESTART_UPTIME:
                 microcontroller.reset()
             else:
-                utils.log('New version is ready to run.')
-        self.retry_after(INTERVAL_AFTER_SUCCESS)
+                utils.log(f'New version v{latest_num} is ready to run.')
+        self.retry_after(SUCCESS_DELAY)
 
 
 def get_latest_enabled_version(index_packs):

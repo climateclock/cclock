@@ -14,6 +14,7 @@ DISK_CAPACITY = 2*1024*1024  # total flash disk space available
 MAX_ROOT_SIZE = 512*1024  # max allotted for root files and lib/ directory
 MAX_UNPACKED_SIZE = (DISK_CAPACITY - MAX_ROOT_SIZE) / 4
 
+
 class Unpacker:
     def __init__(self, stream):
         self.stream = stream
