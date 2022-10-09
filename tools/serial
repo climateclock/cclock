@@ -1,15 +1,22 @@
 #!/bin/bash
 
-if ! [ -c /dev/tty.usb* ]; then
-    echo -n 'Waiting for /dev/tty.usb* to appear..'
+if [ $(uname) = Linux ]; then
+    prefix=/dev/ttyACM
+else
+    prefix=/dev/tty.usb
+fi
+prefix=${CCLOCK_SERIAL_DEVICE_PREFIX:-$prefix}
+
+if ! [ -c "$prefix"* ]; then
+    echo -n "Waiting for $prefix* to appear.."
 fi
 
 while true; do
-    while ! [ -c /dev/tty.usb* ]; do
+    while ! [ -c "$prefix"* ]; do
         echo -n '.'
         sleep 0.05
     done
-    device=/dev/tty.usb*
+    device="$prefix"*
     cat <<EOF >/tmp/screenrc
 logfile flush 0
 defscrollback 10000

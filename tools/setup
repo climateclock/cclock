@@ -1,16 +1,23 @@
 #!/bin/bash
 
+# This setup script is written to be idempotent; please keep it that way.
+
 cd $(dirname "$0")
 cd ..
+
+echo "Setting up $(pwd) for Climate Clock development..."
+
+# Install Python dependencies.
 
 if ! [ -d env ]; then
     python3 -m venv env
 fi
 pip3 install -U -r requirements.txt
 
+# Get the mpy-cross compiler.  Binaries for many architectures are available at:
+# https://adafruit-circuit-python.s3.amazonaws.com/index.html?prefix=bin/mpy-cross/
+
 if ! [ -x env/bin/mpy-cross ]; then
-    # mpy-cross binaries for many architectures are available at
-    # https://adafruit-circuit-python.s3.amazonaws.com/index.html?prefix=bin/mpy-cross/
     if [ $(uname) = Linux ]; then
         curl -o env/bin/mpy-cross https://adafruit-circuit-python.s3.amazonaws.com/bin/mpy-cross/mpy-cross.static-amd64-linux-8.0.0-beta.0-22-g3ba385ff5
         chmod 755 env/bin/mpy-cross
@@ -19,35 +26,37 @@ if ! [ -x env/bin/mpy-cross ]; then
         chmod 755 env/bin/mpy-cross
     else
         echo "Please find and install 'mpy-cross' for your platform."
-        echo "Be sure to get a version compatible with CircuitPython 8.0.0."
+        echo "Be sure to get the version for CircuitPython 8.0.0."
         echo
         echo "https://adafruit-circuit-python.s3.amazonaws.com/index.html?prefix=bin/mpy-cross/"
         exit 1
     fi
 fi
 
-if ! [ -d cache ]; then
-    mkdir cache
-fi
-
 # Grab a copy of the API file.
 
-curl -o $target/cache/clock.json https://api.climateclock.world/v1/clock
+[ -d cache ] || mkdir cache
+curl -o cache/clock.json https://api.climateclock.world/v1/clock
 
-# Clone the source code of some of the Python libraries,
-# at the exact versions used in the current firmware.uf2 file.
+# Clone the source code of some of the Python libraries at the exact versions
+# used in the current firmware.uf2 file.  This code isn't used any more; it's
+# just convenient to have around for reference.
 
 if ! [ -d Adafruit_CircuitPython_ESP32SPI ]; then
     git clone https://github.com/adafruit/Adafruit_CircuitPython_ESP32SPI
 fi
 cd Adafruit_CircuitPython_ESP32SPI
-git checkout 5.0.1
+git checkout -q 5.0.1
 cd ..
 
 if ! [ -d Adafruit_CircuitPython_MatrixPortal ]; then
     git clone https://github.com/adafruit/Adafruit_CircuitPython_MatrixPortal
 fi
 cd Adafruit_CircuitPython_MatrixPortal
-git checkout 3.0.10
+git checkout -q 3.0.10
 cd ..
 
+echo
+echo "Setup is complete.  Next, try 'tools/deploy -f -s' and then 'tools/sim',"
+echo "or see README.md for more detailed instructions."
+echo

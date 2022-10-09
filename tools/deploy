@@ -12,13 +12,20 @@ cd $(dirname "$0")
 source functions.sh
 cd ..
 
-drive=/Volumes/CIRCUITPY
+if [[ -d /Volumes ]]; then
+    drive=/Volumes/CIRCUITPY
+else
+    drive=/media/$USER/CIRCUITPY
+fi
+drive=${CCLOCK_TARGET_ROOT:-$drive}
+sim_root=${CCLOCK_SIMULATOR_ROOT:-/tmp/cclock}
+
 while [[ $1 = -* ]]; do
     [[ $1 = -d ]] && export CCLOCK_MEMORY_DEBUGGING=1
     [[ $1 = -f ]] && factory=yes
     [[ $1 = -h || $1 = --help ]] && help=yes
     [[ $1 = -p ]] && shift && wifi_password="$1"
-    [[ $1 = -s ]] && drive=/tmp/cclock && export CCLOCK_SIMULATOR_MODE=1
+    [[ $1 = -s ]] && drive="$sim_root" && export CCLOCK_SIMULATOR_MODE=1
     [[ $1 = -S ]] && shift && drive="$1" && export CCLOCK_SIMULATOR_MODE=1
     [[ $1 = -w ]] && shift && wifi_ssid="$1"
     shift || break
@@ -30,7 +37,8 @@ if [[ $help || ! $vname ]]; then
     cat <<EOF && exit 1
 Usage: $0 [-d] [-f] [-s] [-S <dir>] [-w <network> -p <password>] <vname>
 
-Deploys the code in the current directory to the attached CircuitPython device.
+Deploys the code in the current directory to the attached CircuitPython device
+at $drive.  (To change the target, set \$CCLOCK_TARGET_ROOT.)
 
 <vname> should be a version name in the form v1, v2, etc.
 
@@ -39,9 +47,9 @@ Deploys the code in the current directory to the attached CircuitPython device.
 -f factory-resets the device by wiping the flash disk, deploying v0, and
 installing clock.json (fetching an up-to-date copy from the API if possible).
 
--s deploys to a simulated filesystem at /tmp/cclock instead of a real device.
+-s deploys to a simulated filesystem at $sim_root instead of a real device.
 
--S deploys to a simulated filesystem at a specified directory.
+-S deploys to a simulated filesystem at the specified directory.
 
 -w and -p set the initial Wi-Fi network and password when factory-resetting.
 EOF

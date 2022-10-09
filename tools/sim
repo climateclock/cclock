@@ -4,6 +4,8 @@ import os
 import sys
 
 root = os.environ.get('CCLOCK_SIMULATOR_ROOT', '/tmp/cclock')
+if not os.path.isdir(root):
+    raise SystemExit(f"{root} not found; try doing 'tools/deploy -f -s' first.")
 
 # All times on the board are in UTC.
 os.environ['TZ'] = 'UTC'
