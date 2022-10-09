@@ -15,7 +15,7 @@ Palette = namedtuple('Palette', ('primary',))
 Item = namedtuple('Item', ('pub_millis', 'headline', 'source'))
 Timer = namedtuple('Timer', ('id', 'type', 'flavor', 'labels', 'ref_millis'))
 Newsfeed = namedtuple('Newsfeed', ('id', 'type', 'flavor', 'labels', 'items'))
-Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'initial', 'ref_millis', 'growth', 'rate', 'unit_labels', 'decimals', 'scale'))
+Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'initial', 'ref_millis', 'growth', 'rate', 'decimals', 'scale', 'shift', 'unit_labels'))
 Defn = namedtuple('Defn', ('config', 'module_dict', 'modules'))
 
 
@@ -88,25 +88,38 @@ def load_item(data):
 
 
 def load_value(id, data):
-    res = data.get("resolution") or 1
-    decimals = 0
+    decimals = data.get("decimals")
     scale = 1
-    # Convert the resolution field to some useful values.
-    while res < 0.9:  # allow for precision error in CircuitPython floats
-        res, decimals, scale = res * 10, decimals + 1, scale * 10
+    if decimals is None:
+        res = data.get("resolution") or 1
+        decimals = 0
+        while res < 0.9:  # allow for precision error in CircuitPython floats
+            res, decimals, scale = res * 10, decimals + 1, scale * 10
+
+    initial = data.get("shifted_initial")
+    if initial is not None:
+        initial = int(initial)  # can be a bigint
+    else:
+        initial = data.get("initial") or 0
+    rate = data.get("shifted_rate")
+    if rate is not None:
+        rate = int(rate)  # can be a bigint
+    else:
+        rate = data.get("rate") or 0
 
     return Value(
         id,
         data.get("type"),
         data.get("flavor"),
         sorted_by_length(data.get("labels")),
-        data.get("initial") or 0,
+        initial,
         cctime.try_isoformat_to_millis(data, "timestamp"),
         data.get("growth") or "linear",
-        data.get("rate") or 0,
-        sorted_by_length(data.get("unit_labels")),
-        decimals,  # number of decimal places
-        scale  # scaling factor as a bigint
+        rate,
+        decimals,
+        scale,
+        data.get("shift") or 0,
+        sorted_by_length(data.get("unit_labels"))
     )
 
 

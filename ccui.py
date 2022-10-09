@@ -4,6 +4,7 @@ import cctime
 from displayio import Bitmap
 import math
 from microfont import large, small
+import time
 
 
 def calc_countdown(deadline_module, now_millis):
@@ -13,7 +14,8 @@ def calc_countdown(deadline_module, now_millis):
     if next_anniversary < now:
         next_anniversary = (now[0] + 1,) + deadline[1:]
     y = deadline[0] - next_anniversary[0]
-    t = (cctime.tm_to_millis(next_anniversary) - now_millis)//1000
+    # When showing a countdown, round up to the next highest whole second.
+    t = (cctime.tm_to_millis(next_anniversary) - now_millis + 999)//1000
     s, t = t % 60, t // 60
     m, t = t % 60, t // 60
     h, d = t % 24, t // 24
@@ -32,8 +34,16 @@ def to_bigint(f, scale):
 
 
 def format_value(module, now_millis):
-    elapsed = now_millis - module.ref_millis
+    elapsed = now_millis - module.ref_millis  # integer
     if module.growth == 'linear':
+        if module.shift > 0:  # calculate entirely in bigints
+            value = module.initial + module.rate * elapsed // 1000
+            str_value = '0'*module.shift + str(abs(value))
+            neg = '-' if value < 0 else ''
+            whole_part = str_value[:-module.shift].lstrip('0')
+            fractional_part = str_value[-module.shift:][:module.decimals]
+            return neg + whole_part + '.' + fractional_part
+
         scale = module.scale * 10000000  # 22 bits = about 7 decimal places
         decimals = module.decimals + 7
 
