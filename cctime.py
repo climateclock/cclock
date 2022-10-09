@@ -73,10 +73,7 @@ def rtc_sync():
             ref_millis += rtc_sec * 1000 - now_millis
             print('>', end='')
         elif now_sec > rtc_sec:
-            # To prevent stuttering that would appear if the clock skips back
-            # repeatedly across a second boundary, rewind by an extra half-frame
-            # interval when rewinding the clock.
-            ref_millis -= now_millis - (rtc_sec + 1) * 1000 + 30
+            ref_millis -= now_millis - (rtc_sec + 1) * 1000
             print('<', end='')
 
 
