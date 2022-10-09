@@ -3,16 +3,18 @@
 import os
 import sys
 
+root = os.environ.get('CCLOCK_SIMULATOR_ROOT', '/tmp/cclock')
+
 # All times on the board are in UTC.
 os.environ['TZ'] = 'UTC'
 
 # simulator_init.py installs the simulator monkey-patches.
 os.environ['CCLOCK_SIMULATOR_PATH'] = os.getcwd() + '/simulator'
-with open('/tmp/cclock/simulator_init.py', 'w') as opt:
+with open(root + '/simulator_init.py', 'w') as opt:
     with open('simulator/simulator_init.py') as ipt:
         opt.write(ipt.read())
 
 # Off we go!
-os.chdir('/tmp/cclock')
+os.chdir(root)
 sys.path = ['.'] + sys.path
 import main

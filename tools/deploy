@@ -12,12 +12,14 @@ cd $(dirname "$0")
 source functions.sh
 cd ..
 
+drive=/Volumes/CIRCUITPY
 while [[ $1 = -* ]]; do
     [[ $1 = -d ]] && export CCLOCK_MEMORY_DEBUGGING=1
     [[ $1 = -f ]] && factory=yes
     [[ $1 = -h || $1 = --help ]] && help=yes
     [[ $1 = -p ]] && shift && wifi_password="$1"
-    [[ $1 = -s ]] && export CCLOCK_SIMULATOR_MODE=1
+    [[ $1 = -s ]] && drive=/tmp/cclock && export CCLOCK_SIMULATOR_MODE=1
+    [[ $1 = -S ]] && shift && drive="$1" && export CCLOCK_SIMULATOR_MODE=1
     [[ $1 = -w ]] && shift && wifi_ssid="$1"
     shift || break
 done
@@ -26,7 +28,7 @@ vname="$1"
 
 if [[ $help || ! $vname ]]; then
     cat <<EOF && exit 1
-Usage: $0 [-d] [-f] [-s] [-w <network> -p <password>] <vname>
+Usage: $0 [-d] [-f] [-s] [-S <dir>] [-w <network> -p <password>] <vname>
 
 Deploys the code in the current directory to the attached CircuitPython device.
 
@@ -38,6 +40,8 @@ Deploys the code in the current directory to the attached CircuitPython device.
 installing clock.json (fetching an up-to-date copy from the API if possible).
 
 -s deploys to a simulated filesystem at /tmp/cclock instead of a real device.
+
+-S deploys to a simulated filesystem at a specified directory.
 
 -w and -p set the initial Wi-Fi network and password when factory-resetting.
 EOF
@@ -54,8 +58,7 @@ for name in os.listdir():
         compile(open(name).read(), name, 'exec')
 EOF
 
-drive=/Volumes/CIRCUITPY
-[[ $CCLOCK_SIMULATOR_MODE ]] && mkdir -p /tmp/cclock && drive=/tmp/cclock
+[[ $CCLOCK_SIMULATOR_MODE ]] && mkdir -p "$drive"
 
 if [[ ! -d $drive ]] || ! touch "$drive/test" 2>/dev/null; then
     echo -n "Waiting for $drive to be writable.."
