@@ -11,7 +11,7 @@ import microfont
 import utils
 microfont.init()
 microfont.small.draw('ClimateClock.world', bitmap, 1, 0, title_pi)
-microfont.small.draw(f'Action Clock {utils.version_num()}', bitmap, 1, 11, pi)
+microfont.small.draw(f'Action Clock v{utils.version_num()}', bitmap, 1, 11, pi)
 w = microfont.small.measure('#ActInTime')
 microfont.small.draw('#ActInTime', bitmap, 192 - w, 0, pi)
 display.send()
