@@ -22,42 +22,17 @@ def calc_countdown(deadline_module, now_millis):
     return y, d, h, m, s
 
 
-def to_bigint(f, scale):
-    mantissa, exponent = math.frexp(f)
-    # CircuitPython floats have 22 bits of mantissa
-    scaled = int(mantissa * (1 << 22)) * scale
-    if exponent > 0:
-        scaled = scaled * (1 << exponent)
-    else:
-        scaled = scaled // (1 << -exponent)
-    return scaled // (1 << 22)
-
-
 def format_value(module, now_millis):
     elapsed = now_millis - module.ref_millis  # integer
     if module.growth == 'linear':
-        if module.shift > 0:  # calculate entirely in bigints
-            value = module.initial + module.rate * elapsed // 1000
-            str_value = '0'*module.shift + str(abs(value))
-            neg = '-' if value < 0 else ''
-            whole_part = str_value[:-module.shift].lstrip('0')
-            fractional_part = str_value[-module.shift:][:module.decimals]
-            return neg + whole_part + '.' + fractional_part
-
-        scale = module.scale * 10000000  # 22 bits = about 7 decimal places
-        decimals = module.decimals + 7
-
-        scaled_initial = to_bigint(module.initial, scale)
-        scaled_rate = to_bigint(module.rate, scale)
-        scaled_value = scaled_initial + scaled_rate * elapsed // 1000
-        str_value = str(scaled_value)
-        if len(str_value) > decimals:
-            whole_part = str_value[:-decimals]
-        else:
-            whole_part = '0'
-            str_value = str(scaled_value + scale)
-        fractional_part = str_value[-decimals:-7]
-        return whole_part + '.' + fractional_part
+        value = module.initial + module.rate * elapsed // 1000
+        value += module.bias if value > 0 else -module.bias  # proper rounding
+        str_value = '0'*module.shift + str(abs(value))
+        # ccapi.load_value guarantees that shift > decimals.
+        negative_sign = '-' if value < 0 else ''
+        whole_part = str_value[:-module.shift].lstrip('0')
+        fractional_part = str_value[-module.shift:][:module.decimals]
+        return negative_sign + whole_part + '.' + fractional_part
     return ''
 
 

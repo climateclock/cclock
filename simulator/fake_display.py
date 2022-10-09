@@ -12,12 +12,11 @@ def install():
 
 
 def init(bitmap):
+    prefs.init()
     parser = argparse.ArgumentParser()
     parser.add_argument('-x', '--left', default=None, type=int)
     parser.add_argument('-y', '--top', default=None, type=int)
     parser.add_argument('-s', '--scale', default=8, type=int)
-
-    prefs.init()
     args = parser.parse_args()
     fake_display = FakeDisplay(
         bitmap, 20, display.BIT_DEPTH,

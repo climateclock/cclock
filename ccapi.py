@@ -15,7 +15,7 @@ Palette = namedtuple('Palette', ('primary',))
 Item = namedtuple('Item', ('pub_millis', 'headline', 'source'))
 Timer = namedtuple('Timer', ('id', 'type', 'flavor', 'labels', 'ref_millis'))
 Newsfeed = namedtuple('Newsfeed', ('id', 'type', 'flavor', 'labels', 'items'))
-Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'initial', 'ref_millis', 'growth', 'rate', 'decimals', 'scale', 'shift', 'unit_labels'))
+Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'initial', 'ref_millis', 'growth', 'rate', 'decimals', 'shift', 'bias', 'unit_labels'))
 Defn = namedtuple('Defn', ('config', 'module_dict', 'modules'))
 
 
@@ -89,23 +89,42 @@ def load_item(data):
 
 def load_value(id, data):
     decimals = data.get("decimals")
-    scale = 1
     if decimals is None:
         res = data.get("resolution") or 1
         decimals = 0
         while res < 0.9:  # allow for precision error in CircuitPython floats
-            res, decimals, scale = res * 10, decimals + 1, scale * 10
+            res, decimals = res * 10, decimals + 1
 
     initial = data.get("shifted_initial")
-    if initial is not None:
-        initial = int(initial)  # can be a bigint
-    else:
-        initial = data.get("initial") or 0
     rate = data.get("shifted_rate")
-    if rate is not None:
-        rate = int(rate)  # can be a bigint
-    else:
+    shift = data.get("shift") or 0
+    if initial is not None and rate is not None:  # treat these as bigints
+        initial = int(initial)
+        rate = int(rate)
+    else:  # fall back to the old API, with floats
+        initial = data.get("initial") or 0
         rate = data.get("rate") or 0
+        initial_sign = -1 if initial < 0 else 1
+        rate_sign = -1 if rate < 0 else 1
+        initial = abs(initial)
+        rate = abs(rate)
+        # CircuitPython only has single-precision floats with 22 bits of
+        # precision, which is about 6.5 decimal places.
+        while 0 < initial < 10000000 or 0 < rate < 10000000:
+            initial *= 10
+            rate *= 10
+            shift += 1
+        initial = int(initial) * initial_sign
+        rate = int(rate) * rate_sign
+
+    while shift <= decimals:
+        initial *= 10
+        rate *= 10
+        shift += 1
+    # The bias is the amount to add so that the last digit is rounded correctly.
+    bias = 5
+    for i in range(decimals + 1, shift):
+        bias *= 10
 
     return Value(
         id,
@@ -117,8 +136,8 @@ def load_value(id, data):
         data.get("growth") or "linear",
         rate,
         decimals,
-        scale,
-        data.get("shift") or 0,
+        shift,
+        bias,
         sorted_by_length(data.get("unit_labels"))
     )
 
