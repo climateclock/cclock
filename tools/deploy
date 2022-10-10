@@ -111,7 +111,7 @@ cp $pack_dir/* "$target"
 if [[ $factory ]]; then
     echo 'Installing factory copy of clock.json...'
     # Try to fetch it from the API, or use the file cached by tools/setup.
-    url=https://api.climateclock.world/v1/clock
+    url=https://api.climateclock.world/v2/portable_m4/clock.json
     curl -s -o "$drive"/clock.json --connect-timeout 2 $url || \
         cp cache/clock.json "$drive"/clock.json
 fi
