@@ -72,9 +72,7 @@ def load_newsfeed(id, data):
         data.get("type"),
         data.get("flavor"),
         sorted_by_length(data.get("labels")),
-        list(reversed(sorted(
-            [load_item(item) for item in data.get("newsfeed", [])]
-        )))
+        [load_item(item) for item in data.get("newsfeed", [])]
     )
 
 
