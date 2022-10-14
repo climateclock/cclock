@@ -154,7 +154,7 @@ class SoftwareUpdater:
                 self.step = self.pack_fetch_step
         else:
             print(f'No enabled versions found.')
-            self.retry_after(SUCCESS_DELAY)
+            self.finish_update()
 
     def pack_fetch_step(self):
         try:

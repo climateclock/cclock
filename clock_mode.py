@@ -113,10 +113,6 @@ class ClockMode:
 
         bitmap = self.app.bitmap
         bitmap.fill(0)
-        if not (self.deadline or self.lifelines):
-            pi = display.get_pi(0x80, 0x80, 0x80)
-            ssid = prefs.get('wifi_ssid')
-            small.draw(f'Joining Wi-Fi network "{ssid}"...', bitmap, 1, 0, pi)
         if self.deadline:
             ccui.render_deadline_module(
                 bitmap, 0, self.deadline,
