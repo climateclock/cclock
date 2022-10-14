@@ -1,5 +1,6 @@
 import gc
 import micropython
+import re
 import sys
 
 debug = False
@@ -92,10 +93,9 @@ def report_error(e, message):
 
 
 def split_url(url):
-    proto, rest = url.split(':', 1)
-    if proto == 'http' or proto == 'https':
-        host, path = rest.lstrip('/').split('/', 1)
-        return proto == 'https', host, '/' + path
+    match = re.match(r'^http(s?):/+([^/]+)(.*)', url)
+    if match:
+        return bool(match.group(1)), match.group(2), match.group(3) or '/'
     return None, None, None
 
 
