@@ -12,8 +12,8 @@ import utils
 # All durations are measured in milliseconds.
 INITIAL_DELAY = prefs.get_int('updater_initial_delay', 1000)
 WIFI_DELAY = prefs.get_int('updater_wifi_delay', 1000)
-FAILURE_DELAY = prefs.get_int('updater_failure_delay', 30 * 1000)
-SUCCESS_DELAY = prefs.get_int('updater_success_delay', 30 * 60 * 1000)
+FAILURE_DELAY = prefs.get_int('updater_failure_delay', 60 * 1000)
+SUCCESS_DELAY = prefs.get_int('updater_success_delay', 60 * 60 * 1000)
 MIN_RESTART_UPTIME = prefs.get_int('min_restart_uptime', 60 * 60 * 1000)
 
 
