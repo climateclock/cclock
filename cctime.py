@@ -29,9 +29,9 @@ def set_millis(millis):
     ref_millis = millis - monotonic_millis()
     if rtc_setter:
         # To set the RTC with sub-second precision, we wait until the
-        # transition to the next second to set it.  Allow an extra 50 ms to
+        # transition to the next second to set it.  Allow an extra 10 ms to
         # account for time passing while we're doing this work.
-        set_millis = ((millis + 50)//1000 + 1) * 1000
+        set_millis = ((millis + 10)//1000 + 1) * 1000
         tm = time.localtime(set_millis//1000)
         print('Setting RTC to', tm)
         sleep_millis(set_millis - millis)
@@ -94,8 +94,16 @@ def ntp_sync(socklib, server):
                 (packet[42] << 8) + packet[43]) - NTP_OFFSET
             ntp_millis = ntp_time * 1000 + (packet[44] * 1000 // 256)
             latency_millis = (recv_millis - send_millis)//2
-            print(f'Got NTP time {ntp_millis} with latency {latency_millis}')
-            set_millis(ntp_millis - latency_millis)
+            print(f'Got {server} time {ntp_millis}, latency {latency_millis}')
+
+            new_millis = ntp_millis - latency_millis
+            current_millis = get_millis()
+            if abs(new_millis - current_millis) < 1000:
+                # For small adjustments, average a few measurements over time.
+                delta_millis = (new_millis - current_millis) // 5
+                print(f'Adjusting clock toward {new_millis} by {delta_millis}')
+                new_millis = current_millis + delta_millis
+            set_millis(new_millis)
     except Exception as e:
         utils.report_error(e, 'Failed to get NTP time')
     finally:
