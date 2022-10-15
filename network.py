@@ -3,6 +3,7 @@ from adafruit_esp32spi import adafruit_esp32spi_socket as socklib
 import board
 import cctime
 import digitalio
+import prefs
 import utils
 
 
@@ -45,7 +46,8 @@ class Network:
         if self.state == 'JOINING':
             if self.esp.status == 3:
                 self.set_state('ONLINE')
-                cctime.ntp_sync(self.socklib, 'pool.ntp.org')
+                ntp_server = prefs.get('ntp_server')
+                cctime.ntp_sync(self.socklib, ntp_server)
 
             elif self.state_elapsed() > 20000:
                 utils.log(f'Could not join Wi-Fi network after 20 s; retrying.')
