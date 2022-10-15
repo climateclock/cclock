@@ -25,6 +25,12 @@ def init(bitmap):
     display.send = fake_display.send
 
 
+def linear_to_srgb(v):
+    if v <= 0.0031308:
+        return 12.92*v
+    return 1.055*(v ** (1/2.4)) - 0.055
+
+
 class FakeDisplay:
     def __init__(self, bitmap, fps, bit_depth, title='Frame',
             pad=4, scale=8, left=None, top=None):
@@ -87,8 +93,11 @@ class FakeDisplay:
             r = (r >> shift) / limit
             g = (g >> shift) / limit
             b = (b >> shift) / limit
-            # Apply gamma correction (LED values are linear due to PWM).
-            rgbs[pi] = int((r**0.5)*256), int((g**0.5)*256), int((b**0.5)*256)
+            # LED values are linear due to PWM; convert to sRGB for display.
+            r = linear_to_srgb(r)
+            g = linear_to_srgb(g)
+            b = linear_to_srgb(b)
+            rgbs[pi] = int(r*255.99), int(g*255.99), int(b*255.99)
         for y in range(self.bitmap.height):
             for x in range(self.bitmap.width):
                 si = y * self.bitmap.width + x

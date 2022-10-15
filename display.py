@@ -50,16 +50,28 @@ def send():
     fb_display.auto_refresh = False
 
 
-def apply_brightness(brightness, r, g, b):
+def srgb_to_linear(v):
+    if v <= 0.04045:
+        return v / 12.92
+    return ((v + 0.055) / 1.055)**2.4
+
+
+def get_shader_rgb(r, g, b, brightness):
     min_value = 0x100 >> BIT_DEPTH
     # When scaling down, don't scale down any nonzero values to zero.
     min_r = min_value if r else 0
     min_g = min_value if g else 0
     min_b = min_value if b else 0
+    r, g, b = r / 255.0, g / 255.0, b / 255.0
+    if prefs.get('colorspace') == 'SRGB':
+        r = srgb_to_linear(r)
+        g = srgb_to_linear(g)
+        b = srgb_to_linear(b)
+    factor = brightness * 255.99
     return (
-        max(min_r, int(brightness * r)),
-        max(min_g, int(brightness * g)),
-        max(min_b, int(brightness * b))
+        max(min_r, int(factor * r)),
+        max(min_g, int(factor * g)),
+        max(min_b, int(factor * b))
     )
 
 
@@ -68,7 +80,8 @@ def set_brightness(new_brightness):
     global brightness
     brightness = new_brightness
     for pi in range(len(colours)):
-        sr, sg, sb = apply_brightness(brightness, *colours[pi])
+        r, g, b = colours[pi]
+        sr, sg, sb = get_shader_rgb(r, g, b, brightness)
         shader[pi] = ((sr << 16) | (sg << 8) | sb)
 
 
@@ -80,7 +93,7 @@ def get_pi(r, g, b):
     if len(colours) < len(shader):
         pi = len(colours)
         colours.append((r, g, b))
-        sr, sg, sb = apply_brightness(brightness, r, g, b)
+        sr, sg, sb = get_shader_rgb(r, g, b, brightness)
         shader[pi] = ((sr << 16) | (sg << 8) | sb)
         return pi
     return 1  # no more palette slots available; just return 1
