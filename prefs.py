@@ -11,7 +11,7 @@ pairs = {
     'auto_cycling': None,
     'updates_paused_until': None,
     'updater_initial_delay': 1000,
-    'updater_wifi_delay': 1000,
+    'updater_wifi_delay': 3000,
     'updater_failure_delay': 60 * 1000,
     'updater_success_delay': 60 * 60 * 1000,
     'min_restart_uptime': 60 * 60 * 1000,

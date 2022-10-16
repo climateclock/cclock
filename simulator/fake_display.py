@@ -5,6 +5,7 @@ import display
 import fake_inputs
 import prefs
 from sdl2 import *
+import time
 
 
 def install():
@@ -107,6 +108,6 @@ class FakeDisplay:
             self.pixels_cptr, len(self.pixels))
         surface = SDL_GetWindowSurface(self.window)
         SDL_BlitScaled(self.canvas, None, surface, None)
-        cctime.sleep_millis(1000//self.fps)
+        time.sleep(1.0/self.fps)
         SDL_UpdateWindowSurface(self.window)
         self.flush_events()

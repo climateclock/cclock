@@ -6,6 +6,7 @@ import select
 import socket
 import ssl
 from ssl import _create_unverified_context as create_ssl_context
+import time
 import utils
 
 WIFI_JOIN_DELAY = 2000  # how long it takes to connect to the simulated AP
@@ -58,7 +59,7 @@ class FakeEsp:
         return self._status
 
     def reset(self):
-        cctime.sleep_millis(760)  # simulate the time it takes to reset
+        time.sleep(0.760)  # simulate the time it takes to reset
         self._client_credentials = None
         self._sockets = {}
         self._set_status(esp32spi.WL_IDLE_STATUS)

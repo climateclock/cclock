@@ -6,13 +6,19 @@ import utils
 # Offset of Unix epoch (1970-01-01) from NTP epoch (1900-01-01), in seconds
 NTP_OFFSET = 2208988800
 
+# Most time values are measured in milliseconds; the naming convention is
+# *_millis for timestamps, *_ms for durations.
+
 # CircuitPython cannot perform time calculations before 2000
 MIN_MILLIS = 946684800_000  # 2000-01-01 00:00:00 UTC represented as Unix time
 
-# Unix time in ms that corresponds to monotonic_ns() == 0
+# Unix time in milliseconds that corresponds to monotonic_ns() == 0
 ref_millis = MIN_MILLIS  # the board starts up with the clock set to 2000-01-01
 rtc_getter = None
 rtc_setter = None
+
+# Exponential moving average of the average NTP half-round-trip latency.
+avg_ntp_latency_ms = None
 
 
 def monotonic_millis():
@@ -23,19 +29,19 @@ def get_millis():
     return ref_millis + monotonic_millis()
 
 
-def set_millis(millis):
+def adjust_ms(delta_ms):
     global ref_millis
-    print(f'Setting cctime clock to {millis} ({millis_to_isoformat(millis)})')
-    ref_millis = millis - monotonic_millis()
+    print(f'Adjusting clock by {delta_ms} ms')
+    ref_millis += delta_ms
     if rtc_setter:
         # To set the RTC with sub-second precision, we wait until the
-        # transition to the next second to set it.  Allow an extra 10 ms to
+        # transition to the next second to set it, allowing an extra 20 ms to
         # account for time passing while we're doing this work.
-        set_millis = ((millis + 10)//1000 + 1) * 1000
-        tm = time.localtime(set_millis//1000)
-        print('Setting RTC to', tm)
-        sleep_millis(set_millis - millis)
+        target_seconds = (get_millis() + 20)//1000 + 1
+        tm = time.localtime(target_seconds)
+        sleep_until(target_seconds * 1000) 
         rtc_setter(tm)
+        print(f'RTC has been set to {tm}')
 
 
 def enable_rtc():
@@ -78,6 +84,8 @@ def rtc_sync():
 
 
 def ntp_sync(socklib, server):
+    global avg_ntp_latency_ms
+
     # Gets the time from an NTP server and sets the clock accordingly.
     sock = socklib.socket(type=socklib.SOCK_DGRAM)
     sock.settimeout(1)
@@ -86,24 +94,32 @@ def ntp_sync(socklib, server):
         sock.connect(addr, conntype=1)  # esp.UDP_MODE == 1
         packet = bytearray(48)
         packet[0] = 0b_00_100_011  # no leap second, NTP version 4, client mode
-        send_millis = monotonic_millis()
+        send_mono = monotonic_millis()
         sock.send(packet)
         if sock.recv_into(packet) == 48:
-            recv_millis = monotonic_millis()
+            recv_mono = monotonic_millis()
+
+            # We use recv_mono instead of get_millis() from this point forward,
+            # so that the measured delta is unaffected by computation time.
+            recv_millis = ref_millis + recv_mono
             ntp_time = ((packet[40] << 24) + (packet[41] << 16) +
                 (packet[42] << 8) + packet[43]) - NTP_OFFSET
             ntp_millis = ntp_time * 1000 + (packet[44] * 1000 // 256)
-            latency_millis = (recv_millis - send_millis)//2
-            print(f'Got {server} time {ntp_millis}, latency {latency_millis}')
+            latency_ms = (recv_mono - send_mono) // 2
+            print(f'At {recv_millis}, got {ntp_millis} from {server}, latency {latency_ms}')
 
-            new_millis = ntp_millis - latency_millis
-            current_millis = get_millis()
-            if abs(new_millis - current_millis) < 1000:
-                # For small adjustments, average a few measurements over time.
-                delta_millis = (new_millis - current_millis) // 5
-                print(f'Adjusting clock toward {new_millis} by {delta_millis}')
-                new_millis = current_millis + delta_millis
-            set_millis(new_millis)
+            if avg_ntp_latency_ms is None:
+                avg_ntp_latency_ms = latency_ms
+            delta_ms = ntp_millis - latency_ms - recv_millis
+            if abs(delta_ms) >= latency_ms * 4:
+                adjust_ms(delta_ms)
+            elif latency_ms <= avg_ntp_latency_ms:
+                # For small adjustments, average a few samples over time.
+                adjust_ms(delta_ms // 4)
+            else:
+                print(f'Latency > {avg_ntp_latency_ms}, skipping adjustment')
+            avg_ntp_latency_ms += (latency_ms - avg_ntp_latency_ms) // 4
+
     except Exception as e:
         utils.report_error(e, 'Failed to get NTP time')
     finally:
@@ -125,10 +141,9 @@ def tm_to_millis(tm):
     return int(time.mktime(tm)*1000)
 
 
-def sleep_millis(ms):
-    # Advances the time by the given amount.
-    wake_millis = get_millis() + ms
-    while get_millis() < wake_millis:
+def sleep_until(millis):
+    wake_monotonic_millis = millis - ref_millis
+    while monotonic_millis() < wake_monotonic_millis:
         pass
 
 

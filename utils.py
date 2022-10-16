@@ -39,6 +39,7 @@ last_ms = None
 last_mem = None
 min_mem = free()
 
+
 def log(message=None, dump=False):
     global last_ms
     global last_mem
