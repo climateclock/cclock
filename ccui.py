@@ -86,11 +86,8 @@ def reset_newsfeed():
     global last_newsfeed_module
     last_newsfeed_module = None
 
-
 def format_item(item):
-    headline = item.headline.strip()
-    return f'{headline} ({item.source.strip()})' if item.source else headline
-
+    return item.headline.strip()
 
 def render_newsfeed_module(bitmap, y, module, pi, lang='en'):
     global newsfeed_w
