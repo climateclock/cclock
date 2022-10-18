@@ -19,6 +19,7 @@ pairs = {
     'addr_pins': 'MTX_ADDRA MTX_ADDRB MTX_ADDRC MTX_ADDRD',
     'ntp_server': 'time.nist.gov',
     'colorspace': 'SRGB',
+    'deadline_force_caps': True,
 }
 
 

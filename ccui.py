@@ -4,6 +4,7 @@ import cctime
 from displayio import Bitmap
 import math
 from microfont import large, small
+import prefs
 import time
 
 
@@ -43,9 +44,10 @@ def render_deadline_module(bitmap, y, module, pi, lang='en'):
         'en': f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}',
         'es': f'{yr} años {d} días {h:02d}:{m:02d}:{s:02d}',
         'fr': f'{yr} ans {d} jours {h:02d}:{m:02d}:{s:02d}',
-        'is': f'{yr} ár {d} dagar {h:02d}:{m:02d}:{s:02d}'
     }
     text = texts.get(lang, texts['en'])
+    if prefs.get('deadline_force_caps'):
+        text = text.upper()
     large.draw(text, bitmap, 1, y, pi)
 
 
@@ -66,8 +68,10 @@ def render_value_module(bitmap, y, module, pi, lang='en'):
                 break
         if value_w + label_w < bitmap.width:
             break
-    x = 1
-    x = large.draw(value_text + unit_text, bitmap, x, y, pi)
+    text = value_text + unit_text
+    if unit_text.startswith('$'):
+        text = '$' + value_text + unit_text[1:]
+    x = large.draw(text, bitmap, 1, y, pi)
     small.draw(label_text, bitmap, x + 4, y + 5, pi)
 
 
