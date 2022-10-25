@@ -20,10 +20,10 @@ pip3 install -U -r requirements.txt
 
 if ! [ -x env/bin/mpy-cross ]; then
     if [ $(uname) = Linux ]; then
-        curl -o env/bin/mpy-cross https://adafruit-circuit-python.s3.amazonaws.com/bin/mpy-cross/mpy-cross.static-amd64-linux-8.0.0-beta.0-22-g3ba385ff5
+        curl -o env/bin/mpy-cross https://raw.githubusercontent.com/zestyping/mpy-cross/main/mpy-cross.static-amd64-linux-8.0.0-beta.3-12-gf67d2794c
         chmod 755 env/bin/mpy-cross
     elif [ $(uname) = Darwin ]; then
-        curl -o env/bin/mpy-cross https://adafruit-circuit-python.s3.amazonaws.com/bin/mpy-cross/mpy-cross-macos-11-8.0.0-beta.0-22-g3ba385ff5-universal
+        curl -o env/bin/mpy-cross https://raw.githubusercontent.com/zestyping/mpy-cross/main/mpy-cross-macos-11-8.0.0-beta.3-12-gf67d2794c-universal
         chmod 755 env/bin/mpy-cross
     else
         echo "Please find and install 'mpy-cross' for your platform."
