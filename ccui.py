@@ -133,6 +133,7 @@ def render_newsfeed_module(bitmap, y, module, pi, lang='en'):
             large.draw(headline_text, newsfeed_buffer)
             newsfeed_static = True
         else:
+            newsfeed_w = DISPLAY_WIDTH
             headline_text = ''
 
     if newsfeed_static:
