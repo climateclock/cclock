@@ -74,7 +74,7 @@ if name:
         run_time = int(time.monotonic()) - start_time
 
         # Downgrade to the previous usable version.
-        if count > 1:
+        if run_time < 3600 and count > 1:
             print(f'\nDisabling /{name} due to crash: {e}\n')
             try:
                 os.remove(name + '/@ENABLED')
@@ -99,12 +99,12 @@ if name:
             print(f'Could not write traceback: {ee}')
 
         # Restart.
-        if run_time < 300:
-            print(f'\nRunning time was only {run_time} s; not restarting.\n')
-        else:
+        if run_time > 60:
             print(f'\nRunning time was {run_time}s; restarting in 5 seconds.\n')
             time.sleep(5)
             import microcontroller
             microcontroller.reset()
+        else:
+            print(f'\nRunning time was only {run_time} s; not restarting.\n')
 else:
     print('\nNo usable versions found.\n')
