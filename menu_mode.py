@@ -33,8 +33,11 @@ class MenuMode:
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
 
-        wifi_status = lambda: 'Status: ' + ['Online', 'Offline'][
-            self.app.net.state == 'OFFLINE']
+        wifi_status = lambda: 'Status: ' + {
+            'JOINING': 'Searching',
+            'ONLINE': 'Online',
+            'CONNECTED': 'Online'
+        }.get(self.app.net.state, 'Offline')
         wifi_ssid = lambda: prefs.get('wifi_ssid')
 
         now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
