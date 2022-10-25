@@ -253,11 +253,10 @@ the pack file, a JSON entry will also be printed out.  You can paste this
 JSON entry into the index file, publish your new `.pk` file, and then
 publish your new index file at the official update URL.
 
-The "official update URL" has not been designated yet; it is configured
-in `data/prefs.json` as the `update_url` entry.  For development, it defaults
-to `https://zestyping.github.io/cclock/packs.json`.  If you are working
-on this feature, you can set `update_url` to point to your own server by
-editing `data/prefs.json` on the Action Clock's flash drive.
+The "official update URL" is configured in `data/prefs.json` as the
+`update_url` entry.  If you are working on software update functionality,
+you can set `update_url` to point to your own server by editing
+`data/prefs.json` on the Action Clock's flash drive.
 
 ### Building the firmware
 

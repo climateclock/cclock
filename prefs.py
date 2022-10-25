@@ -6,7 +6,7 @@ pairs = {
     'wifi_ssid': 'climateclock',
     'wifi_password': 'climateclock',
     'api_url': 'https://api.climateclock.world/v2/portable_m4/clock.json',
-    'update_url': 'https://zestyping.github.io/cclock/packs.json',
+    'update_url': 'https://climateclock.github.io/packs.json',
     'custom_message': '',
     'auto_cycling': None,
     'updates_paused_until': None,
