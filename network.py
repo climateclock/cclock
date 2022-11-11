@@ -69,6 +69,9 @@ class Network:
         if ssid:
             self.ssid = utils.to_bytes(ssid)
             self.password = utils.to_bytes(password)
+        else:
+            utils.log(f'Wi-Fi is disabled because SSID is blank.')
+            return
 
         utils.log(f'Joining Wi-Fi network {repr(self.ssid)}.')
         # NOTE: ssid and password must be bytes, not str!
