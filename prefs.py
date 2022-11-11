@@ -25,14 +25,13 @@ pairs = {
 
 def init():
     try:
+        pairs.update(json.load(fs.open('prefs.json')))
+    except Exception as e:
+        print(f'Could not load /prefs.json: {e}')
+    try:
         pairs.update(json.load(fs.open('data/prefs.json')))
     except Exception as e:
         print(f'Could not load /data/prefs.json: {e}')
-        try:
-            pairs.update(json.load(fs.open('prefs.json')))
-        except Exception as e:
-            print(f'Could not load /prefs.json: {e}')
-        save()
     if not fs.isfile('data/prefs.json'):
         print('Creating prefs.json.')
         save()
