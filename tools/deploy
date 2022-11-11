@@ -26,10 +26,10 @@ while [[ $1 = -* ]]; do
     [[ $1 = -d ]] && export CCLOCK_MEMORY_DEBUGGING=1
     [[ $1 = -f ]] && factory=yes
     [[ $1 = -h || $1 = --help ]] && help=yes
-    [[ $1 = -p ]] && shift && wifi_password="$1"
+    [[ $1 = -p ]] && shift && prefs="$1"
     [[ $1 = -s ]] && drive="$sim_root" && export CCLOCK_SIMULATOR_MODE=1
     [[ $1 = -S ]] && shift && drive="$1" && export CCLOCK_SIMULATOR_MODE=1
-    [[ $1 = -w ]] && shift && wifi_ssid="$1"
+    [[ $1 = -w ]] && shift && wifi="$1"
     shift || break
 done
 vname="$1"
@@ -37,7 +37,7 @@ vname="$1"
 
 if [[ $help || ! $vname ]]; then
     cat <<EOF && exit 1
-Usage: $0 [-d] [-f] [-s] [-S <dir>] [-w <network> -p <password>] <vname>
+Usage: $0 [-d] [-f] [-s] [-S <dir>] [-p <prefs.json>] [-w <network>:<password>] <vname>
 
 Deploys the code in the current directory to the attached CircuitPython device
 at $drive.  (To change the target, set \$CCLOCK_TARGET_ROOT.)
@@ -49,11 +49,15 @@ at $drive.  (To change the target, set \$CCLOCK_TARGET_ROOT.)
 -f factory-resets the device by wiping the flash disk, deploying v0, and
 installing clock.json (fetching an up-to-date copy from the API if possible).
 
+-p installs the specified prefs.json file as the factory prefs.json when
+factory-resetting, or as the user data/prefs.json file otherwise.
+
 -s deploys to a simulated filesystem at $sim_root instead of a real device.
 
 -S deploys to a simulated filesystem at the specified directory.
 
--w and -p set the initial Wi-Fi network and password when factory-resetting.
+-w installs a data/prefs.json file with the given Wi-Fi network and password
+when factory-resetting.
 EOF
 fi
 
@@ -94,12 +98,23 @@ if [[ $factory ]]; then
     rm -rf $drive/*
     cp boot.py main.py "$drive"
     mkdir -p "$drive"/data
-    if [[ $wifi_ssid || $wifi_password ]]; then
+    if [[ $wifi ]]; then
+        wifi_ssid=$(echo "$wifi" | sed -e 's/:.*//')
+        wifi_password=$(echo "$wifi" | sed -E -e 's/[^:]*:?//')
         echo -n 'Setting Wi-Fi network to "'$wifi_ssid'" and '
-        echo 'password to "'$wifi_password'"...'
+        echo 'password to "'$wifi_password'" in user prefs...'
         cat <<EOF >"$drive"/data/prefs.json
 {"wifi_ssid": "$wifi_ssid", "wifi_password": "$wifi_password"}
 EOF
+    fi
+    if [[ $prefs ]]; then
+        echo "Installing factory copy of prefs.json..."
+        cp "$prefs" "$drive"/prefs.json
+    fi
+else
+    if [[ $prefs ]]; then
+        echo "Installing user copy of prefs.json..."
+        cp "$prefs" "$drive"/data/prefs.json
     fi
 fi
 
