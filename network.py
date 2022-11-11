@@ -66,17 +66,16 @@ class Network:
             self.close()
 
     def join(self, ssid=None, password=b''):
+        self.set_state('JOINING')
         if ssid:
             self.ssid = utils.to_bytes(ssid)
             self.password = utils.to_bytes(password)
+            utils.log(f'Joining Wi-Fi network {repr(self.ssid)}.')
+            # NOTE: ssid and password must be bytes, not str!
+            self.esp.wifi_set_passphrase(self.ssid, self.password)
         else:
             utils.log(f'Wi-Fi is disabled because SSID is blank.')
             return
-
-        utils.log(f'Joining Wi-Fi network {repr(self.ssid)}.')
-        # NOTE: ssid and password must be bytes, not str!
-        self.esp.wifi_set_passphrase(self.ssid, self.password)
-        self.set_state('JOINING')
 
     def connect(self, host, port=None, ssl=True):
         if self.state != 'ONLINE':

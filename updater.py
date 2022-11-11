@@ -51,7 +51,7 @@ class SoftwareUpdater:
 
     def join_wifi_step(self):
         self.net.step()
-        if self.net.state == 'OFFLINE':
+        if self.net.state == 'OFFLINE' and prefs.get('wifi_ssid'):
             self.net.join(prefs.get('wifi_ssid'), prefs.get('wifi_password'))
         if self.net.state == 'ONLINE' and self.net.state_elapsed() > WIFI_DELAY:
             fc = self.app.frame_counter
