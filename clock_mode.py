@@ -80,7 +80,6 @@ class ClockMode:
             if self.lifeline == self.message_module:
                 if not prefs.get('custom_message'):
                     self.lifeline = self.lifelines.get(delta or 1)
-            prefs.set('lifeline_id', self.lifeline.id)
             self.app.bitmap.fill(0)
 
     def start(self):

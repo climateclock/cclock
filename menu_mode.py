@@ -39,6 +39,7 @@ class MenuMode:
             'CONNECTED': 'Online'
         }.get(self.app.net.state, 'Offline')
         wifi_ssid = lambda: prefs.get('wifi_ssid')
+        lifeline_id = lambda: prefs.get('lifeline_id')
 
         now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
         updater = self.app.clock_mode.updater
@@ -65,7 +66,11 @@ class MenuMode:
                 ('Password', None, 'WIFI_PASSWORD_MODE', None, []),
                 ('Back', None, 'BACK', None, [])
             ]),
-            (f'Auto cycling', auto_cycling, None, None, [
+            ('Initial lifeline', lifeline_id, None, None, [
+                (lifeline.id, None, 'SET_LIFELINE', lifeline.id, [])
+                for lifeline in self.app.clock_mode.lifelines.items
+            ]),
+            ('Auto cycling', auto_cycling, None, None, [
                 ('Off', None, 'SET_CYCLING', 0, []),
                 ('10 seconds', None, 'SET_CYCLING', 10000, []),
                 ('15 seconds', None, 'SET_CYCLING', 15000, []),
@@ -73,7 +78,7 @@ class MenuMode:
                 ('60 seconds', None, 'SET_CYCLING', 60000, []),
                 ('Back', None, 'BACK', None, [])
             ]),
-            (f'Auto update', auto_update, None, None, [
+            ('Auto update', auto_update, None, None, [
                 ('On', None, 'SET_UPDATES_PAUSED', None, []),
                 ('Pause for 4 hours', None,
                     'SET_UPDATES_PAUSED', 4*3600*1000, []),
@@ -143,9 +148,9 @@ class MenuMode:
                 break
             child_title, child_value, _, _, _ = children[index]
             child_title = self.format_title(child_title, child_value)
-            small.draw(child_title, bitmap, 64, y, self.pi)
+            small.draw(child_title, bitmap, 65, y, self.pi)
             if index == self.index:
-                small.draw('>', bitmap, 58, y, self.cursor_pi)
+                small.draw('>', bitmap, 59, y, self.cursor_pi)
             y += 11
         display.send()
 
@@ -166,6 +171,9 @@ class MenuMode:
             self.move_cursor(-1)
         if command == 'NEXT_OPTION':
             self.move_cursor(1)
+        if command == 'SET_LIFELINE':
+            prefs.set('lifeline_id', arg)
+            command = 'BACK'
         if command == 'SET_CYCLING':
             prefs.set('auto_cycling', arg)
             command = 'BACK'

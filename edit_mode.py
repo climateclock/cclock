@@ -100,12 +100,12 @@ class EditMode:
         text_width = small.measure(self.text)
 
         # Shift text to the left if it's too long to fit.
-        text_x = min(title_width, 192 - 5 - text_width)
+        text_x = min(title_width, 192 - 4 - text_width)
         cx = small.draw(self.text, bitmap, text_x, 0, self.cursor_pi)
-        bitmap.fill(self.cursor_pi, cx, 10, cx + 5, 11)
+        bitmap.fill(self.cursor_pi, cx, 10, cx + 4, 11)
 
         bitmap.fill(0, 0, 0, title_width, 11)
-        small.draw(self.pref_title + ': ', bitmap, 0, 0, self.pi)
+        small.draw(self.pref_title + ':', bitmap, 0, 0, self.pi)
 
     def draw_menu(self):
         bitmap = self.app.bitmap
