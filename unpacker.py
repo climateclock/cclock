@@ -107,8 +107,7 @@ class Unpacker:
                 raise ValueError(
                     f'Pack exceeded limit of {MAX_UNPACKED_SIZE} bytes.')
             self.digest.update(content)
-            with fs.open(self.file_path, 'ab') as file:
-                file.write(content)
+            fs.append(self.file_path, content)
 
         if block_type == b'pe':  # pack end
             actual_hash = self.digest.hexdigest()

@@ -1,6 +1,11 @@
+import json
 import os
 
 builtin_open = open
+class NullContext:
+    def __enter__(*args): pass
+    def __exit__(*args): pass
+write_indicator = NullContext()
 
 
 def open(path, mode='rb'):
@@ -9,17 +14,33 @@ def open(path, mode='rb'):
 
 
 def move(path, newpath):
-    destroy(newpath)
-    os.rename(path, newpath)
+    with write_indicator:
+        destroy(newpath)
+        os.rename(path, newpath)
+
+
+def append(path, data):
+    if data:
+        with write_indicator:
+            with open(path, 'ab') as file:
+                file.write(data)
+
+
+def write_json(path, obj):
+    with write_indicator:
+        with open(path + '.new', 'wt') as file:
+            json.dump(obj, file)
+        move(path + '.new', path)
 
 
 def destroy(path):  # removes a file or directory and all descendants
-    if isdir(path):
-        for file in os.listdir(path):
-            destroy(path + '/' + file)
-        os.rmdir(path)
-    if isfile(path):
-        os.remove(path)
+    with write_indicator:
+        if isdir(path):
+            for file in os.listdir(path):
+                destroy(path + '/' + file)
+            os.rmdir(path)
+        if isfile(path):
+            os.remove(path)
 
 
 def free():
@@ -47,11 +68,12 @@ def get_mode(path):
 
 
 def make_parent(path):
-    parts = path.strip('/').split('/')
-    path = parts[0]
-    for part in parts[1:]:
-        if isfile(path):
-            os.remove(path)
-        if not isdir(path):
-            os.mkdir(path)
-        path += '/' + part
+    with write_indicator:
+        parts = path.strip('/').split('/')
+        path = parts[0]
+        for part in parts[1:]:
+            if isfile(path):
+                os.remove(path)
+            if not isdir(path):
+                os.mkdir(path)
+            path += '/' + part

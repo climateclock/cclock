@@ -57,8 +57,6 @@ def set(name, value):
 
 def save():
     try:
-        with fs.open('data/prefs.json.new', 'wt') as file:
-            json.dump(pairs, file)
-        fs.move('data/prefs.json.new', 'data/prefs.json')
+        fs.write_json('data/prefs.json', pairs)
     except Exception as e:
         print(f'Could not write prefs.json: {e}')

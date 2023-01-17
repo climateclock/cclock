@@ -6,6 +6,7 @@ import display
 display.init(bitmap)
 title_pi = display.get_pi(0x00, 0xff, 0x00)
 pi = display.get_pi(0x80, 0x80, 0x80)
+write_pi = display.get_pi(0xff, 0x80, 0x00)
 
 import microfont
 import utils
@@ -15,6 +16,22 @@ microfont.small.draw(f'Action Clock v{utils.version_num()}', bitmap, 1, 11, pi)
 w = microfont.small.measure('#ActInTime')
 microfont.small.draw('#ActInTime', bitmap, 192 - w, 0, pi)
 display.send()
+
+class WriteIndicator:
+    depth = 0
+
+    def __enter__(self):
+        self.depth += 1
+        bitmap.fill(write_pi, 191, 0, 192, 1)
+        display.send()
+
+    def __exit__(self, *args):
+        self.depth -= 1
+        if self.depth == 0:
+            bitmap.fill(0, 191, 0, 192, 1)
+
+import fs
+fs.write_indicator = WriteIndicator()
 
 #IMPORTS#
 

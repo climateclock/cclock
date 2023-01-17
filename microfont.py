@@ -34,7 +34,7 @@ class Microfont:
     #   - The advance width of each glyph
 
     def __init__(self, path):
-        with fs.open(path, 'rb') as file:
+        with fs.open(path) as file:
             assert file.read(4) == b'\xc2\xb5f1'
             wh, wl, h, num_ranges = file.read(4)
             w = (wh << 8) + wl

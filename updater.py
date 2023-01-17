@@ -25,7 +25,6 @@ class SoftwareUpdater:
         self.fetcher = HttpFetcher(net)
 
         self.api_url = prefs.get('api_url')
-        self.api_file = None
         self.api_fetched = None
 
         self.update_url = prefs.get('update_url')
@@ -67,21 +66,14 @@ class SoftwareUpdater:
                 f'&v={v}&vp={vp}&fv={fv}&t={now}&af={afetch}&if={ifetch}',
                 prefs.get('api_etag'))
             self.step = self.api_fetch_step
+            fs.destroy('data/clock.json.new')
 
     def api_fetch_step(self):
         try:
-            data = self.fetcher.read()
-            if data:
-                if not self.api_file:
-                    self.api_file = fs.open('data/clock.json.new', 'wb')
-                self.api_file.write(data)
+            fs.append('data/clock.json.new', self.fetcher.read())
             return
         except Exception as error:
             self.net.close()
-            if self.api_file:
-                self.api_file.close()
-                self.api_file = None
-
             received_new_file = False
             if isinstance(error, StopIteration):
                 if error.value == 304:
@@ -108,14 +100,11 @@ class SoftwareUpdater:
 
         self.fetcher.go(self.update_url)
         self.step = self.index_fetch_step
+        fs.destroy('data/packs.json')
 
     def index_fetch_step(self):
         try:
-            data = self.fetcher.read()
-            if data:
-                if not self.index_file:
-                    self.index_file = fs.open('data/packs.json', 'wb')
-                self.index_file.write(data)
+            fs.append('data/packs.json', self.fetcher.read())
             return
         except Exception as e:
             self.net.close()
@@ -208,8 +197,7 @@ def write_enabled_flags(index_packs):
             fs.destroy(dir_name + '/@ENABLED')
             if enabled:
                 print('Enabled:', dir_name)
-                with open(dir_name + '/@ENABLED', 'wb') as file:
-                    pass
+                fs.append(dir_name + '/@ENABLED', b'')
                 usable = True
                 if fs.isfile(dir_name + '/@PATH'):
                     with open(dir_name + '/@PATH') as file:
