@@ -71,7 +71,7 @@ def load_newsfeed(id, data):
         id,
         data.get("type"),
         data.get("flavor"),
-        sorted_by_length(data.get("labels")),
+        sorted_by_length(data.get("labels") or ['Newsfeed of hope']),
         [load_item(item) for item in data.get("newsfeed", [])]
     )
 

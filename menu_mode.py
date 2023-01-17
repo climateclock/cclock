@@ -67,7 +67,7 @@ class MenuMode:
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Initial lifeline', lifeline_id, None, None, [
-                (lifeline.id, None, 'SET_LIFELINE', lifeline.id, [])
+                (lifeline.labels and lifeline.labels[0] or lifeline.id, None, 'SET_LIFELINE', lifeline.id, [])
                 for lifeline in self.app.clock_mode.lifelines.items
             ]),
             ('Auto cycling', auto_cycling, None, None, [

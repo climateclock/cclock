@@ -18,7 +18,7 @@ class ClockMode:
         self.lifeline = None
         self.lifelines = None
         self.message_module = ccapi.Newsfeed(
-            'custom_message', 'newsfeed', 'lifeline', [], [])
+            'custom_message', 'newsfeed', 'lifeline', ['Custom message'], [])
 
         self.load_definition()
         self.updater = SoftwareUpdater(app, net, self)
