@@ -9,14 +9,15 @@ function maybe_compile() {
     fi
 }
 
-function build_to() {
-    target="$1"
+function build() {
+    source="$1"
+    target="$2"
 
     # Let the tools/preprocess script do whatever it wants to the code; it's
     # a separate script because we want functions.sh to stay stable.
     prep_dir=/tmp/prep.$$
     mkdir -p $prep_dir
-    cp *.mcf *.py $prep_dir
+    cp "$source"/*.mcf "$source"/*.py $prep_dir
     tools/preprocess $prep_dir
 
     rm -rf "$target"

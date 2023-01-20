@@ -33,31 +33,32 @@ while [[ $1 = -* ]]; do
     shift || break
 done
 vname="$1"
-[[ $factory ]] && vname=v0
 
-if [[ $help || ! $vname ]]; then
+if [[ $help || (! $vname && ! $factory)]]; then
     cat <<EOF && exit 1
 Usage: $0 [-d] [-f] [-s] [-S <dir>] [-p <prefs.json>] [-w <network>:<password>] <vname>
 
 Deploys the code in the current directory to the attached CircuitPython device
 at $drive.  (To change the target, set \$CCLOCK_TARGET_ROOT.)
 
-<vname> should be a version name in the form v1, v2, etc.
+<vname> should be a version name in the form v1, v2, etc.  The code will be
+deployed to a directory named <vname>.<hash> on the target device.
 
 -d enables memory debugging: memory layout is dumped with every log message.
 
--f factory-resets the device by wiping the flash disk, deploying v0, and
+-f factory-resets the device by wiping the target drive, deploying v0, and
 installing clock.json (fetching an up-to-date copy from the API if possible).
+When -f is specified, <vname> is optional and deploys the working directory
+in addition to v0.
 
--p installs the specified prefs.json file as the factory prefs.json when
-factory-resetting, or as the user data/prefs.json file otherwise.
+-p installs the specified prefs.json file; with -f it is installed as factory
+prefs (/prefs.json), otherwise as user prefs (data/prefs.json).
 
 -s deploys to a simulated filesystem at $sim_root instead of a real device.
 
 -S deploys to a simulated filesystem at the specified directory.
 
--w installs a data/prefs.json file with the given Wi-Fi network and password
-when factory-resetting.
+-w installs a user prefs file (data/prefs.json) with the given Wi-Fi settings.
 EOF
 fi
 
@@ -85,28 +86,11 @@ if [[ ! -d $drive ]] || ! touch "$drive/test" 2>/dev/null; then
     echo
 fi
 
-echo "Building $vname..."
-pack_dir=/tmp/pack.$$
-build_to $pack_dir
-# Use tools/pack to find the pack hash, which goes in the directory name.
-eval $(tools/pack -n $vname $pack_dir)
-version=$vname.$pack_hash
-target=$drive/$version
-
 if [[ $factory ]]; then
     echo "Wiping $drive and installing bootstrap code..."
     rm -rf $drive/*
     cp boot.py main.py "$drive"
     mkdir -p "$drive"/data
-    if [[ $wifi ]]; then
-        wifi_ssid=$(echo "$wifi" | sed -e 's/:.*//')
-        wifi_password=$(echo "$wifi" | sed -E -e 's/[^:]*:?//')
-        echo -n 'Setting Wi-Fi network to "'$wifi_ssid'" and '
-        echo 'password to "'$wifi_password'" in user prefs...'
-        cat <<EOF >"$drive"/data/prefs.json
-{"wifi_ssid": "$wifi_ssid", "wifi_password": "$wifi_password"}
-EOF
-    fi
     if [[ $prefs ]]; then
         echo "Installing factory copy of prefs.json..."
         cp "$prefs" "$drive"/prefs.json
@@ -118,10 +102,49 @@ else
     fi
 fi
 
-echo "Installing $vname at $target..."
-mkdir -p "$target"
-cp $pack_dir/* "$target"
-[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir
+if [[ $wifi ]]; then
+    wifi_ssid=$(echo "$wifi" | sed -e 's/:.*//')
+    wifi_password=$(echo "$wifi" | sed -E -e 's/[^:]*:?//')
+    echo -n 'Setting Wi-Fi network to "'$wifi_ssid'" and '
+    echo 'password to "'$wifi_password'" in user prefs...'
+    cat <<EOF >"$drive"/data/prefs.json
+{"wifi_ssid": "$wifi_ssid", "wifi_password": "$wifi_password"}
+EOF
+fi
+
+function install_version() {
+    version="$1"
+    pack_dir="$2"
+
+    # Use tools/pack to find the pack hash, which goes in the directory name.
+    eval $(tools/pack -n $version $pack_dir)
+    target=$drive/$version.$pack_hash
+
+    echo "Installing $version at $target..."
+    mkdir -p "$target"
+    cp "$pack_dir"/* "$target"
+    touch "$target"/@VALID
+    touch "$target"/@ENABLED
+}
+
+if [[ $factory ]]; then
+    echo "Building v0..."
+    v0_files_dir=/tmp/v0-files.$$
+    v0_pack_dir=/tmp/v0-pack.$$
+    mkdir $v0_files_dir
+    git archive v0 | tar -x -C $v0_files_dir
+    build $v0_files_dir $v0_pack_dir
+    install_version v0 $v0_pack_dir
+    [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $v0_files_dir $v0_pack_dir
+fi
+
+if [[ $vname ]]; then
+    echo "Building $vname..."
+    pack_dir=/tmp/pack.$$
+    build . $pack_dir
+    install_version $vname $pack_dir
+    [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir
+fi
 
 if [[ $factory ]]; then
     echo 'Installing factory copy of clock.json...'
@@ -131,8 +154,6 @@ if [[ $factory ]]; then
         cp cache/clock.json "$drive"/clock.json
 fi
 
-touch "$target"/@VALID
-touch "$target"/@ENABLED
 sync
 
 # Occasionally, I've seen filesystem corruption.  I'm not sure if it happens

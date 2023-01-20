@@ -14,22 +14,29 @@ vname="$1"
 commit="$2"
 parent="$3"
 parent_commit="$4"
-pack_dir=/tmp/pack.$$
-parent_dir=/tmp/parent.$$
+parent_commit=${parent_commit:-$parent}
+release_files_dir=/tmp/release-files.$$
+release_pack_dir=/tmp/release-pack.$$
+parent_files_dir=/tmp/parent-files.$$
+parent_pack_dir=/tmp/parent-pack.$$
 
-if [[ $help || ! $commit || ! $vname = v* ]]; then
+if [[ $help || ! $vname = v* ]]; then
     cat <<EOF && exit 1
-Usage: $0 [-u <url>] <vname> <commit> [<parent> <parent-commit>]
+Usage: $0 [-u <url>] <vname> [<commit> [<parent> [<parent-commit>]]]
 
 <vname> and <parent> should be version names in the form v1, v2, etc.
 <commit> and <parent-commit> should be git commit hashes or tags.
 
-If only <vname> and <commit> are specified, builds a pack file
-named <vname>.<hash>.pk file containing the files at <commit>.
+If only <vname> and <commit> are specified, builds a pack file named
+<vname>.<hash>.pk containing the files at <commit>.
 
-If <parent> and <parent-commit> are also specified, builds a pack
-file named <vname>-<parent>.<hash>.pk containing only the files
-that changed between <parent-commit> and <commit>.
+If <parent> and <parent-commit> are also specified, builds a pack file
+named <vname>-<parent>.<hash>.pk containing only the files that changed
+between <parent-commit> and <commit>.
+
+<commit> can be omitted or given as "." to use the files in the working
+directory instead of the files at a particular commit.  <parent-commit>
+can be omitted if it is the same as <parent>.
 
 -s produces a pack file that can work in the simulator, by
 suppressing the usual compilation of Python files into .mpy files.
@@ -40,35 +47,35 @@ into packs.json when you publish the pack file.
 EOF
 fi
 
-if ! git diff --quiet; then
-    echo "Working tree is dirty.  Please commit or stash before releasing."
-    exit 1
-fi
-
-current_commit=$(git rev-parse --abbrev-ref HEAD)
-
 # Make a directory containing the version to release.
-git checkout -q $commit
-echo "Releasing $vname at:"
-git log -n 1 --oneline
-build_to $pack_dir
+mkdir $release_files_dir
+if [[ $commit && $commit != "." ]]; then
+    git archive $commit | tar -x -C $release_files_dir
+    echo "Releasing $vname at:"
+    git log -n 1 --oneline $commit
+    build $release_files_dir $release_pack_dir
+else
+    echo "Releasing working directory files as $vname."
+    build . $release_pack_dir
+fi
 
 if [[ $parent_commit ]]; then
     # Make a directory containing the parent version.
-    git checkout -q $parent_commit
+    mkdir $parent_files_dir
+    git archive $parent_commit | tar -x -C $parent_files_dir
     echo "Patching against parent $parent at:"
-    git log -n 1 --oneline
-    build_to $parent_dir
+    git log -n 1 --oneline $parent_commit
+    build $parent_files_dir $parent_pack_dir
 
     # Use tools/pack to find the pack hash for the parent version.
-    eval $(tools/pack -n $parent $parent_dir)
-    echo $parent.$pack_hash > $pack_dir/@PATH
+    eval $(tools/pack -n $parent $parent_pack_dir)
+    echo $parent.$pack_hash > $release_pack_dir/@PATH
     echo "Setting @PATH to: $parent.$pack_hash"
 
     # Omit all the unchanged files from the patch pack.
-    for file in $(cd $pack_dir; echo *); do
-        if diff -q $parent_dir/$file $pack_dir/$file >/dev/null 2>&1; then
-            rm $pack_dir/$file
+    for file in $(cd $release_pack_dir; echo *); do
+        if diff -q $parent_pack_dir/$file $release_pack_dir/$file >/dev/null 2>&1; then
+            rm $release_pack_dir/$file
         fi
     done
     pack_name=$vname-${parent}
@@ -78,7 +85,7 @@ fi
 
 # Now build the pack.
 echo
-eval $(tools/pack $pack_name $pack_dir)
+eval $(tools/pack $pack_name $release_pack_dir)
 echo Pack file: $pack_filename
 
 [[ $url ]] && cat <<EOF
@@ -92,7 +99,4 @@ echo Pack file: $pack_filename
 
 EOF
 
-# Restore the working tree.
-git checkout -q $current_commit
-
-[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf "$pack_dir" "$parent_dir"
+[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf "$release_files_dir" "$release_pack_dir" "$parent_files_dir" "$parent_pack_dir"
