@@ -22,7 +22,7 @@ parent_pack_dir=/tmp/parent-pack.$$
 
 if [[ $help || ! $vname = v* ]]; then
     cat <<EOF && exit 1
-Usage: $0 [-u <url>] <vname> [<commit> [<parent> [<parent-commit>]]]
+Usage: $0 [-u <base-url>] <vname> [<commit> [<parent> [<parent-commit>]]]
 
 <vname> and <parent> should be version names in the form v1, v2, etc.
 <commit> and <parent-commit> should be git commit hashes or tags.
@@ -41,8 +41,11 @@ can be omitted if it is the same as <parent>.
 -s produces a pack file that can work in the simulator, by
 suppressing the usual compilation of Python files into .mpy files.
 
--u <url> prints out a nicely formatted JSON entry for you to paste
-into packs.json when you publish the pack file.
+-u <base-url> prints out a nicely formatted JSON entry for you to paste
+into packs.json when you publish the pack file.  <base-url> should be
+the URL to the directory where the pack file will go; for example, if
+you are putting pack files at https://example.com/path/whatever.pk,
+<base-url> should be "https://example.com/path".
 
 EOF
 fi
