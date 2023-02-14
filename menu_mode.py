@@ -67,7 +67,8 @@ class MenuMode:
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Initial lifeline', lifeline_id, None, None, [
-                (lifeline.labels and lifeline.labels[0] or lifeline.id, None, 'SET_LIFELINE', lifeline.id, [])
+                (lifeline.labels and lifeline.labels[0] or lifeline.id,
+                    None, 'SET_LIFELINE', lifeline.id, [])
                 for lifeline in self.app.clock_mode.lifelines.items
             ]),
             ('Auto cycling', auto_cycling, None, None, [
@@ -104,7 +105,7 @@ class MenuMode:
                 (f'Uptime', self.app.frame_counter.uptime, None, None, []),
                 ('Back', None, 'BACK', None, [])
             ]),
-            ('Exit', None, 'CLOCK_MODE', None, [])
+            ('Back', None, 'CLOCK_MODE', None, [])
         ])
         self.crumbs = []
         self.node = self.tree
