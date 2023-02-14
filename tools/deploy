@@ -42,8 +42,8 @@ at $drive.  (To change the target, set \$CCLOCK_TARGET_ROOT.)
 
 <vname> should be a version name in the form v1, v2, etc.  The code at that
 version tag will be deployed to a directory named <vname>.<hash> on the target
-device.  <vname> can also be given as "HEAD" to deploy the current working
-directory as v999.
+device.  <vname> can also be given as "." to deploy the contents of the current
+working directory as v999.
 
 -d enables memory debugging: memory layout is dumped with every log message.
 
@@ -139,12 +139,21 @@ if [[ $factory ]]; then
     [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $v0_files_dir $v0_pack_dir
 fi
 
-if [[ $vname ]]; then
-    echo "Building $vname..."
+if [[ $vname = . ]]; then
+    echo "Building working directory..."
     pack_dir=/tmp/pack.$$
     build . $pack_dir
-    install_version $vname $pack_dir
+    install_version v999 $pack_dir
     [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir
+elif [[ $vname ]]; then
+    echo "Building $vname..."
+    vn_files_dir=/tmp/$vname-files.$$
+    vn_pack_dir=/tmp/$vname-pack.$$
+    mkdir $vn_files_dir
+    git archive $vname | tar -x -C $vn_files_dir
+    build $vn_files_dir $vn_pack_dir
+    install_version $vname $vn_pack_dir
+    [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $vn_files_dir $vn_pack_dir
 fi
 
 if [[ $factory ]]; then

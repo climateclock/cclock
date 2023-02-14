@@ -50,7 +50,7 @@ to set up your Python virtual environment and install dependencies.
 
 Plug in your board.  Once you have a `CIRCUITPY` volume visible, run:
 
-    tools/deploy -f v999
+    tools/deploy -f .
 
 to wipe the MatrixPortal and perform a clean installation.  The current
 code will be deployed as version 999 and preferences will be wiped (the
@@ -98,14 +98,14 @@ to deploy the code to that location before you can run the simulator.
 
 To deploy the code to the simulator, run `deploy` with the `-s` option:
 
-    tools/deploy -f -s
+    tools/deploy -s -f .
 
 To run the simulator:
 
     tools/sim
 
 When you make changes to the code during development, you will need to
-deploy again with `tools/deploy -f -s` in order to see your changes in
+deploy again with `tools/deploy -s -f .` in order to see your changes in
 the simulator.
 
 The simulated clock will save the clock definition and user settings to

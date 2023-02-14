@@ -34,7 +34,7 @@ If <parent> and <parent-commit> are also specified, builds a pack file
 named <vname>-<parent>.<hash>.pk containing only the files that changed
 between <parent-commit> and <commit>.
 
-<commit> can be omitted or given as "HEAD" to use the files in the working
+<commit> can be omitted or given as "." to use the files in the working
 directory instead of the files at a particular commit.  <parent-commit>
 can be omitted if it is the same as <parent>.
 
@@ -52,7 +52,7 @@ fi
 
 # Make a directory containing the version to release.
 mkdir $release_files_dir
-if [[ $commit && $commit != HEAD ]]; then
+if [[ $commit && $commit != . ]]; then
     git archive $commit | tar -x -C $release_files_dir
     echo "Releasing $vname at:"
     git log -n 1 --oneline $commit
