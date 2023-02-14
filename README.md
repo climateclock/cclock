@@ -50,10 +50,10 @@ to set up your Python virtual environment and install dependencies.
 
 Plug in your board.  Once you have a `CIRCUITPY` volume visible, run:
 
-    tools/deploy -f
+    tools/deploy -f v999
 
 to wipe the MatrixPortal and perform a clean installation.  The current
-code will be deployed as version 0 and preferences will be wiped (the
+code will be deployed as version 999 and preferences will be wiped (the
 equivalent of a "factory reset").
 
 ### Networking
