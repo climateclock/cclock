@@ -3,6 +3,7 @@ import cctime
 from ccinput import DialReader
 from clock_mode import ClockMode
 import display
+import fs
 import gc
 from menu_mode import MenuMode
 import network
@@ -107,7 +108,26 @@ class FrameCounter:
         return (now - self.start)//1000
 
 
+class Indicator:
+    def __init__(self, bitmap, pi):
+        self.depth = 0
+        self.bitmap = bitmap
+        self.pi = pi
+
+    def __enter__(self):
+        self.depth += 1
+        self.bitmap.fill(self.pi, 191, 0, 192, 1)
+        display.send()
+
+    def __exit__(self, *args):
+        self.depth -= 1
+        if self.depth == 0:
+            self.bitmap.fill(0, 191, 0, 192, 1)
+
+
 def run(bitmap, net, button_map, dial_map):
+    fs.write_indicator = Indicator(bitmap, display.get_pi(0xff, 0x80, 0x00))
+    net.indicator = Indicator(bitmap, display.get_pi(0x00, 0xff, 0x00))
     utils.log('Starting run')
     cctime.enable_rtc()
     app = App(bitmap, net, button_map, dial_map)

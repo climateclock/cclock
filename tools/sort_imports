@@ -9,7 +9,7 @@ def scan_imports(module):
     if os.path.isfile(filename):
         for line in open(filename).readlines():
             words = line.replace(',', ' ').split()
-            if words:
+            if words and not line.startswith(' '):
                 if words[0] == 'import':
                     for word in words[1:]:
                         if word == 'as':

@@ -1,11 +1,9 @@
 import json
 import os
+import utils
 
 builtin_open = open
-class NullContext:
-    def __enter__(*args): pass
-    def __exit__(*args): pass
-write_indicator = NullContext()
+write_indicator = utils.NullContext()
 
 
 def open(path, mode='rb'):

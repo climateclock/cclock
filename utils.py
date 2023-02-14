@@ -108,3 +108,8 @@ class Cycle:
     def get(self, delta=0):
         self.index = (self.index + len(self.items) + delta) % len(self.items)
         return self.items[self.index]
+
+
+class NullContext:
+    def __enter__(*args): pass
+    def __exit__(*args): pass
