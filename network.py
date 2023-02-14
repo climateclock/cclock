@@ -7,6 +7,12 @@ import prefs
 import utils
 
 
+class NullContext:
+    def __enter__(*args): pass
+    def __exit__(*args): pass
+null_context = NullContext()
+
+
 def init():
     esp = esp32spi.ESP_SPIcontrol(
         board.SPI(),
@@ -28,6 +34,7 @@ class Network:
 
         self.socket = None
         self.set_state('OFFLINE')
+        self.indicator = null_context
 
     def set_state(self, new_state):
         # Possible states are:
@@ -91,17 +98,18 @@ class Network:
 
         port = port or (443 if ssl else 80)
         mode = self.esp.TLS_MODE if ssl else self.esp.TCP_MODE
-        utils.log(f'Connecting to {host} port {port}')
-        try:
-            # NOTE: host must be str, not bytes!
-            self.esp.socket_open(self.socket, host, port, mode)
-            if self.esp.socket_connected(self.socket):
-                self.set_state('CONNECTED')
-        except Exception as e:
-            utils.report_error(e, 'Failed to open socket; resetting')
-            self.esp.reset()
-            self.socket = None
-            self.set_state('OFFLINE')
+        with self.indicator:
+            utils.log(f'Connecting to {host} port {port}')
+            try:
+                # NOTE: host must be str, not bytes!
+                self.esp.socket_open(self.socket, host, port, mode)
+                if self.esp.socket_connected(self.socket):
+                    self.set_state('CONNECTED')
+            except Exception as e:
+                utils.report_error(e, 'Failed to open socket; resetting')
+                self.esp.reset()
+                self.socket = None
+                self.set_state('OFFLINE')
 
     def send(self, data):
         if self.state == 'CONNECTED':
