@@ -52,7 +52,7 @@ class Network:
             elif self.state_elapsed() > 20000:
                 utils.log(f'Could not join Wi-Fi network after 20 s; retrying.')
                 self.esp.disconnect()
-                self.join()
+                self.join(self.ssid, self.password)
             return
 
         if (self.state == 'ONLINE' or self.state == 'CONNECTED'
