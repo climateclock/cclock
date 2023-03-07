@@ -3,5 +3,6 @@ cache/
 env/
 unused/
 
+.DS_Store
 *.pyc
 screenlog.0
