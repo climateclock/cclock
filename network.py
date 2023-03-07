@@ -7,12 +7,6 @@ import prefs
 import utils
 
 
-class NullContext:
-    def __enter__(*args): pass
-    def __exit__(*args): pass
-null_context = NullContext()
-
-
 def init():
     esp = esp32spi.ESP_SPIcontrol(
         board.SPI(),
@@ -34,7 +28,7 @@ class Network:
 
         self.socket = None
         self.set_state('OFFLINE')
-        self.indicator = null_context
+        self.indicator = utils.null_context
 
     def set_state(self, new_state):
         # Possible states are:

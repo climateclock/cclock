@@ -25,7 +25,7 @@ def version_dir():
 
 
 def versions_present():
-    import fs
+    import fs  # ignored by sort_imports
     versions = []
     for name in fs.listdir():
         if name.startswith('v') and fs.isdir(name):
@@ -108,3 +108,10 @@ class Cycle:
     def get(self, delta=0):
         self.index = (self.index + len(self.items) + delta) % len(self.items)
         return self.items[self.index]
+
+
+class NullContext:
+    def __enter__(*args): pass
+    def __exit__(*args): pass
+
+null_context = NullContext()

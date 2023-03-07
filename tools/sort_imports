@@ -8,6 +8,8 @@ def scan_imports(module):
     imports = set()
     if os.path.isfile(filename):
         for line in open(filename).readlines():
+            if line.strip().endswith('# ignored by sort_imports'):
+                continue
             words = line.replace(',', ' ').split()
             if words:
                 if words[0] == 'import':
