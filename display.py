@@ -58,10 +58,12 @@ def srgb_to_linear(v):
 
 def get_shader_rgb(r, g, b, brightness):
     min_value = 0x100 >> BIT_DEPTH
-    # When scaling down, don't scale down any nonzero values to zero.
-    min_r = min_value if r else 0
-    min_g = min_value if g else 0
-    min_b = min_value if b else 0
+    mid = (r + g + b)/3
+    # When scaling down, don't scale down any nonzero values to zero,
+    # and avoid scaling down saturated colours to pure grey.
+    min_r = 2*min_value if r > mid else min_value if r else 0
+    min_g = 2*min_value if g > mid else min_value if g else 0
+    min_b = 2*min_value if b > mid else min_value if b else 0
     r, g, b = r / 255.0, g / 255.0, b / 255.0
     if prefs.get('colorspace') == 'SRGB':
         r = srgb_to_linear(r)
