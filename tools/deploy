@@ -41,16 +41,14 @@ Deploys the code at the specified version to the attached CircuitPython device
 at $drive.  (To change the target, set \$CCLOCK_TARGET_ROOT.)
 
 <vname> should be a version name in the form v1, v2, etc.  The code at that
-version tag will be deployed to a directory named <vname>.<hash> on the target
-device.  <vname> can also be given as "." to deploy the contents of the current
-working directory as v999.
+tag will be deployed to a directory named <vname>.<hash> on the target device.
 
 -d enables memory debugging: memory layout is dumped with every log message.
 
--f factory-resets the device by wiping the target drive, deploying v0, and
-installing clock.json (fetching an up-to-date copy from the API if possible).
-When -f is specified, <vname> is optional and deploys the specified version
-in addition to v0.  (Every clock must have a v0.)
+-f factory-resets the device by wiping the target drive, deploying v0,
+installing clock.json (fetching an up-to-date copy from the API if possible),
+and deploying <vname> in addition to v0.  When -f is specified, omit <vname>
+to deploy the contents of the current directory as v999.
 
 -p installs the specified prefs.json file; with -f it is installed as factory
 prefs (/prefs.json), otherwise as user prefs (data/prefs.json).
@@ -60,8 +58,15 @@ prefs (/prefs.json), otherwise as user prefs (data/prefs.json).
 -S deploys to a simulated filesystem at the specified directory.
 
 -w installs a user prefs file (data/prefs.json) with the given Wi-Fi settings.
+
 EOF
 fi
+
+if [[ ! $factory ]] || [[ $vname && $vname != v* ]]; then
+    echo 'Please specify the version to deploy in the form "v1", "v2", etc.'
+    exit 1
+fi
+
 
 echo 'Checking syntax...'
 python3 <<EOF || exit 1
@@ -139,13 +144,14 @@ if [[ $factory ]]; then
     [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $v0_files_dir $v0_pack_dir
 fi
 
-if [[ $vname = . ]]; then
+if [[ $factory && -z $vname ]]; then
     echo "Building working directory..."
     pack_dir=/tmp/pack.$$
     build . $pack_dir
     install_version v999 $pack_dir
     [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $pack_dir
-elif [[ $vname ]]; then
+
+elif [[ $vname = v* ]]; then
     echo "Building $vname..."
     vn_files_dir=/tmp/$vname-files.$$
     vn_pack_dir=/tmp/$vname-pack.$$

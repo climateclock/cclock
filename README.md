@@ -50,10 +50,10 @@ to set up your Python virtual environment and install dependencies.
 
 Plug in your board.  Once you have a `CIRCUITPY` volume visible, run:
 
-    tools/deploy -f .
+    tools/deploy -f
 
 to wipe the MatrixPortal and perform a clean installation.  The current
-code will be deployed as version 999 and preferences will be wiped (the
+code will be deployed as version v999 and preferences will be wiped (the
 equivalent of a "factory reset").
 
 ### Networking
@@ -98,14 +98,14 @@ to deploy the code to that location before you can run the simulator.
 
 To deploy the code to the simulator, run `deploy` with the `-s` option:
 
-    tools/deploy -s -f .
+    tools/deploy -s -f
 
 To run the simulator:
 
     tools/sim
 
 When you make changes to the code during development, you will need to
-deploy again with `tools/deploy -s -f .` in order to see your changes in
+deploy again with `tools/deploy -s -f` in order to see your changes in
 the simulator.
 
 The simulated clock will save the clock definition and user settings to
@@ -121,7 +121,7 @@ installed version of the software, just as the real clock does.
 If you prefer to use an existing Wi-Fi network instead of creating a hotspot,
 you can specify a network name and password when you deploy:
 
-    tools/deploy -f -w NetworkName -p SecretPassword
+    tools/deploy -f -w NetworkName:SecretPassword
 
 This will factory-reset the board in every respect except that prefs.json
 will be initialized to contain the given Wi-Fi network name and password.

@@ -8,6 +8,9 @@ import prefs
 import time
 
 
+DISPLAY_WIDTH = 192
+
+
 def calc_countdown(deadline_module, now_millis):
     deadline = cctime.millis_to_tm(deadline_module.ref_millis)
     now = cctime.millis_to_tm(now_millis)
@@ -51,16 +54,30 @@ def render_deadline_module(bitmap, y, module, pi, lang='en'):
     large.draw(text, bitmap, 1, y, pi)
 
 
-def render_lifeline_module(bitmap, y, module, pi, lang='en'):
+def render_lifeline_module(bitmap, y, module, pi, with_label=True, lang='en'):
     if module.type == 'value':
-        render_value_module(bitmap, y, module, pi, lang)
+        render_value_module(bitmap, y, module, pi, with_label, lang)
     if module.type == 'newsfeed':
         render_newsfeed_module(bitmap, y, module, pi, lang)
 
 
-def render_value_module(bitmap, y, module, pi, lang='en'):
+def render_label(bitmap, y, labels, pi):
+    for font in [large, small]:
+        for text in labels:
+            width = font.measure(text)
+            if width < bitmap.width:
+                x = (DISPLAY_WIDTH - width)//2
+                font.draw(text, bitmap, x, y, pi)
+                return
+
+
+def render_value_module(bitmap, y, module, pi, with_label=True, lang='en'):
     value_text = format_value(module, cctime.get_millis())
-    for label_text in module.labels:
+    label_text = unit_text = ''
+    label_w = value_w = 0
+    for label_item in module.labels:
+        if with_label:
+            label_text = label_item
         label_w = small.measure(label_text)
         for unit_text in module.unit_labels:
             value_w = large.measure(value_text + unit_text)
@@ -71,11 +88,16 @@ def render_value_module(bitmap, y, module, pi, lang='en'):
     text = value_text + unit_text
     if unit_text.startswith('$'):
         text = '$' + value_text + unit_text[1:]
-    x = large.draw(text, bitmap, 1, y, pi)
+    width = large.measure(text)
+    if label_text:
+        width += 4 + small.measure(label_text)
+    x = 1
+    if width < DISPLAY_WIDTH:
+        x = (DISPLAY_WIDTH - width)//2
+    x = large.draw(text, bitmap, x, y, pi)
     small.draw(label_text, bitmap, x + 4, y + 5, pi)
 
 
-DISPLAY_WIDTH = 192
 last_newsfeed_module = None
 newsfeed_w = DISPLAY_WIDTH
 newsfeed_buffer = None

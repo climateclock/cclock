@@ -40,6 +40,8 @@ class MenuMode:
         }.get(self.app.net.state, 'Offline')
         wifi_ssid = lambda: prefs.get('wifi_ssid')
         lifeline_id = lambda: prefs.get('lifeline_id')
+        hide_deadline = lambda: (
+            prefs.get('hide_deadline') and 'Hidden' or 'Visible')
 
         now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
         updater = self.app.clock_mode.updater
@@ -66,10 +68,19 @@ class MenuMode:
                 ('Password', None, 'WIFI_PASSWORD_MODE', None, []),
                 ('Back', None, 'BACK', None, [])
             ]),
-            ('Initial lifeline', lifeline_id, None, None, [
-                (lifeline.labels and lifeline.labels[0] or lifeline.id,
-                    None, 'SET_LIFELINE', lifeline.id, [])
-                for lifeline in self.app.clock_mode.lifelines.items
+            ('Initial display', None, None, None, [
+                ('Lifeline', lifeline_id, None, None, [
+                    (lifeline_id, None, 'SET_LIFELINE', lifeline_id, [])
+                    for lifeline_id in self.app.clock_mode.lifeline_ids
+                ] + [
+                    ('Back', None, 'BACK', None, [])
+                ]),
+                ('Deadline', hide_deadline, None, None, [
+                    ('Visible', None, 'SET_HIDE_DEADLINE', False, []),
+                    ('Hidden', None, 'SET_HIDE_DEADLINE', True, []),
+                    ('Back', None, 'BACK', None, [])
+                ]),
+                ('Back', None, 'BACK', None, [])
             ]),
             ('Auto cycling', auto_cycling, None, None, [
                 ('Off', None, 'SET_CYCLING', 0, []),
@@ -174,6 +185,9 @@ class MenuMode:
             self.move_cursor(1)
         if command == 'SET_LIFELINE':
             prefs.set('lifeline_id', arg)
+            command = 'BACK'
+        if command == 'SET_HIDE_DEADLINE':
+            prefs.set('hide_deadline', arg)
             command = 'BACK'
         if command == 'SET_CYCLING':
             prefs.set('auto_cycling', arg)
