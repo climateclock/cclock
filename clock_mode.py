@@ -130,13 +130,11 @@ class ClockMode:
 
         bitmap = self.app.bitmap
         if self.hide_deadline:
-            bitmap.fill(0, 0, 0, bitmap.width, 16)
             if self.lifeline:
                 ccui.render_lifeline_module(
                     bitmap, 0, self.lifeline,
                     self.lifeline_pi, False, self.app.lang)
         else:
-            bitmap.fill(0)
             if self.deadline:
                 ccui.render_deadline_module(
                     bitmap, 0, self.deadline,

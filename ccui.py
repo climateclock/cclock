@@ -41,6 +41,7 @@ def format_value(module, now_millis):
 
 
 def render_deadline_module(bitmap, y, module, pi, lang='en'):
+    bitmap.fill(0, 0, y, bitmap.width, y + 16)
     yr, d, h, m, s = calc_countdown(module, cctime.get_millis())
     texts = {
         'de': f'{yr} Jahre {d} Tage {h:02d}:{m:02d}:{s:02d}',
@@ -51,10 +52,13 @@ def render_deadline_module(bitmap, y, module, pi, lang='en'):
     text = texts.get(lang, texts['en'])
     if prefs.get('deadline_force_caps'):
         text = text.upper()
-    large.draw(text, bitmap, 1, y, pi)
+    width = large.measure(text)
+    x = max((DISPLAY_WIDTH - width)//2, 0)
+    large.draw(text, bitmap, x, y, pi)
 
 
 def render_lifeline_module(bitmap, y, module, pi, with_label=True, lang='en'):
+    bitmap.fill(0, 0, y, bitmap.width, y + 16)
     if module.type == 'value':
         render_value_module(bitmap, y, module, pi, with_label, lang)
     if module.type == 'newsfeed':
@@ -91,9 +95,7 @@ def render_value_module(bitmap, y, module, pi, with_label=True, lang='en'):
     width = large.measure(text)
     if label_text:
         width += 4 + small.measure(label_text)
-    x = 1
-    if width < DISPLAY_WIDTH:
-        x = (DISPLAY_WIDTH - width)//2
+    x = max((DISPLAY_WIDTH - width)//2, 0)
     x = large.draw(text, bitmap, x, y, pi)
     small.draw(label_text, bitmap, x + 4, y + 5, pi)
 
