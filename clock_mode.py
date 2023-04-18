@@ -68,7 +68,7 @@ class ClockMode:
                     self.lifeline_ids.append(m.id)
                     if m.id == prefs.get('lifeline_id'):
                         lifeline_index = len(lifelines)
-                    if m.labels or m.full_screen_labels:
+                    if m.labels or m.full_width_labels:
                         lifelines.append((m, True))
                     lifelines.append((m, False))
             lifelines.append((self.custom_message_module, False))
@@ -96,7 +96,7 @@ class ClockMode:
             if self.hide_deadline:
                 ccui.render_label(
                     self.app.bitmap, 16,
-                    self.lifeline.full_screen_labels or self.lifeline.labels,
+                    self.lifeline.full_width_labels or self.lifeline.labels,
                     self.lifeline_pi
                 )
 

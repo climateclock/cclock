@@ -14,8 +14,8 @@ Display = namedtuple('Display', ('deadline', 'lifeline'))
 Palette = namedtuple('Palette', ('primary',))
 Item = namedtuple('Item', ('pub_millis', 'headline', 'source'))
 Timer = namedtuple('Timer', ('id', 'type', 'flavor', 'labels', 'ref_millis'))
-Newsfeed = namedtuple('Newsfeed', ('id', 'type', 'flavor', 'labels', 'full_screen_labels', 'items'))
-Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'full_screen_labels', 'initial', 'ref_millis', 'growth', 'rate', 'decimals', 'shift', 'bias', 'unit_labels'))
+Newsfeed = namedtuple('Newsfeed', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'items'))
+Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'initial', 'ref_millis', 'growth', 'rate', 'decimals', 'shift', 'bias', 'unit_labels'))
 Defn = namedtuple('Defn', ('config', 'module_dict', 'modules'))
 
 
@@ -72,7 +72,7 @@ def load_newsfeed(id, data):
         data.get("type"),
         data.get("flavor"),
         sorted_by_length(data.get("labels")),
-        sorted_by_length(data.get("full_screen_labels")),
+        sorted_by_length(data.get("full_width_labels")),
         [load_item(item) for item in data.get("newsfeed", [])]
     )
 
@@ -130,7 +130,7 @@ def load_value(id, data):
         data.get("type"),
         data.get("flavor"),
         sorted_by_length(data.get("labels")),
-        sorted_by_length(data.get("full_screen_labels")),
+        sorted_by_length(data.get("full_width_labels")),
         initial,
         cctime.try_isoformat_to_millis(data, "timestamp"),
         data.get("growth") or "linear",
