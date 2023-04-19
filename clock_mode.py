@@ -133,7 +133,8 @@ class ClockMode:
             if self.lifeline:
                 ccui.render_lifeline_module(
                     bitmap, 0, self.lifeline,
-                    self.lifeline_pi, False, self.app.lang)
+                    self.deadline_pi if self.lifeline.id[:1] == '_'
+                    else self.lifeline_pi, False, self.app.lang)
         else:
             if self.deadline:
                 ccui.render_deadline_module(
