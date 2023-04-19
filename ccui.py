@@ -27,6 +27,7 @@ def calc_countdown(deadline_module, now_millis):
 
 
 def format_value(module, now_millis):
+    result = ''
     elapsed = now_millis - module.ref_millis  # integer
     if module.growth == 'linear':
         value = module.initial + module.rate * elapsed // 1000
@@ -36,8 +37,10 @@ def format_value(module, now_millis):
         negative_sign = '-' if value < 0 else ''
         whole_part = str_value[:-module.shift].lstrip('0')
         fractional_part = str_value[-module.shift:][:module.decimals]
-        return negative_sign + whole_part + '.' + fractional_part
-    return ''
+        result = negative_sign + whole_part
+        if fractional_part:
+            result += '.' + fractional_part
+    return result
 
 
 def render_deadline_module(bitmap, y, module, pi, lang='en'):
@@ -73,6 +76,7 @@ def render_label(bitmap, y, labels, pi):
                 x = (DISPLAY_WIDTH - width)//2
                 font.draw(text, bitmap, x, y, pi)
                 return
+        y += 5
 
 
 def render_value_module(bitmap, y, module, pi, with_label=True, lang='en'):
