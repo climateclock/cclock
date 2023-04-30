@@ -49,6 +49,7 @@ def render_deadline_module(bitmap, y, module, pi, lang='en'):
     texts = {
         'de': f'{yr} Jahre {d} Tage {h:02d}:{m:02d}:{s:02d}',
         'en': f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}',
+        'pt': f'{yr} ANOS {d} DIAS {h:02d}:{m:02d}:{s:02d}',
         'es': f'{yr} años {d} días {h:02d}:{m:02d}:{s:02d}',
         'fr': f'{yr} ans {d} jours {h:02d}:{m:02d}:{s:02d}',
     }
