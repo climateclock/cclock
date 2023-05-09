@@ -72,7 +72,7 @@ class Network:
             self.close()
 
     def join(self, ssid=None, password=b''):
-        utils.log(f'network.join({ssid=}, {password=}')
+        utils.log(f'network.join({ssid=}, {password=})')
         self.set_state('JOINING')
         if ssid:
             self.ssid = utils.to_bytes(ssid)
