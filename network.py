@@ -39,6 +39,8 @@ class Network:
         self.state = new_state
         self.state_started = cctime.monotonic_millis()
         utils.log(f'Network is now {self.state}.')
+        if hasattr(self, 'ssid'):
+            utils.log(f'state, {self.ssid=}, {self.password=}')
 
     def state_elapsed(self):
         return cctime.monotonic_millis() - self.state_started
@@ -52,13 +54,16 @@ class Network:
 
             elif self.state_elapsed() > 20000:
                 utils.log(f'Could not join Wi-Fi network after 20 s; retrying.')
+                utils.log(f'{self.ssid=}, {self.password=}')
                 self.esp.disconnect()
+                utils.log(f'disconnect, {self.ssid=}, {self.password=}')
                 self.join(self.ssid, self.password)
             return
 
         if (self.state == 'ONLINE' or self.state == 'CONNECTED'
             ) and self.esp.status != 3:
             utils.log('Wi-Fi network lost.')
+            utils.log(f'lost, {self.ssid=}, {self.password=}')
             self.close()
 
         if (self.state == 'CONNECTED' and
@@ -67,6 +72,7 @@ class Network:
             self.close()
 
     def join(self, ssid=None, password=b''):
+        utils.log(f'network.join({ssid=}, {password=}')
         self.set_state('JOINING')
         if ssid:
             self.ssid = utils.to_bytes(ssid)

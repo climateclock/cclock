@@ -3,6 +3,7 @@ import displayio
 bitmap = displayio.Bitmap(192, 32, 16)
 
 import display
+display.BIT_DEPTH = 4  # save memory
 display.init(bitmap)
 title_pi = display.get_pi(0x00, 0xff, 0x00)
 pi = display.get_pi(0x80, 0x80, 0x80)
