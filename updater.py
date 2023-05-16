@@ -197,7 +197,7 @@ def write_enabled_flags(index_packs):
             fs.destroy(dir_name + '/@ENABLED')
             if enabled:
                 print('Enabled:', dir_name)
-                fs.append(dir_name + '/@ENABLED', b'')
+                fs.append(dir_name + '/@ENABLED', b'1')
                 usable = True
                 if fs.isfile(dir_name + '/@PATH'):
                     with open(dir_name + '/@PATH') as file:

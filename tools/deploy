@@ -129,8 +129,8 @@ function install_version() {
     echo "Installing $version at $target..."
     mkdir -p "$target"
     cp "$pack_dir"/* "$target"
-    touch "$target"/@VALID
-    touch "$target"/@ENABLED
+    echo -n 1 > "$target"/@VALID
+    echo -n 1 > "$target"/@ENABLED
 }
 
 if [[ $factory ]]; then

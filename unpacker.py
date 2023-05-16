@@ -112,8 +112,7 @@ class Unpacker:
         if block_type == b'pe':  # pack end
             actual_hash = self.digest.hexdigest()
             if actual_hash == self.pack_hash:
-                with open(self.dir_name + '/@VALID', 'wb') as file:
-                    pass
+                fs.append(self.dir_name + '/@VALID', b'1')
                 print(f'Pack {self.dir_name} unpacked successfully!')
                 return True
             raise ValueError(
