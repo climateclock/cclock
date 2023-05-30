@@ -10,85 +10,95 @@ while [[ $1 = -* ]]; do
     [[ $1 = -u ]] && shift && url=$1
     shift
 done
-vname="$1"
-commit="$2"
-parent="$3"
-parent_commit="$4"
-parent_commit=${parent_commit:-$parent}
-release_files_dir=/tmp/release-files.$$
-release_pack_dir=/tmp/release-pack.$$
-parent_files_dir=/tmp/parent-files.$$
-parent_pack_dir=/tmp/parent-pack.$$
+
+version="$1"
+base="$2"
+
+vname=${version%%@*}
+vcommit=${version##*@}
+bname=${base%%@*}
+bcommit=${base##*@}
+
+version_files_dir=/tmp/version-files.$$
+version_pack_dir=/tmp/version-pack.$$
+base_files_dir=/tmp/base-files.$$
+base_pack_dir=/tmp/base-pack.$$
 
 if [[ $help || ! $vname = v* ]]; then
     cat <<EOF && exit 1
-Usage: $0 [-u <base-url>] <vname> [<commit> [<parent> [<parent-commit>]]]
+Usage: $0 [-u <base-url>] <version> [<base>]
 
-<vname> and <parent> should be version names in the form v1, v2, etc.
-<commit> and <parent-commit> should be git commit hashes or tags.
+<version> and <base> should be version names in the form v1, v2, etc.
 
-If only <vname> and <commit> are specified, builds a pack file named
-<vname>.<hash>.pk containing the files at <commit>.
+If only <version> is specified, builds a pack file named <version>.<hash>.pk
+containing all the files at the git tag named <version>.
 
-If <parent> and <parent-commit> are also specified, builds a pack file
-named <vname>-<parent>.<hash>.pk containing only the files that changed
-between <parent-commit> and <commit>.
+If <version> and <base> are specified, builds a pack file named
+<version>-<base>.<hash>.pk containing just the files that changed between
+the tag named <base> and the tag named <version>.
 
-<commit> can be omitted or given as "." to use the files in the working
-directory instead of the files at a particular commit.  <parent-commit>
-can be omitted if it is the same as <parent>.
+To force the pack to be built using the files at a different git commit,
+you can add a @<commit> suffix after <version> or <base>.  You can also use
+the suffix "@." to build a fictitious version from the current working tree.
 
--s produces a pack file that can work in the simulator, by
-suppressing the usual compilation of Python files into .mpy files.
+-s produces a pack file that can work in the simulator, by suppressing the
+usual compilation of Python files into .mpy files.
 
--u <base-url> prints out a nicely formatted JSON entry for you to paste
-into packs.json when you publish the pack file.  <base-url> should be
-the URL to the directory where the pack file will go; for example, if
-you are putting pack files at https://example.com/path/whatever.pk,
-<base-url> should be "https://example.com/path".
+-u <base-url> prints out a nicely formatted JSON entry for you to paste into
+packs.json when you publish the pack file.  <base-url> should be the URL to
+the directory where the pack file will go; for example, if you are putting
+pack files at https://example.com/path/whatever.pk, <base-url> should be
+"https://example.com/path".
+
+Examples:
+
+    release v2     # builds v2.<hash>.pk, containing v2
+    release -s v2  # builds v2.<hash>.pk, containing v2, for the simulator only
+    release v2 v1  # builds v2-v1.<hash>.pk, containing a patch from v1 to v2
+    release v3@.   # builds v3.<hash>.pk, containing the working tree
 
 EOF
 fi
 
 # Make a directory containing the version to release.
-mkdir $release_files_dir
-if [[ $commit && $commit != . ]]; then
-    git archive $commit | tar -x -C $release_files_dir
-    echo "Releasing $vname at:"
-    git log -n 1 --oneline $commit
-    build $release_files_dir $release_pack_dir
-else
+mkdir $version_files_dir
+if [[ $vcommit = . ]]; then
     echo "Releasing working directory files as $vname."
-    build . $release_pack_dir
+    build . $version_pack_dir
+else
+    git archive $vcommit | tar -x -C $version_files_dir
+    echo "Releasing $vname at:"
+    git log -n 1 --oneline $vcommit
+    build $version_files_dir $version_pack_dir
 fi
 
-if [[ $parent_commit ]]; then
-    # Make a directory containing the parent version.
-    mkdir $parent_files_dir
-    git archive $parent_commit | tar -x -C $parent_files_dir
-    echo "Patching against parent $parent at:"
-    git log -n 1 --oneline $parent_commit
-    build $parent_files_dir $parent_pack_dir
+if [[ $base ]]; then
+    # Make a directory containing the base version.
+    mkdir $base_files_dir
+    git archive $bcommit | tar -x -C $base_files_dir
+    echo "Patching against base $bname at:"
+    git log -n 1 --oneline $bcommit
+    build $base_files_dir $base_pack_dir
 
-    # Use tools/pack to find the pack hash for the parent version.
-    eval $(tools/pack -n $parent $parent_pack_dir)
-    echo $parent.$pack_hash > $release_pack_dir/@PATH
-    echo "Setting @PATH to: $parent.$pack_hash"
+    # Use tools/pack to find the pack hash for the base version.
+    eval $(tools/pack -n $bname $base_pack_dir)
+    echo $bname.$pack_hash > $version_pack_dir/@PATH
+    echo "Setting @PATH to: $bname.$pack_hash"
 
     # Omit all the unchanged files from the patch pack.
-    for file in $(cd $release_pack_dir; echo *); do
-        if diff -q $parent_pack_dir/$file $release_pack_dir/$file >/dev/null 2>&1; then
-            rm $release_pack_dir/$file
+    for file in $(cd $version_pack_dir; echo *); do
+        if diff -q $base_pack_dir/$file $version_pack_dir/$file >/dev/null 2>&1; then
+            rm $version_pack_dir/$file
         fi
     done
-    pack_name=$vname-${parent}
+    pack_name=$vname-${bname}
 else
     pack_name=$vname
 fi
 
 # Now build the pack.
 echo
-eval $(tools/pack $pack_name $release_pack_dir)
+eval $(tools/pack $pack_name $version_pack_dir)
 echo Pack file: $pack_filename
 
 [[ $url ]] && cat <<EOF
@@ -102,4 +112,4 @@ echo Pack file: $pack_filename
 
 EOF
 
-[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf "$release_files_dir" "$release_pack_dir" "$parent_files_dir" "$parent_pack_dir"
+[[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf "$version_files_dir" "$version_pack_dir" "$base_files_dir" "$base_pack_dir"
