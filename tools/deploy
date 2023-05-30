@@ -62,7 +62,7 @@ prefs (/prefs.json), otherwise as user prefs (data/prefs.json).
 EOF
 fi
 
-if [[ ! $factory ]] || [[ $vname && $vname != v* ]]; then
+if [[ ! $factory ]] && [[ $vname && $vname != v* ]]; then
     echo 'Please specify the version to deploy in the form "v1", "v2", etc.'
     exit 1
 fi
