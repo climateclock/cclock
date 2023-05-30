@@ -15,7 +15,7 @@ Palette = namedtuple('Palette', ('primary',))
 Item = namedtuple('Item', ('pub_millis', 'headline', 'source'))
 Timer = namedtuple('Timer', ('id', 'type', 'flavor', 'labels', 'ref_millis'))
 Newsfeed = namedtuple('Newsfeed', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'items'))
-Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'initial', 'ref_millis', 'growth', 'rate', 'decimals', 'shift', 'bias', 'unit_labels'))
+Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'initial', 'ref_millis', 'growth', 'rate', 'decimals', 'shift', 'bias', 'unit_labels', 'count_up_millis'))
 Defn = namedtuple('Defn', ('config', 'module_dict', 'modules'))
 
 
@@ -138,7 +138,8 @@ def load_value(id, data):
         decimals,
         shift,
         bias,
-        sorted_by_length(data.get("unit_labels"))
+        sorted_by_length(data.get("unit_labels")),
+        int(data.get("count_up_duration", 0) * 1000)
     )
 
 

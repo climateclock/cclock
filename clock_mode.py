@@ -87,6 +87,8 @@ class ClockMode:
         utils.log(f'Loaded {path}')
 
     def advance_lifeline(self, delta):
+        if delta:
+            self.start_millis = cctime.get_millis()
         if self.lifelines:
             self.lifeline, self.hide_deadline = self.lifelines.get(delta)
             if (self.lifeline == self.custom_message_module and
@@ -134,7 +136,8 @@ class ClockMode:
                 ccui.render_lifeline_module(
                     bitmap, 0, self.lifeline,
                     self.deadline_pi if self.lifeline.id[:1] == '_'
-                    else self.lifeline_pi, False, self.app.lang)
+                    else self.lifeline_pi, False,
+                    self.start_millis, self.app.lang)
         else:
             if self.deadline:
                 ccui.render_deadline_module(
@@ -143,7 +146,8 @@ class ClockMode:
             if self.lifeline:
                 ccui.render_lifeline_module(
                     bitmap, 16, self.lifeline,
-                    self.lifeline_pi, True, self.app.lang)
+                    self.lifeline_pi, True, 
+                    self.start_millis, self.app.lang)
         display.send()
         if cctime.get_millis() > (self.updates_paused_until_millis or 0):
             self.updater.step()

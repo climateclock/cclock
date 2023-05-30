@@ -26,20 +26,37 @@ def calc_countdown(deadline_module, now_millis):
     return y, d, h, m, s
 
 
-def format_value(module, now_millis):
+def format_decimal(value, bias, shift, decimals):
+    value += -bias if value < 0 else bias  # proper rounding
+    str_value = '0'*shift + str(abs(value))
+    negative_sign = '-' if value < 0 else ''
+    whole_part = str_value[:-shift].lstrip('0')
+    # ccapi.load_value guarantees that shift > decimals.
+    fractional_part = str_value[-shift:][:decimals]
+
+    result = negative_sign + whole_part
+    if fractional_part:
+        result += '.' + fractional_part
+    return result
+
+
+def format_value(module, now_millis, start_millis=0):
     result = ''
     elapsed = now_millis - module.ref_millis  # integer
     if module.growth == 'linear':
         value = module.initial + module.rate * elapsed // 1000
-        value += module.bias if value > 0 else -module.bias  # proper rounding
-        str_value = '0'*module.shift + str(abs(value))
-        # ccapi.load_value guarantees that shift > decimals.
-        negative_sign = '-' if value < 0 else ''
-        whole_part = str_value[:-module.shift].lstrip('0')
-        fractional_part = str_value[-module.shift:][:module.decimals]
-        result = negative_sign + whole_part
-        if fractional_part:
-            result += '.' + fractional_part
+        result = format_decimal(
+            value, module.bias, module.shift, module.decimals)
+    if module.count_up_millis:
+        length = len(result)
+        if now_millis - start_millis < module.count_up_millis:
+            t = (now_millis - start_millis) * 1000 // module.count_up_millis
+            progress = 1000000000 - (1000 - t) * (1000 - t) * (1000 - t)
+            elapsed = elapsed * progress // 1000000000
+            value = module.initial + module.rate * elapsed // 1000
+            result = format_decimal(
+                value, module.bias, module.shift, module.decimals)
+            result = '\u2007' * (length - len(result)) + result
     return result
 
 
@@ -61,10 +78,11 @@ def render_deadline_module(bitmap, y, module, pi, lang='en'):
     large.draw(text, bitmap, x, y, pi)
 
 
-def render_lifeline_module(bitmap, y, module, pi, with_label=True, lang='en'):
+def render_lifeline_module(
+    bitmap, y, module, pi, with_label=True, start_millis=None, lang='en'):
     bitmap.fill(0, 0, y, bitmap.width, y + 16)
     if module.type == 'value':
-        render_value_module(bitmap, y, module, pi, with_label, lang)
+        render_value_module(bitmap, y, module, pi, with_label, start_millis, lang)
     if module.type == 'newsfeed':
         render_newsfeed_module(bitmap, y, module, pi, lang)
 
@@ -80,8 +98,9 @@ def render_label(bitmap, y, labels, pi):
         y += 5
 
 
-def render_value_module(bitmap, y, module, pi, with_label=True, lang='en'):
-    value_text = format_value(module, cctime.get_millis())
+def render_value_module(
+    bitmap, y, module, pi, with_label=True, start_millis=None, lang='en'):
+    value_text = format_value(module, cctime.get_millis(), start_millis)
     label_text = unit_text = ''
     label_w = value_w = 0
     for label_item in module.labels:
