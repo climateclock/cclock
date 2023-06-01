@@ -35,20 +35,20 @@ vname="$1"
 
 if [[ $help || (! $vname && ! $factory)]]; then
     cat <<EOF && exit 1
-Usage: $0 [-d] [-f] [-s] [-S <dir>] [-p <prefs.json>] [-w <network>:<password>] <vname>
+Usage: $0 [-d] [-f] [-s] [-S <dir>] [-p <prefs.json>] [-w <network>:<password>] <version>
 
 Deploys the code at the specified version to the attached CircuitPython device
 at $drive.  (To change the target, set \$CCLOCK_TARGET_ROOT.)
 
-<vname> should be a version name in the form v1, v2, etc.  The code at that
-tag will be deployed to a directory named <vname>.<hash> on the target device.
+<version> should be a version name in the form v1, v2, etc.  The code at that
+tag will be deployed to a directory named <version>.<hash> on the target device.
 
 -d enables memory debugging: memory layout is dumped with every log message.
 
 -f factory-resets the device by wiping the target drive, deploying v0,
 installing clock.json (fetching an up-to-date copy from the API if possible),
-and deploying <vname> in addition to v0.  When -f is specified, omit <vname>
-to deploy the contents of the current directory as v999.
+and deploying <version> in addition to v0.  When -f is specified, you can omit
+<version> to deploy the contents of the current directory as v999.
 
 -p installs the specified prefs.json file; with -f it is installed as factory
 prefs (/prefs.json), otherwise as user prefs (data/prefs.json).
