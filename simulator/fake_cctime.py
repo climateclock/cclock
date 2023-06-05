@@ -2,10 +2,13 @@ import cctime
 import os
 import time
 
-rtc_offset = cctime.MIN_MILLIS//1000 - time.time()
+rtc_offset = 0
+
+if os.environ.get('CCLOCK_DISABLE_RTC'):
+    rtc_offset = cctime.MIN_MILLIS//1000 - time.time()
 
 # By default, pretend the internal clock is 2% too slow.
-internal_clock_speed = int(os.environ.get('CCLOCK_CLOCK_SPEED_PERCENT', 98))/100
+internal_clock_speed = int(os.environ.get('CCLOCK_CLOCK_RATE', 98))/100
 
 def fake_monotonic_millis():
     return int(internal_clock_speed * time.monotonic_ns()/1000000)

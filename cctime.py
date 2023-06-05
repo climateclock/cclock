@@ -112,6 +112,7 @@ def ntp_sync(socklib, server):
                 avg_ntp_latency_ms = latency_ms
             delta_ms = ntp_millis - latency_ms - recv_millis
             if abs(delta_ms) >= latency_ms * 4:
+                print(f'Applying clock delta {delta_ms} > {latency_ms}*4')
                 adjust_ms(delta_ms)
             elif latency_ms <= avg_ntp_latency_ms:
                 # For small adjustments, average a few samples over time.
