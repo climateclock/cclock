@@ -225,14 +225,12 @@ each directory has a name of the form `v<number>.<hash>`, which includes
 an MD5 hash of the contents of the directory.  In the above example, "v1"
 would be installed at `/v1.f4a09eb4651480f7a20a2849544f80e2`.
 
-A factory-installed Action Clock always has a "v0" directory; performing
+A factory-installed Action Clock always has a "v5" directory; performing
 a factory reset deletes all the other version directories as well as the
 `data` directory containing the user settings and any other downloaded
-data files.  When the first Action Clock is released, the hash and thus
-the contents of "v0" will become set in stone, and when each version is
-released thereafter, its hash and its contents will be set in stone.
-This makes it possible to release patch packs that are overlays on top
-of fixed known previous versions of the software.
+data files.  When each version is released, its hash and thus its contents
+will be set in stone.  This makes it possible to release patch packs that
+are overlays on top of fixed known previous versions of the software.
 
 To publish a new software update, use `tools/release`.  To produce a
 complete pack, run it with a version name and a Git tag or commit hash:

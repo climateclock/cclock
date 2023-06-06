@@ -11,8 +11,8 @@ import traceback
 #     v<N>-v<M>.<hash>, e.g. v4-v1.401b30e3b8b5d629635a5c613cdb7919
 #         for a patch directory (just files that differ from version M to N)
 #
-# In all distributions, a complete v0 directory will be present, and a
-# a factory reset will remove all other versions, leaving only v0.
+# In all distributions, a complete base version (see tools/deploy) will be
+# present, and a factory reset will remove all other versions.
 
 
 def get_latest_usable_version():
