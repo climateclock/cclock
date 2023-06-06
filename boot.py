@@ -68,7 +68,7 @@ def check_for_development_mode():
         # software can update itself. 
         pixel.fill((8, 0, 64))  # [P]u[R]ple means [PR]oduction mode
         storage.remount('/', readonly=False)
-        supervisor.disable_autoreload()
+        supervisor.runtime.autoreload = False
 
 up = digitalio.DigitalInOut(board.BUTTON_UP)
 up.pull = digitalio.Pull.UP
