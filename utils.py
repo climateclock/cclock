@@ -30,7 +30,7 @@ def versions_present():
     for name in fs.listdir():
         if name.startswith('v') and fs.isdir(name):
             pack_name = name.split('.')[0]
-            enabled_flag = '@' if fs.isfile(name + '/@ENABLED') else ''
+            enabled_flag = '*' if fs.isfile(name + '/@ENABLED') else ''
             versions.append(enabled_flag + pack_name)
     return versions
 

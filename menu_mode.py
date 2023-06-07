@@ -49,7 +49,7 @@ class MenuMode:
             cctime.millis_to_isoformat(updater.api_fetched) or 'Not yet')
         index_fetched = lambda: (updater.index_fetched and
             cctime.millis_to_isoformat(updater.index_fetched) or 'Not yet')
-        versions_present = ','.join(utils.versions_present() or ['None'])
+        versions_present = lambda: ','.join(utils.versions_present() or ['None'])
 
         def auto_cycling():
             cycling_millis = prefs.get('auto_cycling')
