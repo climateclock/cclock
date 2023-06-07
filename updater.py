@@ -10,8 +10,7 @@ import utils
 
 
 # All durations are measured in milliseconds.
-INITIAL_DELAY = prefs.get_int('updater_initial_delay', 1000)
-WIFI_DELAY = prefs.get_int('updater_wifi_delay', 3000)
+INITIAL_DELAY = prefs.get_int('updater_initial_delay', 2 * 1000)
 FAILURE_DELAY = prefs.get_int('updater_failure_delay', 60 * 1000)
 SUCCESS_DELAY = prefs.get_int('updater_success_delay', 60 * 60 * 1000)
 MIN_RESTART_UPTIME = prefs.get_int('min_restart_uptime', 60 * 60 * 1000)
@@ -52,7 +51,7 @@ class SoftwareUpdater:
         self.net.step()
         if self.net.state == 'OFFLINE' and prefs.get('wifi_ssid'):
             self.net.join(prefs.get('wifi_ssid'), prefs.get('wifi_password'))
-        if self.net.state == 'ONLINE' and self.net.state_elapsed() > WIFI_DELAY:
+        if self.net.state == 'ONLINE':
             fc = self.app.frame_counter
             v = utils.version_dir()
             vp = ','.join(utils.versions_present())
@@ -158,7 +157,10 @@ class SoftwareUpdater:
     def finish_update(self):
         latest_num = write_enabled_flags(self.index_packs)
         if latest_num > utils.version_num():
-            # Restart with the new version if the clock has been up long enough.
+            # Restart with the new version only if the clock has been up long
+            # enough.  If we release broken software, it can cause a clock to
+            # repeatedly downgrade and upgrade; this is a safeguard to ensure
+            # the clock still runs for at least MIN_RESTART_UPTIME.
             if self.app.frame_counter.uptime()*1000 > MIN_RESTART_UPTIME:
                 microcontroller.reset()
             else:
