@@ -116,12 +116,13 @@ def render_value_module(
     text = value_text + unit_text
     if unit_text.startswith('$'):
         text = '$' + value_text + unit_text[1:]
-    width = large.measure(text)
+    width = small.measure(module.prefix_label) + large.measure(text)
     if label_text:
-        width += 4 + small.measure(label_text)
+        width += small.measure(label_text)
     x = max((DISPLAY_WIDTH - width)//2, 0)
+    x = small.draw(module.prefix_label, bitmap, x, y + 5, pi)
     x = large.draw(text, bitmap, x, y, pi)
-    small.draw(label_text, bitmap, x + 4, y + 5, pi)
+    small.draw(label_text, bitmap, x, y + 5, pi)
 
 
 last_newsfeed_module = None
