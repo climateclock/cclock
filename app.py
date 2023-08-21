@@ -8,14 +8,16 @@ import gc
 from menu_mode import MenuMode
 import network
 from edit_mode import EditMode
+import storage
 import utils
 
 
 class App:
-    def __init__(self, bitmap, net, button_map, dial_map):
+    def __init__(self, bitmap, net, power_sensor, button_map, dial_map):
         utils.log('Starting App.__init__')
         self.bitmap = bitmap
         self.net = net
+        self.power_sensor = power_sensor
         self.frame_counter = FrameCounter()
 
         self.clock_mode = ClockMode(self, net, button_map, dial_map)
@@ -37,10 +39,19 @@ class App:
         self.mode.start()
 
     def step(self):
+        if self.power_sensor.level < 5:
+            self.shut_down()
         self.frame_counter.tick()
         cctime.rtc_sync()
         self.brightness_reader.step(self)
         self.mode.step()
+
+    def shut_down(self):
+        utils.log(f'Power level is {self.power_sensor.level}%; shutting down')
+        storage.umount('/')
+        display.blank()
+        while True:
+            display.send()
 
     def receive(self, command, arg=None):
         print('[' + command + ('' if arg is None else ': ' + str(arg)) + ']')
@@ -125,12 +136,12 @@ class Indicator:
             self.bitmap.fill(0, 191, 0, 192, 1)
 
 
-def run(bitmap, net, button_map, dial_map):
+def run(bitmap, net, power_sensor, button_map, dial_map):
     fs.write_indicator = Indicator(bitmap, display.get_pi(0xff, 0x80, 0x00))
     net.indicator = Indicator(bitmap, display.get_pi(0x00, 0xff, 0x00))
     utils.log('Starting run')
     cctime.enable_rtc()
-    app = App(bitmap, net, button_map, dial_map)
+    app = App(bitmap, net, power_sensor, button_map, dial_map)
     app.start()
     utils.log('First frame')
     while True:

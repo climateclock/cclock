@@ -77,6 +77,12 @@ def get_shader_rgb(r, g, b, brightness):
     )
 
 
+# Blank the display as quickly as possible.
+def blank():
+    for pi in range(len(shader)):
+        shader[pi] = 0
+
+
 # Sets the brightness to a level from 0.0 to 1.0.
 def set_brightness(new_brightness):
     global brightness

@@ -22,7 +22,7 @@ display.send()
 import utils
 utils.log()
 import inputs
-up, down, enter, brightness, selector = inputs.init()
+up, down, enter, brightness, selector, power_sensor = inputs.init()
 utils.log('Initialized inputs')
 
 utils.log()
@@ -32,7 +32,7 @@ utils.log('Initialized network')
 
 import app
 app.run(
-    bitmap, net,
+    bitmap, net, power_sensor,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )

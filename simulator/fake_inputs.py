@@ -17,7 +17,9 @@ def init():
         SDL_SCANCODE_DOWN, SDL_SCANCODE_UP, 5/256, 1.0, 0.0, 1.0)
     selector = FakeDial(
         SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, 1, 0, -100000, 100000)
-    return up, down, enter, brightness, selector
+    power_sense = FakePowerSense(
+        SDL_SCANCODE_COMMA, SDL_SCANCODE_PERIOD, 25, 50, 0, 100)
+    return up, down, enter, brightness, selector, power_sense
 
 
 def handle_event(event):
@@ -57,3 +59,9 @@ class FakeDial:
             self.position = max(self.min_position, self.position - self.delta)
         if scancode == self.incr_scancode:
             self.position = min(self.max_position, self.position + self.delta)
+
+
+class FakePowerSense(FakeDial):
+    @property
+    def level(self):
+        return self.position
