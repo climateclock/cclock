@@ -173,8 +173,7 @@ fi
 
 sync
 
-# Occasionally, I've seen filesystem corruption.  I'm not sure if it happens
-# during deployment, but unmounting might reduce the risk.
+# Unmount the drive to prevent corruption of the flash filesystem.
 if [[ $factory && ! $CCLOCK_SIMULATOR_MODE ]]; then
     [ -f /usr/bin/hdiutil ] && hdiutil eject $drive
     [ -e $drive ] && [[ $(command -v umount) ]] && umount $drive
