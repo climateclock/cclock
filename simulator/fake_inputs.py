@@ -10,15 +10,15 @@ def install():
 
 
 def init():
-    up = FakeButton(SDL_SCANCODE_LSHIFT)
-    down = FakeButton(SDL_SCANCODE_RSHIFT)
-    enter = FakeButton(SDL_SCANCODE_RETURN)
+    up = FakeButton('UP', SDL_SCANCODE_LSHIFT)
+    down = FakeButton('DOWN', SDL_SCANCODE_RSHIFT)
+    enter = FakeButton('ENTER', SDL_SCANCODE_RETURN)
     brightness = FakeDial(
-        SDL_SCANCODE_DOWN, SDL_SCANCODE_UP, 5/256, 1.0, 0.0, 1.0)
+        'BRIGHTNESS', SDL_SCANCODE_DOWN, SDL_SCANCODE_UP, 1/8, 1.0, 0.0, 1.0)
     selector = FakeDial(
-        SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, 1, 0, -100000, 100000)
+        'SELECTOR', SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, 1, 0, -10000, 10000)
     power_sense = FakePowerSense(
-        SDL_SCANCODE_COMMA, SDL_SCANCODE_PERIOD, 25, 50, 0, 100)
+        'POWER', SDL_SCANCODE_COMMA, SDL_SCANCODE_PERIOD, 25, 50, 0, 100)
     return up, down, enter, brightness, selector, power_sense
 
 
@@ -33,7 +33,8 @@ def handle_event(event):
 
 
 class FakeButton:
-    def __init__(self, scancode):
+    def __init__(self, name, scancode):
+        self.name = name
         self.scancode = scancode
 
     @property
@@ -44,9 +45,10 @@ class FakeButton:
 
 class FakeDial:
     def __init__(
-        self, decr_scancode, incr_scancode, delta,
+        self, name, decr_scancode, incr_scancode, delta,
         position, min_position, max_position):
         key_handlers.append(self)
+        self.name = name
         self.decr_scancode = decr_scancode
         self.incr_scancode = incr_scancode
         self.delta = delta
@@ -57,8 +59,10 @@ class FakeDial:
     def key_down(self, scancode):
         if scancode == self.decr_scancode:
             self.position = max(self.min_position, self.position - self.delta)
+            print(f'Simulator: {self.name} at {self.position}')
         if scancode == self.incr_scancode:
             self.position = min(self.max_position, self.position + self.delta)
+            print(f'Simulator: {self.name} at {self.position}')
 
 
 class FakePowerSense(FakeDial):
