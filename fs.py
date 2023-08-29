@@ -66,12 +66,13 @@ def get_mode(path):
 
 
 def make_parent(path):
-    with write_indicator:
-        parts = path.strip('/').split('/')
-        path = parts[0]
-        for part in parts[1:]:
-            if isfile(path):
+    parts = path.strip('/').split('/')
+    path = parts[0]
+    for part in parts[1:]:
+        if isfile(path):
+            with write_indicator:
                 os.remove(path)
-            if not isdir(path):
+        if not isdir(path):
+            with write_indicator:
                 os.mkdir(path)
-            path += '/' + part
+        path += '/' + part
