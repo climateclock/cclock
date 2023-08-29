@@ -19,7 +19,6 @@ display.send()
 
 #IMPORTS#
 
-import utils
 utils.log()
 import inputs
 up, down, enter, brightness, selector, power_sensor = inputs.init()

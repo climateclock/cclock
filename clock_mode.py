@@ -4,7 +4,6 @@ import cctime
 import ccui
 import display
 import fs
-from microfont import small
 import prefs
 from updater import SoftwareUpdater
 import utils

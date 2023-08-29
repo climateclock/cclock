@@ -1,4 +1,3 @@
-import ccapi
 import cctime
 from ccinput import DialReader
 from clock_mode import ClockMode
@@ -6,7 +5,6 @@ import display
 import fs
 import gc
 from menu_mode import MenuMode
-import network
 from edit_mode import EditMode
 import utils
 
