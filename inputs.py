@@ -37,7 +37,7 @@ def init():
             hw_revision = ((~rev_code[0] >> 4) & 0xf) + 1
     finally:
         i2c.unlock()
-    print('Hardware revision:', hw_revision)
+    print('Detected hardware revision:', hw_revision)
 
     up = digitalio.DigitalInOut(board.BUTTON_UP)
     up.pull = digitalio.Pull.UP

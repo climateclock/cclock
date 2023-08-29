@@ -6,6 +6,7 @@ import display
 import fs
 import gc
 from menu_mode import MenuMode
+import microcontroller
 import network
 from edit_mode import EditMode
 import storage
@@ -50,8 +51,10 @@ class App:
         utils.log(f'Power level is {self.power_sensor.level}%; shutting down')
         storage.umount('/')
         display.blank()
-        while True:
+        while self.power_sensor.level < 5:
             display.send()
+        utils.log(f'Power has returned after shutdown; restarting')
+        microcontroller.reset()
 
     def receive(self, command, arg=None):
         print('[' + command + ('' if arg is None else ': ' + str(arg)) + ']')
