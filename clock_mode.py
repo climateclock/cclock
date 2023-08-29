@@ -95,6 +95,9 @@ class ClockMode:
             if (self.lifeline == self.custom_message_module and
                 not prefs.get('custom_message')):
                 self.lifeline, self.hide_deadline = self.lifelines.get(delta or 1)
+            prefs.set('lifeline_id', self.lifeline.id)
+            prefs.set('hide_deadline', self.hide_deadline)
+
             self.app.bitmap.fill(0)
             if self.hide_deadline:
                 ccui.render_label(
