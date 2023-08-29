@@ -13,6 +13,7 @@ import utils
 class ClockMode:
     def __init__(self, app, net, button_map, dial_map):
         self.app = app
+        self.start_millis = cctime.get_millis()
 
         self.deadline = None
         self.lifeline = None
