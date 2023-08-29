@@ -23,6 +23,9 @@ import utils
 utils.log()
 import inputs
 up, down, enter, brightness, selector, power_sensor = inputs.init()
+if power_sensor.level < 5:
+    display.blank()
+    utils.shut_down(power_sensor)
 utils.log('Initialized inputs')
 
 utils.log()

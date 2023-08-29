@@ -6,10 +6,8 @@ import display
 import fs
 import gc
 from menu_mode import MenuMode
-import microcontroller
 import network
 from edit_mode import EditMode
-import storage
 import utils
 
 
@@ -41,21 +39,12 @@ class App:
 
     def step(self):
         if self.power_sensor.level < 5:
-            self.shut_down()
+            display.blank()
+            utils.shut_down(self.power_sensor)
         self.frame_counter.tick()
         cctime.rtc_sync()
         self.brightness_reader.step(self)
         self.mode.step()
-
-    def shut_down(self):
-        utils.log(f'Power level is {self.power_sensor.level}%; shutting down')
-        storage.umount('/')
-        utils.log(f'Storage has been unmounted')
-        display.blank()
-        while self.power_sensor.level < 5:
-            display.send()
-        utils.log(f'Power has returned after shutdown; restarting')
-        microcontroller.reset()
 
     def receive(self, command, arg=None):
         print('[' + command + ('' if arg is None else ': ' + str(arg)) + ']')

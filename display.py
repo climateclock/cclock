@@ -81,6 +81,7 @@ def get_shader_rgb(r, g, b, brightness):
 def blank():
     for pi in range(len(shader)):
         shader[pi] = 0
+    send()
 
 
 # Sets the brightness to a level from 0.0 to 1.0.

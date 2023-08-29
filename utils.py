@@ -1,9 +1,21 @@
 import gc
+import microcontroller
 import micropython
 import re
+import storage
 import sys
 
 debug = False
+
+
+def shut_down(power_sensor):
+    log(f'Power at {power_sensor.level}%; shutting down')
+    storage.umount('/')
+    log(f'Storage has been unmounted')
+    while power_sensor.level < 5:
+        pass
+    log(f'Power has returned after shutdown; resetting')
+    microcontroller.reset()
 
 
 def free():
