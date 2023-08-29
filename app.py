@@ -50,6 +50,7 @@ class App:
     def shut_down(self):
         utils.log(f'Power level is {self.power_sensor.level}%; shutting down')
         storage.umount('/')
+        utils.log(f'Storage has been unmounted')
         display.blank()
         while self.power_sensor.level < 5:
             display.send()

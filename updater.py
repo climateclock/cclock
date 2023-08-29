@@ -41,7 +41,7 @@ class SoftwareUpdater:
         self.unpacker = None
         self.next_check = cctime.monotonic_millis() + delay
         self.step = self.wait_step
-        utils.log(f'Next software update attempt in {delay} ms.')
+        utils.log(f'Next software update attempt in {delay} ms')
 
     def wait_step(self):
         if cctime.monotonic_millis() > self.next_check:
@@ -132,16 +132,16 @@ class SoftwareUpdater:
         version = get_latest_enabled_version(self.index_packs)
         if version:
             num, url, dir_name = version
-            print(f'Latest enabled version is {dir_name} at {url}.')
+            print(f'Latest enabled version is {dir_name} at {url}')
             if fs.isfile(dir_name + '/@VALID'):
-                print(f'{dir_name} already exists and is valid.')
+                print(f'{dir_name} already exists and is valid')
                 self.finish_update()
             else:
                 self.fetcher.go(url)
                 self.unpacker = Unpacker(self.fetcher)
                 self.step = self.pack_fetch_step
         else:
-            print(f'No enabled versions found.')
+            print(f'No enabled versions found')
             self.finish_update()
 
     def pack_fetch_step(self):
@@ -164,7 +164,7 @@ class SoftwareUpdater:
             if self.app.frame_counter.uptime()*1000 > MIN_RESTART_UPTIME:
                 microcontroller.reset()
             else:
-                utils.log(f'New version v{latest_num} is ready to run.')
+                utils.log(f'New version v{latest_num} is ready to run')
         self.retry_after(SUCCESS_DELAY)
 
 
