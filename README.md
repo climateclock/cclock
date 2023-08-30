@@ -137,10 +137,10 @@ To enable writing over USB, press the reset button once and then hold
 down either of the other two buttons until the status light turns red.
 The red light indicates that the board is now writable, so you can
 run `tools/deploy` again to copy any of your local edits over to the
-board.  The status light can be red or purple; the mnemonic is:
+board.  The status light can be red or blue; the mnemonic is:
 
   - Red means you can wRite (or think of a red recording light)
-  - PuRple means it's in PRoduction (non-writable over USB)
+  - Blue means it's in Broduction (non-writable over USB)
 
 When the light is red, `tools/deploy` will work.
 
