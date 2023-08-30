@@ -68,6 +68,10 @@ if [[ ! $factory ]] && [[ $vname && $vname != v* ]]; then
     exit 1
 fi
 
+if ! git rev-parse $vname 1>/dev/null 2>/dev/null; then
+    echo "There is no version tag named $vname."
+    exit 1
+fi
 
 echo 'Checking syntax...'
 python3 <<EOF || exit 1
@@ -86,7 +90,7 @@ if [[ ! -d $drive ]] || ! touch "$drive/test" 2>/dev/null; then
     echo -n "Waiting for $drive to be writable.."
     while [[ ! -d $drive ]] || ! touch "$drive/test" 2>/dev/null; do
         echo -n '.'
-        sleep 0.05
+        sleep 0.3
     done
     sleep 0.5  # wait for drive to become writable after boot
     rm -f "$drive/test"
@@ -145,7 +149,7 @@ if [[ $factory ]]; then
     [[ $CCLOCK_KEEP_TEMP_FILES ]] || rm -rf $base_files_dir $base_pack_dir
 fi
 
-if [[ $factory && -z $vname ]]; then
+if [[ $factory ]] && [[ $vname = '' || $vname = . ]]; then
     echo "Building working directory..."
     pack_dir=/tmp/pack.$$
     build . $pack_dir
@@ -180,4 +184,4 @@ if [[ $factory && ! $CCLOCK_SIMULATOR_MODE ]]; then
 fi
 
 echo
-echo 'All done!'
+echo 'Software installed!'
