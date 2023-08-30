@@ -123,7 +123,7 @@ EOF
 ready
 
 echo $GREEN"Installing the Action Clock software..."
-deploy -f $VERSION
+tools/deploy -f $VERSION
 
 cat <<EOF
 $YELLOW
