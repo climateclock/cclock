@@ -86,11 +86,13 @@ class ClockMode:
 
         utils.log(f'Loaded {path}')
 
-    def advance_lifeline(self, delta):
+    def advance_lifeline(self, delta, require_deadline=False):
         if delta:
             self.start_millis = cctime.get_millis()
         if self.lifelines:
             self.lifeline, self.hide_deadline = self.lifelines.get(delta)
+            if require_deadline and self.hide_deadline:
+                self.lifeline, self.hide_deadline = self.lifelines.get(delta)
             if (self.lifeline == self.custom_message_module and
                 not prefs.get('custom_message')):
                 self.lifeline, self.hide_deadline = self.lifelines.get(delta or 1)
@@ -129,9 +131,9 @@ class ClockMode:
             auto_cycling = prefs.get('auto_cycling')
             if auto_cycling:
                 self.next_advance += auto_cycling
+                self.advance_lifeline(1, True)
             else:
                 self.next_advance = None
-            self.advance_lifeline(1)
 
         bitmap = self.app.bitmap
         if self.hide_deadline:
