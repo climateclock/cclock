@@ -2,10 +2,10 @@ import cctime
 from ccinput import DialReader
 from clock_mode import ClockMode
 import display
+from edit_mode import EditMode
 import fs
 import gc
 from menu_mode import MenuMode
-from edit_mode import EditMode
 import utils
 
 
@@ -16,6 +16,8 @@ class App:
         self.net = net
         self.power_sensor = power_sensor
         self.frame_counter = FrameCounter()
+        self.locked = False
+        self.lock_tick = 0
 
         self.clock_mode = ClockMode(self, net, button_map, dial_map)
         utils.log('Created ClockMode')
@@ -46,6 +48,15 @@ class App:
 
     def receive(self, command, arg=None):
         print('[' + command + ('' if arg is None else ': ' + str(arg)) + ']')
+        if command == 'LOCK_TICK':
+            self.lock_tick += 1
+            if self.lock_tick == 6:
+                self.locked = not self.locked
+        if command == 'LOCK_END':
+            self.lock_tick = 0
+        if self.locked:
+            return  # ignore all other input
+
         if command == 'BRIGHTNESS':
             delta, value = arg
             display.set_brightness(value)

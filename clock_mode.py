@@ -4,6 +4,7 @@ import cctime
 import ccui
 import display
 import fs
+from microfont import small
 import prefs
 from updater import SoftwareUpdater
 import utils
@@ -38,6 +39,8 @@ class ClockMode:
             },
             'ENTER': {
                 Press.SHORT: 'MENU_MODE',
+                Press.REPEAT: 'LOCK_TICK',
+                Press.RELEASE: 'LOCK_END',
             }
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
@@ -68,6 +71,8 @@ class ClockMode:
                     self.lifeline_ids.append(m.id)
                     if m.id == prefs.get('lifeline_id'):
                         lifeline_index = len(lifelines)
+                        if not prefs.get('hide_deadline'):
+                            lifeline_index += 1
                     if m.labels or m.full_width_labels:
                         lifelines.append((m, True))
                     lifelines.append((m, False))
@@ -129,7 +134,7 @@ class ClockMode:
     def step(self):
         if self.next_advance and cctime.monotonic_millis() > self.next_advance:
             auto_cycling = prefs.get('auto_cycling')
-            if auto_cycling:
+            if auto_cycling and not self.app.locked:
                 self.next_advance += auto_cycling
                 self.advance_lifeline(1, True)
             else:
@@ -153,9 +158,21 @@ class ClockMode:
                     bitmap, 16, self.lifeline,
                     self.lifeline_pi, True, 
                     self.start_millis, self.app.lang)
+
+        if self.app.lock_tick > 0:
+            if self.app.lock_tick < 6:
+                text = 'Unlocking' if self.app.locked else 'Locking'
+                text += '.'*self.app.lock_tick
+            else:
+                text = 'Display is '
+                text += 'locked.' if self.app.locked else 'unlocked.'
+            self.app.bitmap.fill(0, 0, 0, small.measure(text) + 1, small.h + 1)
+            small.draw(text, self.app.bitmap, 1, 0)
+
         display.send()
         if cctime.get_millis() > (self.updates_paused_until_millis or 0):
-            self.updater.step()
+            if not self.app.locked:
+                self.updater.step()
 
         # Input readers can switch modes, so they should be called last.
         self.reader.step(self.app)
