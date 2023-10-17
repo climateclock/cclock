@@ -68,18 +68,15 @@ class MenuMode:
                 ('Password', None, 'WIFI_PASSWORD_MODE', None, []),
                 ('Back', None, 'BACK', None, [])
             ]),
-            ('Initial display', None, None, None, [
-                ('Lifeline', lifeline_id, None, None, [
-                    (lifeline_id, None, 'SET_LIFELINE', lifeline_id, [])
-                    for lifeline_id in self.app.clock_mode.lifeline_ids
-                ] + [
-                    ('Back', None, 'BACK', None, [])
-                ]),
-                ('Deadline', hide_deadline, None, None, [
-                    ('Visible', None, 'SET_HIDE_DEADLINE', False, []),
-                    ('Hidden', None, 'SET_HIDE_DEADLINE', True, []),
-                    ('Back', None, 'BACK', None, [])
-                ]),
+            ('Initial lifeline', lifeline_id, None, None, [
+                (lifeline.id, None, 'SET_LIFELINE', lifeline.id, [])
+                for lifeline in self.app.clock_mode.lifelines.items
+            ] + [
+                ('Back', None, 'BACK', None, [])
+            ]),
+            ('Deadline', hide_deadline, None, None, [
+                ('Visible', None, 'SET_HIDE_DEADLINE', False, []),
+                ('Hidden', None, 'SET_HIDE_DEADLINE', True, []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Auto cycling', auto_cycling, None, None, [

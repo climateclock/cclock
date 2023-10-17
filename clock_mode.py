@@ -17,9 +17,7 @@ class ClockMode:
 
         self.deadline = None
         self.lifeline = None
-        self.lifeline_ids = None
         self.lifelines = None
-        self.hide_deadline = False
         self.custom_message_module = ccapi.Newsfeed(
             'custom_message', 'newsfeed', 'lifeline', [], [], [])
 
@@ -61,22 +59,16 @@ class ClockMode:
             defn = ccapi.load(api_file)
 
             deadlines = []
-            self.lifeline_ids = []
             lifelines = []
             lifeline_index = 0
             for m in defn.modules:
                 if m.flavor == 'deadline':
                     deadlines.append(m)
                 if m.flavor == 'lifeline':
-                    self.lifeline_ids.append(m.id)
                     if m.id == prefs.get('lifeline_id'):
                         lifeline_index = len(lifelines)
-                        if not prefs.get('hide_deadline'):
-                            lifeline_index += 1
-                    if m.labels or m.full_width_labels:
-                        lifelines.append((m, True))
-                    lifelines.append((m, False))
-            lifelines.append((self.custom_message_module, False))
+                    lifelines.append(m)
+            lifelines.append(self.custom_message_module)
 
             self.deadline = deadlines and deadlines[0] or None
             self.lifelines = utils.Cycle(lifelines)
@@ -86,26 +78,19 @@ class ClockMode:
                 *defn.config.display.lifeline.primary)
 
             self.advance_lifeline(lifeline_index)
-            if self.hide_deadline and not prefs.get('hide_deadline'):
-                self.advance_lifeline(1)
 
         utils.log(f'Loaded {path}')
 
-    def advance_lifeline(self, delta, require_deadline=False):
+    def advance_lifeline(self, delta):
         if delta:
             self.start_millis = cctime.get_millis()
         if self.lifelines:
-            self.lifeline, self.hide_deadline = self.lifelines.get(delta)
-            if require_deadline and self.hide_deadline:
-                self.lifeline, self.hide_deadline = self.lifelines.get(delta)
+            self.lifeline = self.lifelines.get(delta)
             if (self.lifeline == self.custom_message_module and
                 not prefs.get('custom_message')):
-                self.lifeline, self.hide_deadline = self.lifelines.get(delta or 1)
-            prefs.set('lifeline_id', self.lifeline.id)
-            prefs.set('hide_deadline', self.hide_deadline)
-
+                self.lifeline = self.lifelines.get(delta or 1)
             self.app.bitmap.fill(0)
-            if self.hide_deadline:
+            if prefs.get('hide_deadline'):
                 ccui.render_label(
                     self.app.bitmap, 16,
                     self.lifeline.full_width_labels or self.lifeline.labels,
@@ -141,7 +126,7 @@ class ClockMode:
                 self.next_advance = None
 
         bitmap = self.app.bitmap
-        if self.hide_deadline:
+        if prefs.get('hide_deadline'):
             if self.lifeline:
                 ccui.render_lifeline_module(
                     bitmap, 0, self.lifeline,
