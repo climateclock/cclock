@@ -105,7 +105,7 @@ class EditMode:
         bitmap.fill(self.cursor_pi, cx, 10, cx + 4, 11)
 
         bitmap.fill(0, 0, 0, title_width, 11)
-        small.draw(self.pref_title + ':', bitmap, 0, 0, self.pi)
+        small.draw(self.pref_title + ':', bitmap, 1, 0, self.pi)
 
     def draw_menu(self):
         bitmap = self.app.bitmap

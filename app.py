@@ -63,7 +63,7 @@ class App:
         if command == 'MENU_MODE':
             self.set_mode(self.menu_mode)
         if command == 'WIFI_SSID_MODE':
-            self.edit_mode.set_pref('Wi-Fi network name', 'wifi_ssid')
+            self.edit_mode.set_pref('2.4 GHz network name', 'wifi_ssid')
             self.set_mode(self.edit_mode)
         if command == 'WIFI_PASSWORD_MODE':
             self.edit_mode.set_pref('Wi-Fi password', 'wifi_password')
