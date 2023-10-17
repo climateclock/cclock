@@ -60,17 +60,18 @@ def format_value(module, now_millis, start_millis=0):
     return result
 
 
-def render_deadline_module(bitmap, y, module, pi, lang='en'):
+def render_deadline_module(bitmap, y, module, pi):
     bitmap.fill(0, 0, y, bitmap.width, y + 16)
     yr, d, h, m, s = calc_countdown(module, cctime.get_millis())
-    texts = {
-        'de': f'{yr} Jahre {d} Tage {h:02d}:{m:02d}:{s:02d}',
-        'en': f'{yr} years {d} days {h:02d}:{m:02d}:{s:02d}',
-        'pt': f'{yr} ANOS {d} DIAS {h:02d}:{m:02d}:{s:02d}',
-        'es': f'{yr} años {d} días {h:02d}:{m:02d}:{s:02d}',
-        'fr': f'{yr} ans {d} jours {h:02d}:{m:02d}:{s:02d}',
-    }
-    text = texts.get(lang, texts['en'])
+    years, days = {
+        'de': ('Jahre', 'Tage'),
+        'en': ('years', 'days'),
+        'es': ('años', 'dias'),
+        'fr': ('ans', 'jours'),
+        'pt': ('anos', 'dias')
+    }[prefs.get('lang', 'en')]
+
+    text = f'{yr} {years} {d} {days} {h:02d}:{m:02d}:{s:02d}'
     if prefs.get('deadline_force_caps'):
         text = text.upper()
     width = large.measure(text)
@@ -79,12 +80,12 @@ def render_deadline_module(bitmap, y, module, pi, lang='en'):
 
 
 def render_lifeline_module(
-    bitmap, y, module, pi, with_label=True, start_millis=None, lang='en'):
+    bitmap, y, module, pi, with_label=True, start_millis=None):
     bitmap.fill(0, 0, y, bitmap.width, y + 16)
     if module.type == 'value':
-        render_value_module(bitmap, y, module, pi, with_label, start_millis, lang)
+        render_value_module(bitmap, y, module, pi, with_label, start_millis)
     if module.type == 'newsfeed':
-        render_newsfeed_module(bitmap, y, module, pi, lang)
+        render_newsfeed_module(bitmap, y, module, pi)
 
 
 def render_label(bitmap, y, labels, pi):
@@ -99,7 +100,7 @@ def render_label(bitmap, y, labels, pi):
 
 
 def render_value_module(
-    bitmap, y, module, pi, with_label=True, start_millis=None, lang='en'):
+    bitmap, y, module, pi, with_label=True, start_millis=None):
     value_text = format_value(module, cctime.get_millis(), start_millis)
     label_text = unit_text = ''
     label_w = value_w = 0
@@ -144,7 +145,7 @@ def format_item(item):
     return f'{headline} ({item.source.strip()})' if item.source else headline
 
 
-def render_newsfeed_module(bitmap, y, module, pi, lang='en'):
+def render_newsfeed_module(bitmap, y, module, pi):
     global newsfeed_w
     global newsfeed_buffer
     global newsfeed_static

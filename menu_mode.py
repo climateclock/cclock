@@ -7,6 +7,13 @@ import os
 import prefs
 import utils
 
+LANGS = {
+    'en': 'English',
+    'es': 'Español',
+    'fr': 'Français',
+    'de': 'Deutsch',
+    'pt': 'Português'
+}
 
 class MenuMode:
     def __init__(self, app, button_map, dial_map):
@@ -42,6 +49,7 @@ class MenuMode:
         lifeline_id = lambda: prefs.get('lifeline_id')
         hide_deadline = lambda: (
             prefs.get('hide_deadline') and 'Hidden' or 'Visible')
+        language = lambda: LANGS.get(prefs.get('lang', 'en'))
 
         now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
         battery_level = lambda: app.power_sensor.level
@@ -94,6 +102,11 @@ class MenuMode:
                     'SET_UPDATES_PAUSED', 4*3600*1000, []),
                 ('Pause for 24 hours', None,
                     'SET_UPDATES_PAUSED', 24*3600*1000, []),
+                ('Back', None, 'BACK', None, [])
+            ]),
+            ('Language', language, None, None, [
+                (LANGS[lang], None, 'SET_LANG', lang, []) for lang in LANGS
+            ] + [
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Custom message', None, 'CUSTOM_MESSAGE_MODE', None, []),
@@ -197,6 +210,9 @@ class MenuMode:
                     cctime.millis_to_isoformat(cctime.get_millis() + arg))
             else:
                 prefs.set('updates_paused_until', None)
+            command = 'BACK'
+        if command == 'SET_LANG':
+            prefs.set('lang', arg)
             command = 'BACK'
         if command == 'GO':
             title, value, command, arg, children = self.node

@@ -27,7 +27,6 @@ class ClockMode:
 
         self.reader = ButtonReader(button_map, {
             'UP': {
-                Press.SHORT: 'NEXT_LANGUAGE',
                 Press.DOUBLE: 'DUMP_FRAME',
             },
             'DOWN': {
@@ -131,18 +130,15 @@ class ClockMode:
                 ccui.render_lifeline_module(
                     bitmap, 0, self.lifeline,
                     self.deadline_pi if self.lifeline.id[:1] == '_'
-                    else self.lifeline_pi, False,
-                    self.start_millis, self.app.lang)
+                    else self.lifeline_pi, False, self.start_millis)
         else:
             if self.deadline:
                 ccui.render_deadline_module(
-                    bitmap, 0, self.deadline,
-                    self.deadline_pi, self.app.lang)
+                    bitmap, 0, self.deadline, self.deadline_pi)
             if self.lifeline:
                 ccui.render_lifeline_module(
                     bitmap, 16, self.lifeline,
-                    self.lifeline_pi, True, 
-                    self.start_millis, self.app.lang)
+                    self.lifeline_pi, True, self.start_millis)
 
         if self.app.lock_tick > 0:
             if self.app.lock_tick < 6:

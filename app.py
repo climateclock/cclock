@@ -27,8 +27,6 @@ class App:
         utils.log('Created EditMode')
         self.mode = self.clock_mode
 
-        self.langs = utils.Cycle(['en', 'es', 'de', 'fr', 'is'])
-        self.lang = self.langs.get()
         self.brightness_reader = DialReader(
             'BRIGHTNESS', dial_map['BRIGHTNESS'], 9/256, 1/256, 255/256)
         utils.log('Finished App.__init__')
@@ -60,9 +58,6 @@ class App:
         if command == 'BRIGHTNESS':
             delta, value = arg
             display.set_brightness(value)
-        if command == 'NEXT_LANGUAGE':
-            self.lang = self.langs.get(1)
-            self.bitmap.fill(0)
         if command == 'CLOCK_MODE':
             self.set_mode(self.clock_mode)
         if command == 'MENU_MODE':

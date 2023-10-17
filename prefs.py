@@ -36,15 +36,15 @@ def init():
         save()
 
 
-def get(name):
-    return pairs.get(name)
+def get(name, default=None):
+    return pairs.get(name, default)
 
 
-def get_int(name, val):
+def get_int(name, default):
     try:
         return int(pairs.get(name))
     except:
-        return val
+        return default
 
 
 def set(name, value):
