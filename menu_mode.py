@@ -71,21 +71,18 @@ class MenuMode:
 
         # Each node has the form (title, value, command, arg, children).
         self.tree = ('Settings', None, None, None, [
+            ('Battery level', battery_level, None, None, []),
             ('Wi-Fi setup', None, None, None, [
                 (wifi_status, None, None, None, []),
                 ('Network', wifi_ssid, 'WIFI_SSID_MODE', None, []),
                 ('Password', None, 'WIFI_PASSWORD_MODE', None, []),
                 ('Back', None, 'BACK', None, [])
             ]),
+            ('Custom message', None, 'CUSTOM_MESSAGE_MODE', None, []),
             ('Initial lifeline', lifeline_id, None, None, [
                 (lifeline.id, None, 'SET_LIFELINE', lifeline.id, [])
                 for lifeline in self.app.clock_mode.lifelines.items
             ] + [
-                ('Back', None, 'BACK', None, [])
-            ]),
-            ('Deadline', hide_deadline, None, None, [
-                ('Visible', None, 'SET_HIDE_DEADLINE', False, []),
-                ('Hidden', None, 'SET_HIDE_DEADLINE', True, []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Auto cycling', auto_cycling, None, None, [
@@ -104,18 +101,21 @@ class MenuMode:
                     'SET_UPDATES_PAUSED', 24*3600*1000, []),
                 ('Back', None, 'BACK', None, [])
             ]),
+            ('Deadline', hide_deadline, None, None, [
+                ('Visible', None, 'SET_HIDE_DEADLINE', False, []),
+                ('Hidden', None, 'SET_HIDE_DEADLINE', True, []),
+                ('Back', None, 'BACK', None, [])
+            ]),
             ('Language', language, None, None, [
                 (LANGS[lang], None, 'SET_LANG', lang, []) for lang in LANGS
             ] + [
                 ('Back', None, 'BACK', None, [])
             ]),
-            ('Custom message', None, 'CUSTOM_MESSAGE_MODE', None, []),
             ('System info', None, None, None, [
                 (f'Time', now, None, None, []),
-                (f'Battery level', battery_level, None, None, []),
+                (f'MAC ID', self.app.net.mac_address, None, None, []),
                 (f'Version', utils.version_dir, None, None, []),
                 (f'Versions present', versions_present, None, None, []),
-                (f'MAC ID', self.app.net.mac_address, None, None, []),
                 (f'Last API fetch', lambda: cctime.millis_to_isoformat(
                     updater.api_fetched), None, None, []),
                 (f'Last update fetch', lambda: cctime.millis_to_isoformat(
