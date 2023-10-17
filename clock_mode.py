@@ -120,7 +120,7 @@ class ClockMode:
             auto_cycling = prefs.get('auto_cycling')
             if auto_cycling and not self.app.locked:
                 self.next_advance += auto_cycling
-                self.advance_lifeline(1, True)
+                self.advance_lifeline(1)
             else:
                 self.next_advance = None
 
