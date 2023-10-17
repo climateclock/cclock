@@ -44,6 +44,7 @@ class MenuMode:
             prefs.get('hide_deadline') and 'Hidden' or 'Visible')
 
         now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
+        battery_level = lambda: app.power_sensor.level
         updater = self.app.clock_mode.updater
         api_fetched = lambda: (updater.api_fetched and
             cctime.millis_to_isoformat(updater.api_fetched) or 'Not yet')
@@ -98,9 +99,10 @@ class MenuMode:
             ('Custom message', None, 'CUSTOM_MESSAGE_MODE', None, []),
             ('System info', None, None, None, [
                 (f'Time', now, None, None, []),
-                (f'MAC ID', self.app.net.mac_address, None, None, []),
+                (f'Battery level', battery_level, None, None, []),
                 (f'Version', utils.version_dir, None, None, []),
                 (f'Versions present', versions_present, None, None, []),
+                (f'MAC ID', self.app.net.mac_address, None, None, []),
                 (f'Last API fetch', lambda: cctime.millis_to_isoformat(
                     updater.api_fetched), None, None, []),
                 (f'Last update fetch', lambda: cctime.millis_to_isoformat(
