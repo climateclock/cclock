@@ -61,7 +61,7 @@ def load_timer(id, data):
         data.get("type"),
         data.get("flavor"),
         sorted_by_length(data.get("labels")),
-        cctime.try_isoformat_to_millis(data, "timestamp")
+        cctime.try_isoformat_to_millis(data, "timestamp") or 0
     )
 
 
@@ -132,7 +132,7 @@ def load_value(id, data):
         sorted_by_length(data.get("labels")),
         sorted_by_length(data.get("full_width_labels")),
         initial,
-        cctime.try_isoformat_to_millis(data, "timestamp"),
+        cctime.try_isoformat_to_millis(data, "timestamp") or 0,
         data.get("growth") or "linear",
         rate,
         decimals,
