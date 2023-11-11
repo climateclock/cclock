@@ -7,28 +7,30 @@ UP_ARROW = '\u2191'
 
 # ASCII characters only, for entering passwords and the like.
 ASCII_TEXT_MENU = [
-    ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz'),
-    ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
+    ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz\u2423'),
+    ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\u2423'),
     ('123', None, UP_ARROW + '1234567890'),
     ('.,-!?', None, UP_ARROW + '.,:;-\'!?"@#$%^&*+=_~/\\()[]<>{}'),
     ('\u2423', 'SPACE', ''),
-    ('\b', 'BACKSPACE', ''),
-    ('\x0b', 'CLEAR', ''),  # we're using Ctrl-K as the clear character
-    ('\r', 'ACCEPT', '')
+    ('\b', 'BACKSPACE', ''),  # Backspace
+    ('\x0b', 'CLEAR', ''),  # Ctrl-K (KILL)
+    ('\x1b', 'CANCEL', ''),  # Escape
+    ('\r', 'ACCEPT', '')  # Enter
 ]
 
 # All the common letters and punctuation marks in Western European languages.
 DISPLAY_TEXT_MENU = [
-    ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz'),
-    ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
+    ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz\u2423'),
+    ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\u2423'),
     ('àáâ', None, UP_ARROW + 'àáâãäåæçèéêëìíîïðµñòóôõöøßùúûüýÿþ'),
     ('ÀÁÂ', None, UP_ARROW + 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ'),
     ('+−123', None, UP_ARROW + '+−1234567890°²³₂₃₄,.'),
     ('.,-!?', None, UP_ARROW + '.,:;-\'!?¡¿“”@#$%^&*=_~·–—/\\()[]<>{}'),
     ('\u2423', 'SPACE', ''),
-    ('\b', 'BACKSPACE', ''),
-    ('\x0b', 'CLEAR', ''),
-    ('\r', 'ACCEPT', '')
+    ('\b', 'BACKSPACE', ''),  # Backspace
+    ('\x0b', 'CLEAR', ''),  # Ctrl-K (KILL)
+    ('\x1b', 'CANCEL', ''),  # Escape
+    ('\r', 'ACCEPT', '')  # Enter
 ]
 
 
@@ -123,7 +125,7 @@ class EditMode:
                 if i == self.menu_index:
                     bitmap.fill(self.cursor_pi, x, 21, nx - 1, 22)
                 x = nx
-            x += 4
+            x += 3
 
     def draw_char_cursor(self):
         label, command, chars = self.menu[self.menu_index]
@@ -153,7 +155,7 @@ class EditMode:
                 if ci == 0:
                     self.menu_selected = False
                 else:
-                    self.text += chars[ci]
+                    self.text += chars[ci].replace('\u2423', ' ')
                     self.draw_field()
             elif not command:
                 self.menu_selected = True
@@ -177,7 +179,8 @@ class EditMode:
         if command == 'CLEAR':
             self.text = ''
             self.draw_field()
-
+        if command == 'CANCEL':
+            self.app.receive('MENU_MODE')
         if command == 'ACCEPT':
             prefs.set(self.pref_name, self.text)
             self.app.receive('MENU_MODE')

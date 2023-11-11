@@ -47,6 +47,7 @@ class MenuMode:
         }.get(self.app.net.state, 'Offline')
         wifi_ssid = lambda: prefs.get('wifi_ssid')
         lifeline_id = lambda: prefs.get('lifeline_id')
+        message = lambda: prefs.get('custom_message') or 'None'
         hide_deadline = lambda: (
             prefs.get('hide_deadline') and 'Hidden' or 'Visible')
         language = lambda: LANGS.get(prefs.get('lang', 'en'))
@@ -78,7 +79,7 @@ class MenuMode:
                 ('Password', None, 'WIFI_PASSWORD_MODE', None, []),
                 ('Back', None, 'BACK', None, [])
             ]),
-            ('Custom message', None, 'CUSTOM_MESSAGE_MODE', None, []),
+            ('Custom message', message, 'CUSTOM_MESSAGE_MODE', None, []),
             ('Initial lifeline', lifeline_id, None, None, [
                 (lifeline.id, None, 'SET_LIFELINE', lifeline.id, [])
                 for lifeline in self.app.clock_mode.lifelines.items
