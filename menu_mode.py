@@ -229,7 +229,6 @@ class MenuMode:
             else:
                 self.app.receive('CLOCK_MODE')
 
-
     def move_cursor(self, delta):
         title, value, command, arg, children = self.node
         if children:

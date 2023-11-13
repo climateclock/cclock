@@ -80,14 +80,14 @@ class ClockMode:
 
         utils.log(f'Loaded {path}')
 
-    def advance_lifeline(self, delta):
+    def advance_lifeline(self, delta=0, index=None):
         if delta:
             self.start_millis = cctime.get_millis()
         if self.lifelines:
-            self.lifeline = self.lifelines.get(delta)
+            self.lifeline = self.lifelines.get(delta=delta, index=index)
             if (self.lifeline == self.custom_message_module and
                 not prefs.get('custom_message')):
-                self.lifeline = self.lifelines.get(delta or 1)
+                self.lifeline = self.lifelines.get(delta=delta or 1)
             self.app.bitmap.fill(0)
             if prefs.get('hide_deadline'):
                 ccui.render_label(

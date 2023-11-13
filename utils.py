@@ -118,8 +118,9 @@ class Cycle:
         self.items = items
         self.index = 0
 
-    def get(self, delta=0):
-        self.index = (self.index + len(self.items) + delta) % len(self.items)
+    def get(self, delta=0, index=None):
+        new_index = self.index + delta if index is None else index
+        self.index = (new_index + len(self.items)) % len(self.items)
         return self.items[self.index]
 
 

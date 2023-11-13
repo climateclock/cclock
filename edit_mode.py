@@ -183,7 +183,9 @@ class EditMode:
             self.app.receive('MENU_MODE')
         if command == 'ACCEPT':
             prefs.set(self.pref_name, self.text)
-            self.app.receive('MENU_MODE')
+            if self.pref_name == 'custom_message' and self.text:
+                self.app.clock_mode.advance_lifeline(index=-1)
+            self.app.receive('CLOCK_MODE')
 
     def move_menu_cursor(self, delta):
         self.menu_index = max(0, min(len(self.menu) - 1, self.menu_index + delta))
