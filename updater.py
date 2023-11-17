@@ -50,7 +50,7 @@ class SoftwareUpdater:
     def join_wifi_step(self):
         self.net.step()
         if self.net.state == 'OFFLINE' and prefs.get('wifi_ssid'):
-            self.net.join(prefs.get('wifi_ssid'), prefs.get('wifi_password'))
+            self.net.join()
         if self.net.state == 'ONLINE':
             fc = self.app.frame_counter
             v = utils.version_dir()

@@ -53,7 +53,7 @@ class Network:
             elif self.state_elapsed() > 20000:
                 utils.log(f'Could not join Wi-Fi network after 20 s; retrying.')
                 self.esp.disconnect()
-                self.join(self.ssid, self.password)
+                self.join()
             return
 
         if (self.state == 'ONLINE' or self.state == 'CONNECTED'
@@ -66,17 +66,16 @@ class Network:
             utils.log('Remote server closed connection.')
             self.close()
 
-    def join(self, ssid=None, password=b''):
+    def join(self):
         self.set_state('JOINING')
+        ssid = utils.to_bytes(prefs.get('wifi_ssid'))
+        password = utils.to_bytes(prefs.get('wifi_password'))
         if ssid:
-            self.ssid = utils.to_bytes(ssid)
-            self.password = utils.to_bytes(password)
-            utils.log(f'Joining Wi-Fi network {repr(self.ssid)}.')
+            utils.log(f'Joining Wi-Fi network {repr(ssid)}.')
             # NOTE: ssid and password must be bytes, not str!
-            self.esp.wifi_set_passphrase(self.ssid, self.password)
+            self.esp.wifi_set_passphrase(ssid, password)
         else:
             utils.log(f'Wi-Fi is disabled because SSID is blank.')
-            return
 
     def connect(self, host, port=None, ssl=True):
         if self.state != 'ONLINE':

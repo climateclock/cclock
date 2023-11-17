@@ -46,7 +46,7 @@ class HttpFetcher:
     def connect_read(self):
         self.net.step()
         if self.net.state == 'OFFLINE':
-            self.net.join(prefs.get('wifi_ssid'), prefs.get('wifi_password'))
+            self.net.join()
         elif self.net.state == 'ONLINE':
             # connect() will raise if it fails; there's no risk of a retry loop
             self.net.connect(self.host, ssl=self.ssl)
