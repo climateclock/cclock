@@ -41,6 +41,7 @@ class ClockMode:
             }
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
+        self.low_battery_cv = display.get_pi(0xff, 0, 0)
 
     def load_definition(self):
         utils.log()
@@ -147,8 +148,12 @@ class ClockMode:
             else:
                 text = 'Display is '
                 text += 'locked.' if self.app.locked else 'unlocked.'
-            self.app.bitmap.fill(0, 0, 0, small.measure(text) + 1, small.h + 1)
-            small.draw(text, self.app.bitmap, 1, 0)
+            bitmap.fill(0, 0, 0, small.measure(text) + 1, small.h + 1)
+            small.draw(text, bitmap, 1, 0)
+
+        if self.app.battery_sensor.level < 10:
+            blink = cctime.monotonic_millis() % 1500
+            bitmap.fill(self.low_battery_cv * (blink < 1000), 190, 30, 192, 32)
 
         display.send()
         if cctime.get_millis() > (self.updates_paused_until_millis or 0):

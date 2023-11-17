@@ -10,11 +10,11 @@ import utils
 
 
 class App:
-    def __init__(self, bitmap, net, power_sensor, button_map, dial_map):
+    def __init__(self, bitmap, net, battery_sensor, button_map, dial_map):
         utils.log('Starting App.__init__')
         self.bitmap = bitmap
         self.net = net
-        self.power_sensor = power_sensor
+        self.battery_sensor = battery_sensor
         self.frame_counter = FrameCounter()
         self.locked = False
         self.lock_tick = 0
@@ -36,9 +36,9 @@ class App:
         self.mode.start()
 
     def step(self):
-        if self.power_sensor.level < 5:
+        if self.battery_sensor.level < 2:
             display.blank()
-            utils.shut_down(self.power_sensor)
+            utils.shut_down(self.battery_sensor)
         self.frame_counter.tick()
         cctime.rtc_sync()
         self.brightness_reader.step(self)
@@ -133,12 +133,12 @@ class Indicator:
             self.bitmap.fill(0, 191, 0, 192, 1)
 
 
-def run(bitmap, net, power_sensor, button_map, dial_map):
-    fs.write_indicator = Indicator(bitmap, display.get_pi(0xff, 0x80, 0x00))
+def run(bitmap, net, battery_sensor, button_map, dial_map):
+    fs.write_indicator = Indicator(bitmap, display.get_pi(0xe0, 0xc0, 0x00))
     net.indicator = Indicator(bitmap, display.get_pi(0x00, 0xff, 0x00))
     utils.log('Starting run')
     cctime.enable_rtc()
-    app = App(bitmap, net, power_sensor, button_map, dial_map)
+    app = App(bitmap, net, battery_sensor, button_map, dial_map)
     app.start()
     utils.log('First frame')
     while True:

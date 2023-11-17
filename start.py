@@ -21,10 +21,10 @@ display.send()
 
 utils.log()
 import inputs
-up, down, enter, brightness, selector, power_sensor = inputs.init()
-if power_sensor.level < 5:
+up, down, enter, brightness, selector, battery_sensor = inputs.init()
+if battery_sensor.level < 5:
     display.blank()
-    utils.shut_down(power_sensor)
+    utils.shut_down(battery_sensor)
 utils.log('Initialized inputs')
 
 utils.log()
@@ -34,7 +34,7 @@ utils.log('Initialized network')
 
 import app
 app.run(
-    bitmap, net, power_sensor,
+    bitmap, net, battery_sensor,
     {'UP': up, 'DOWN': down, 'ENTER': enter},
     {'BRIGHTNESS': brightness, 'SELECTOR': selector}
 )

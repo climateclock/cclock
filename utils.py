@@ -8,11 +8,11 @@ import sys
 debug = False
 
 
-def shut_down(power_sensor):
-    log(f'Power at {power_sensor.level}%; shutting down')
+def shut_down(battery_sensor):
+    log(f'Battery at {battery_sensor.level}%; shutting down')
     storage.umount('/')
     log(f'Storage has been unmounted')
-    while power_sensor.level < 5:
+    while battery_sensor.level < 2:
         pass
     log(f'Power has returned after shutdown; resetting')
     microcontroller.reset()

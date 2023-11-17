@@ -53,7 +53,7 @@ class MenuMode:
         language = lambda: LANGS.get(prefs.get('lang', 'en'))
 
         now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
-        battery_level = lambda: app.power_sensor.level
+        battery_level = lambda: str(app.battery_sensor.level) + '%'
         updater = self.app.clock_mode.updater
         api_fetched = lambda: (updater.api_fetched and
             cctime.millis_to_isoformat(updater.api_fetched) or 'Not yet')

@@ -17,9 +17,9 @@ def init():
         'BRIGHTNESS', SDL_SCANCODE_DOWN, SDL_SCANCODE_UP, 1/8, 1.0, 0.0, 1.0)
     selector = FakeDial(
         'SELECTOR', SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, 1, 0, -10000, 10000)
-    power_sense = FakePowerSense(
-        'POWER', SDL_SCANCODE_COMMA, SDL_SCANCODE_PERIOD, 25, 50, 0, 100)
-    return up, down, enter, brightness, selector, power_sense
+    battery_sensor = FakeBatterySensor(
+        'BATTERY', SDL_SCANCODE_COMMA, SDL_SCANCODE_PERIOD, 4, 50, 0, 100)
+    return up, down, enter, brightness, selector, battery_sensor
 
 
 def handle_event(event):
@@ -65,7 +65,7 @@ class FakeDial:
             print(f'Simulator: {self.name} at {self.position}')
 
 
-class FakePowerSense(FakeDial):
+class FakeBatterySensor(FakeDial):
     @property
     def level(self):
         return self.position

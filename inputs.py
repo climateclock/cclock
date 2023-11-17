@@ -13,15 +13,21 @@ class PositionDial:
         return self.input.value/65536.0
 
 
-class PowerSensor:
+class BatterySensor:
     def __init__(self, pin=None):
         self.analog = pin and analogio.AnalogIn(pin)
+        self.value = self.analog and self.analog.value
 
     @property
     def level(self):  # returns a battery percentage level from 0 to 100
         if not self.analog:
             return 50  # no battery reading available
-        fraction = (self.analog.value - 40000) / 8000  # roughly 40000 to 48000
+        self.value = (
+            self.value * 12 +
+            self.analog.value + self.analog.value +
+            self.analog.value + self.analog.value  # take 4 samples
+        ) / 16  # smooth it out
+        fraction = (self.value - 40000) / 8000  # roughly 40000 to 48000
         return max(0, min(100, int(fraction * 100)))
 
 
@@ -47,5 +53,5 @@ def init():
     enter.pull = digitalio.Pull.UP
     brightness = PositionDial(analogio.AnalogIn(board.A1))
     selector = rotaryio.IncrementalEncoder(board.A2, board.A3)
-    power_sensor = PowerSensor(None if hw_revision == 0 else board.A4)
-    return up, down, enter, brightness, selector, power_sensor
+    battery_sensor = BatterySensor(None if hw_revision == 0 else board.A4)
+    return up, down, enter, brightness, selector, battery_sensor
