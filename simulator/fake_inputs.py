@@ -1,4 +1,5 @@
 import inputs
+import os
 from sdl2 import *
 
 pressed_scancodes = set()
@@ -18,7 +19,7 @@ def init():
     selector = FakeDial(
         'SELECTOR', SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, 1, 0, -10000, 10000)
     battery_sensor = FakeBatterySensor(
-        'BATTERY', SDL_SCANCODE_COMMA, SDL_SCANCODE_PERIOD, 4, 50, 0, 100)
+        'BATTERY', SDL_SCANCODE_COMMA, SDL_SCANCODE_PERIOD, 4, 70, 0, 100)
     return up, down, enter, brightness, selector, battery_sensor
 
 
@@ -68,4 +69,6 @@ class FakeDial:
 class FakeBatterySensor(FakeDial):
     @property
     def level(self):
+        if os.environ.get('CCLOCK_DISABLE_BATTERY_SENSOR'):
+            return None
         return self.position

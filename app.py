@@ -36,7 +36,8 @@ class App:
         self.mode.start()
 
     def step(self):
-        if self.battery_sensor.level < 2:
+        level = self.battery_sensor.level
+        if level is not None and level < 5:
             display.blank()
             utils.shut_down(self.battery_sensor)
         self.frame_counter.tick()

@@ -22,7 +22,8 @@ display.send()
 utils.log()
 import inputs
 up, down, enter, brightness, selector, battery_sensor = inputs.init()
-if battery_sensor.level < 5:
+level = battery_sensor.level
+if level is not None and level < 5:
     display.blank()
     utils.shut_down(battery_sensor)
 utils.log('Initialized inputs')

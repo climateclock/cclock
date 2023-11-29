@@ -80,15 +80,15 @@ class MenuMode:
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Custom message', message, 'CUSTOM_MESSAGE_MODE', None, []),
+            ('Display mode', display_mode, None, None, [
+                ('Dual (deadline and lifeline)', None, 'SET_DISPLAY_MODE', 'DUAL', []),
+                ('Single (deadline or lifeline)', None, 'SET_DISPLAY_MODE', 'SINGLE', []),
+                ('Back', None, 'BACK', None, [])
+            ]),
             ('Initial display', module_id, None, None, [
                 (module.id, None, 'SET_INITIAL_MODULE', module.id, [])
                 for module in self.app.clock_mode.modules.items
             ] + [
-                ('Back', None, 'BACK', None, [])
-            ]),
-            ('Display mode', display_mode, None, None, [
-                ('Dual (deadline and lifeline)', None, 'SET_DISPLAY_MODE', 'DUAL', []),
-                ('Single (deadline or lifeline)', None, 'SET_DISPLAY_MODE', 'SINGLE', []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Auto cycling', auto_cycling, None, None, [
@@ -131,6 +131,9 @@ class MenuMode:
             ]),
             ('Back', None, 'CLOCK_MODE', None, [])
         ])
+        if app.battery_sensor.level is None:
+            self.tree[4][:1] = []  # omit the "Battery:" item
+
         self.crumbs = []
         self.node = self.tree
         self.top = self.index = self.offset = 0

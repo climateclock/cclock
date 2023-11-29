@@ -19,16 +19,15 @@ class BatterySensor:
         self.value = self.analog and self.analog.value
 
     @property
-    def level(self):  # returns a battery percentage level from 0 to 100
-        if not self.analog:
-            return 50  # no battery reading available
-        self.value = (
-            self.value * 12 +
-            self.analog.value + self.analog.value +
-            self.analog.value + self.analog.value  # take 4 samples
-        ) / 16  # smooth it out
-        fraction = (self.value - 40000) / 8000  # roughly 40000 to 48000
-        return max(0, min(100, int(fraction * 100)))
+    def level(self):  # returns a level from 0 to 100, or None if no sensor
+        if self.analog:
+            self.value = (
+                self.value * 12 +
+                self.analog.value + self.analog.value +
+                self.analog.value + self.analog.value  # take 4 samples
+            ) / 16  # smooth it out
+            fraction = (self.value - 40000) / 8000  # roughly 40000 to 48000
+            return max(0, min(100, int(fraction * 100)))
 
 
 def init():

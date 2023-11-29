@@ -12,10 +12,10 @@ def shut_down(battery_sensor):
     log(f'Battery at {battery_sensor.level}%; shutting down')
     storage.umount('/')
     log(f'Storage has been unmounted')
-    while battery_sensor.level < 2:
-        pass
-    log(f'Power has returned after shutdown; resetting')
-    microcontroller.reset()
+    while True:
+        if (battery_sensor.level or 0) >= 10:
+            log(f'Power has returned after shutdown; resetting')
+            microcontroller.reset()
 
 
 def free():
