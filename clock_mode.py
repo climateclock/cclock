@@ -128,23 +128,17 @@ class ClockMode:
                 self.next_advance = None
 
         bitmap = self.app.bitmap
-        if prefs.get('display_mode') != 'DUAL':
-            if self.module == self.deadline:
-                ccui.render_deadline_module(
-                    bitmap, 0, self.module, self.deadline_pi)
-            else:
-                ccui.render_lifeline_module(
-                    bitmap, 0, self.module,
-                    self.deadline_pi if self.module.id[:1] == '_'
-                    else self.lifeline_pi, False, self.start_millis)
-        else:
-            if self.deadline:
-                ccui.render_deadline_module(
-                    bitmap, 0, self.deadline, self.deadline_pi)
-            if self.module:
-                ccui.render_lifeline_module(
-                    bitmap, 16, self.module,
-                    self.lifeline_pi, True, self.start_millis)
+        dual_mode = prefs.get('display_mode') == 'DUAL'
+
+        if self.module == self.deadline or dual_mode:
+            ccui.render_deadline_module(
+                bitmap, 0, self.deadline, self.deadline_pi)
+
+        pi = self.deadline_pi if self.module.id[:1] == '_' else self.lifeline_pi
+        if self.module != self.deadline:
+            ccui.render_lifeline_module(
+                bitmap, dual_mode*16, self.module, pi,
+                dual_mode, self.start_millis)
 
         if self.app.lock_tick > 0:
             if self.app.lock_tick < 6:
