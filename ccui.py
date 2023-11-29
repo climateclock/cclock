@@ -60,8 +60,18 @@ def format_value(module, now_millis, start_millis=0):
     return result
 
 
-def render_deadline_module(bitmap, y, module, pi):
+def render_module(
+    bitmap, y, module, pi, with_label=True, start_millis=None):
     bitmap.fill(0, 0, y, bitmap.width, y + 16)
+    if module.type == 'timer':
+        render_timer_module(bitmap, y, module, pi)
+    if module.type == 'value':
+        render_value_module(bitmap, y, module, pi, with_label, start_millis)
+    if module.type == 'newsfeed':
+        render_newsfeed_module(bitmap, y, module, pi)
+
+
+def render_timer_module(bitmap, y, module, pi):
     yr, d, h, m, s = calc_countdown(module, cctime.get_millis())
     years, days = {
         'de': ('Jahre', 'Tage'),
@@ -77,15 +87,6 @@ def render_deadline_module(bitmap, y, module, pi):
     width = large.measure(text)
     x = max((DISPLAY_WIDTH - width)//2, 0)
     large.draw(text, bitmap, x, y, pi)
-
-
-def render_lifeline_module(
-    bitmap, y, module, pi, with_label=True, start_millis=None):
-    bitmap.fill(0, 0, y, bitmap.width, y + 16)
-    if module.type == 'value':
-        render_value_module(bitmap, y, module, pi, with_label, start_millis)
-    if module.type == 'newsfeed':
-        render_newsfeed_module(bitmap, y, module, pi)
 
 
 def render_label(bitmap, y, labels, pi):

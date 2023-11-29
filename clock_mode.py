@@ -131,14 +131,13 @@ class ClockMode:
         dual_mode = prefs.get('display_mode') == 'DUAL'
 
         if self.module == self.deadline or dual_mode:
-            ccui.render_deadline_module(
-                bitmap, 0, self.deadline, self.deadline_pi)
+            ccui.render_module(bitmap, 0, self.deadline, self.deadline_pi)
 
         pi = self.deadline_pi if self.module.id[:1] == '_' else self.lifeline_pi
         if self.module != self.deadline:
-            ccui.render_lifeline_module(
-                bitmap, dual_mode*16, self.module, pi,
-                dual_mode, self.start_millis)
+            y = dual_mode*16
+            ccui.render_module(
+                bitmap, y, self.module, pi, dual_mode, self.start_millis)
 
         if self.app.lock_tick > 0:
             if self.app.lock_tick < 6:
@@ -150,7 +149,8 @@ class ClockMode:
             bitmap.fill(0, 0, 0, small.measure(text) + 1, small.h + 1)
             small.draw(text, bitmap, 1, 0)
 
-        if self.app.battery_sensor.level < 10:
+        level = self.app.battery_sensor.level
+        if level is not None and level < 10:
             blink = cctime.monotonic_millis() % 1500
             bitmap.fill(self.low_battery_cv * (blink < 1000), 190, 30, 192, 32)
 
