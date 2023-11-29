@@ -198,6 +198,7 @@ class MenuMode:
             self.move_cursor(1)
         if command == 'SET_INITIAL_MODULE':
             prefs.set('module_id', arg)
+            self.app.clock_mode.advance_module(id=arg)
             command = 'BACK'
         if command == 'SET_DISPLAY_MODE':
             prefs.set('display_mode', arg)
