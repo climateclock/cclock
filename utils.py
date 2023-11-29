@@ -113,14 +113,14 @@ def split_url(url):
     return None, None, None
 
 
-class Cycle:
+class Cycle:  # note, inheriting from list causes hard crashes in CircuitPython!
     def __init__(self, items):
         self.items = items
         self.index = 0
 
-    def get(self, delta=0, index=None):
-        new_index = self.index + delta if index is None else index
-        self.index = (new_index + len(self.items)) % len(self.items)
+    def advance(self, delta=0):
+        n = len(self.items)
+        self.index = (self.index + delta + n) % n
         return self.items[self.index]
 
 

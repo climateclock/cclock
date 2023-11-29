@@ -3,13 +3,15 @@ import json
 
 
 pairs = {
+    # User-editable settings
     'wifi_ssid': 'climateclock',
     'wifi_password': 'climateclock',
+    'custom_message': '',
+    'display_mode': 'DUAL',
+
+    # Internal settings
     'api_url': 'https://api.climateclock.world/v2/portable_m4/clock.json',
     'update_url': 'https://climateclock.github.io/packs.json',
-    'custom_message': '',
-    'auto_cycling': None,
-    'updates_paused_until': None,
     'updater_initial_delay': 2 * 1000,
     'updater_failure_delay': 60 * 1000,
     'updater_success_delay': 60 * 60 * 1000,

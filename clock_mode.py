@@ -16,9 +16,9 @@ class ClockMode:
         self.start_millis = cctime.get_millis()
 
         self.deadline = None
-        self.lifeline = None
-        self.lifelines = None
-        self.custom_message_module = ccapi.Newsfeed(
+        self.module = None
+        self.modules = None
+        self.custom_message = ccapi.Newsfeed(
             'custom_message', 'newsfeed', 'lifeline', [], [], [])
 
         self.load_definition()
@@ -30,7 +30,7 @@ class ClockMode:
                 Press.DOUBLE: 'DUMP_FRAME',
             },
             'DOWN': {
-                Press.SHORT: 'NEXT_LIFELINE',
+                Press.SHORT: 'NEXT_MODULE',
                 Press.LONG: 'MENU_MODE',
                 Press.DOUBLE: 'DUMP_MEMORY',
             },
@@ -57,45 +57,47 @@ class ClockMode:
     def load_path(self, path):
         with fs.open(path) as api_file:
             defn = ccapi.load(api_file)
+            disp = defn.config.display
+            self.deadline_pi = display.get_pi(*disp.deadline.primary)
+            self.lifeline_pi = display.get_pi(*disp.lifeline.primary)
 
-            deadlines = []
-            lifelines = []
-            lifeline_index = 0
             for m in defn.modules:
                 if m.flavor == 'deadline':
-                    deadlines.append(m)
-                if m.flavor == 'lifeline':
-                    if m.id == prefs.get('lifeline_id'):
-                        lifeline_index = len(lifelines)
-                    lifelines.append(m)
-            lifelines.append(self.custom_message_module)
+                    self.deadline = m
 
-            self.deadline = deadlines and deadlines[0] or None
-            self.lifelines = utils.Cycle(lifelines)
-            self.deadline_pi = display.get_pi(
-                *defn.config.display.deadline.primary)
-            self.lifeline_pi = display.get_pi(
-                *defn.config.display.lifeline.primary)
-
-            self.advance_lifeline(lifeline_index)
+            self.modules = utils.Cycle(defn.modules + [self.custom_message])
+            self.advance_module(id=prefs.get('module_id'))
 
         utils.log(f'Loaded {path}')
 
-    def advance_lifeline(self, delta=0, index=None):
+    def advance_module(self, delta=0, id=None):
         if delta:
             self.start_millis = cctime.get_millis()
-        if self.lifelines:
-            self.lifeline = self.lifelines.get(delta=delta, index=index)
-            if (self.lifeline == self.custom_message_module and
-                not prefs.get('custom_message')):
-                self.lifeline = self.lifelines.get(delta=delta or 1)
-            self.app.bitmap.fill(0)
-            if prefs.get('hide_deadline'):
-                ccui.render_label(
-                    self.app.bitmap, 16,
-                    self.lifeline.full_width_labels or self.lifeline.labels,
-                    self.lifeline_pi
-                )
+
+        # Validate the inputs
+        if not self.modules or len(self.modules.items) <= 2:
+            return  # definition not yet loaded, or has no lifelines
+        if id and id not in [m.id for m in self.modules.items]:
+            id = None
+
+        # Advance in the specified direction, skipping modules we can't display
+        m = self.modules.advance(delta)
+        while (
+            m == self.deadline and prefs.get('display_mode') == 'DUAL' or
+            m == self.custom_message and not prefs.get('custom_message') or
+            id and m.id != id
+        ):
+            m = self.modules.advance(delta or 1)
+        self.module = m
+
+        # Render static parts of the display
+        self.app.bitmap.fill(0)
+        if prefs.get('display_mode') != 'DUAL':
+            ccui.render_label(
+                self.app.bitmap, 16,
+                self.module.full_width_labels or self.module.labels,
+                self.deadline_pi if m == self.deadline else self.lifeline_pi
+            )
 
     def start(self):
         self.reader.reset()
@@ -111,34 +113,37 @@ class ClockMode:
             prefs, 'updates_paused_until')
 
         ccui.reset_newsfeed()
-        self.custom_message_module.items[:] = [
+        self.custom_message.items[:] = [
             ccapi.Item(0, prefs.get('custom_message'), '')
         ]
-        self.advance_lifeline(0)
+        self.advance_module(0)
 
     def step(self):
         if self.next_advance and cctime.monotonic_millis() > self.next_advance:
             auto_cycling = prefs.get('auto_cycling')
             if auto_cycling and not self.app.locked:
                 self.next_advance += auto_cycling
-                self.advance_lifeline(1)
+                self.advance_module(1)
             else:
                 self.next_advance = None
 
         bitmap = self.app.bitmap
-        if prefs.get('hide_deadline'):
-            if self.lifeline:
+        if prefs.get('display_mode') != 'DUAL':
+            if self.module == self.deadline:
+                ccui.render_deadline_module(
+                    bitmap, 0, self.module, self.deadline_pi)
+            else:
                 ccui.render_lifeline_module(
-                    bitmap, 0, self.lifeline,
-                    self.deadline_pi if self.lifeline.id[:1] == '_'
+                    bitmap, 0, self.module,
+                    self.deadline_pi if self.module.id[:1] == '_'
                     else self.lifeline_pi, False, self.start_millis)
         else:
             if self.deadline:
                 ccui.render_deadline_module(
                     bitmap, 0, self.deadline, self.deadline_pi)
-            if self.lifeline:
+            if self.module:
                 ccui.render_lifeline_module(
-                    bitmap, 16, self.lifeline,
+                    bitmap, 16, self.module,
                     self.lifeline_pi, True, self.start_millis)
 
         if self.app.lock_tick > 0:
@@ -165,8 +170,8 @@ class ClockMode:
         self.dial_reader.step(self.app)
 
     def receive(self, command, arg=None):
-        if command == 'NEXT_LIFELINE':
-            self.advance_lifeline(1)
+        if command == 'NEXT_MODULE':
+            self.advance_module(1)
         if command == 'SELECTOR':
             delta, value = arg
-            self.advance_lifeline(delta > 0 and 1 or -1)
+            self.advance_module(delta > 0 and 1 or -1)

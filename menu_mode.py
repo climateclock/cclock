@@ -46,10 +46,10 @@ class MenuMode:
             'CONNECTED': 'Online'
         }.get(self.app.net.state, 'Offline')
         wifi_ssid = lambda: prefs.get('wifi_ssid')
-        lifeline_id = lambda: prefs.get('lifeline_id')
+        module_id = lambda: prefs.get('module_id') or 'Default'
         message = lambda: prefs.get('custom_message') or 'None'
-        hide_deadline = lambda: (
-            prefs.get('hide_deadline') and 'Hidden' or 'Visible')
+        display_mode = lambda: (
+            'Dual' if prefs.get('display_mode') == 'DUAL' else 'Single')
         language = lambda: LANGS.get(prefs.get('lang', 'en'))
 
         now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
@@ -80,10 +80,15 @@ class MenuMode:
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Custom message', message, 'CUSTOM_MESSAGE_MODE', None, []),
-            ('Initial lifeline', lifeline_id, None, None, [
-                (lifeline.id, None, 'SET_LIFELINE', lifeline.id, [])
-                for lifeline in self.app.clock_mode.lifelines.items
+            ('Initial display', module_id, None, None, [
+                (module.id, None, 'SET_INITIAL_MODULE', module.id, [])
+                for module in self.app.clock_mode.modules.items
             ] + [
+                ('Back', None, 'BACK', None, [])
+            ]),
+            ('Display mode', display_mode, None, None, [
+                ('Dual (deadline and lifeline)', None, 'SET_DISPLAY_MODE', 'DUAL', []),
+                ('Single (deadline or lifeline)', None, 'SET_DISPLAY_MODE', 'SINGLE', []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Auto cycling', auto_cycling, None, None, [
@@ -100,11 +105,6 @@ class MenuMode:
                     'SET_UPDATES_PAUSED', 4*3600*1000, []),
                 ('Pause for 24 hours', None,
                     'SET_UPDATES_PAUSED', 24*3600*1000, []),
-                ('Back', None, 'BACK', None, [])
-            ]),
-            ('Deadline', hide_deadline, None, None, [
-                ('Visible', None, 'SET_HIDE_DEADLINE', False, []),
-                ('Hidden', None, 'SET_HIDE_DEADLINE', True, []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Language', language, None, None, [
@@ -196,11 +196,11 @@ class MenuMode:
             self.move_cursor(-1)
         if command == 'NEXT_OPTION':
             self.move_cursor(1)
-        if command == 'SET_LIFELINE':
-            prefs.set('lifeline_id', arg)
+        if command == 'SET_INITIAL_MODULE':
+            prefs.set('module_id', arg)
             command = 'BACK'
-        if command == 'SET_HIDE_DEADLINE':
-            prefs.set('hide_deadline', arg)
+        if command == 'SET_DISPLAY_MODE':
+            prefs.set('display_mode', arg)
             command = 'BACK'
         if command == 'SET_CYCLING':
             prefs.set('auto_cycling', arg)

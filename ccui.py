@@ -89,8 +89,8 @@ def render_lifeline_module(
 
 
 def render_label(bitmap, y, labels, pi):
-    for font in [large, small]:
-        for text in labels:
+    for text in labels or []:
+        for font in [large, small]:
             width = font.measure(text)
             if width < bitmap.width:
                 x = (DISPLAY_WIDTH - width)//2
