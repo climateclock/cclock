@@ -7,10 +7,10 @@ UP_ARROW = '\u2191'
 
 # ASCII characters only, for entering passwords and the like.
 ASCII_TEXT_MENU = [
-    ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz\u2423'),
-    ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\u2423'),
-    ('123', None, UP_ARROW + '1234567890'),
-    ('.,-!?', None, UP_ARROW + '.,:;-\'!?"@#$%^&*+=_~/\\()[]<>{}'),
+    ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz\u2423\b'),
+    ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\u2423\b'),
+    ('123', None, UP_ARROW + '1234567890\u2423\b'),
+    ('.,-!?', None, UP_ARROW + '.,:;-\'!?"@#$%^&*+=_~/\\()[]<>{}\u2423\b'),
     ('\u2423', 'SPACE', ''),
     ('\b', 'BACKSPACE', ''),  # Backspace
     ('\x0b', 'CLEAR', ''),  # Ctrl-K (KILL)
@@ -20,12 +20,12 @@ ASCII_TEXT_MENU = [
 
 # All the common letters and punctuation marks in Western European languages.
 DISPLAY_TEXT_MENU = [
-    ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz\u2423'),
-    ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\u2423'),
-    ('àáâ', None, UP_ARROW + 'àáâãäåæçèéêëìíîïðµñòóôõöøßùúûüýÿþ'),
+    ('abc', None, UP_ARROW + 'abcdefghijklmnopqrstuvwxyz\u2423\b'),
+    ('ABC', None, UP_ARROW + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\u2423\b'),
+    ('àáâ', None, UP_ARROW + 'àáâãäåæçèéêëìíîïðµñòóôõöøßùúûüýÿþ\u2423\b'),
     ('ÀÁÂ', None, UP_ARROW + 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ'),
-    ('+−123', None, UP_ARROW + '+−1234567890°²³₂₃₄,.'),
-    ('.,-!?', None, UP_ARROW + '.,:;-\'!?¡¿“”@#$%^&*=_~·–—/\\()[]<>{}'),
+    ('+−123', None, UP_ARROW + '+−1234567890°²³₂₃₄.,\u2423\b'),
+    ('.,-!?', None, UP_ARROW + '.,:;-\'!?¡¿“”@#$%^&*=_~·–—/\\()[]<>{}\b'),
     ('\u2423', 'SPACE', ''),
     ('\b', 'BACKSPACE', ''),  # Backspace
     ('\x0b', 'CLEAR', ''),  # Ctrl-K (KILL)
@@ -112,13 +112,13 @@ class EditMode:
     def draw_menu(self):
         bitmap = self.app.bitmap
         bitmap.fill(0, 0, 11)
-        x = 4
+        x = 1
         for i, option in enumerate(self.menu):
             label, command, chars = option
 
             if self.menu_selected and i == self.menu_index:
                 x = small.draw(label, bitmap, x, 11, self.cursor_pi)
-                small.draw(chars, bitmap, 4, 21, self.pi)
+                small.draw(chars, bitmap, 1, 21, self.pi)
                 self.draw_char_cursor()
             else:
                 nx = small.draw(label, bitmap, x, 11, self.pi)
@@ -133,7 +133,7 @@ class EditMode:
         left = small.measure(chars[:ci])
         w = small.measure(chars[ci])
         self.app.bitmap.fill(0, 0, 31)
-        self.app.bitmap.fill(self.cursor_pi, 4 + left, 31, 3 + left + w, 32)
+        self.app.bitmap.fill(self.cursor_pi, 1 + left, 31, left + w, 32)
 
     def receive(self, command, arg=None):
         if self.menu_selected:
@@ -154,9 +154,11 @@ class EditMode:
                 ci = self.char_indexes[self.menu_index]
                 if ci == 0:
                     self.menu_selected = False
+                elif chars[ci] == '\b':
+                    self.text = self.text[:-1]
                 else:
                     self.text += chars[ci].replace('\u2423', ' ')
-                    self.draw_field()
+                self.draw_field()
             elif not command:
                 self.menu_selected = True
             self.draw_menu()
@@ -172,9 +174,7 @@ class EditMode:
             self.text += ' '
             self.draw_field()
         if command == 'BACKSPACE':
-            print('%r' % self.text)
             self.text = self.text[:-1]
-            print('-> %r' % self.text)
             self.draw_field()
         if command == 'CLEAR':
             self.text = ''
