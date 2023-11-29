@@ -13,14 +13,10 @@ Config = namedtuple('Config', ('device_id', 'module_ids', 'display'))
 Display = namedtuple('Display', ('deadline', 'lifeline'))
 Palette = namedtuple('Palette', ('primary',))
 Item = namedtuple('Item', ('pub_millis', 'headline', 'source'))
-Timer = namedtuple('Timer', ('id', 'type', 'flavor', 'labels', 'ref_millis'))
+Timer = namedtuple('Timer', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'ref_millis'))
 Newsfeed = namedtuple('Newsfeed', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'items'))
 Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'initial', 'ref_millis', 'growth', 'rate', 'decimals', 'shift', 'bias', 'unit_labels', 'count_up_millis'))
 Defn = namedtuple('Defn', ('config', 'module_dict', 'modules'))
-
-
-def sorted_by_length(labels):
-    return sorted(labels or [], key=lambda label: -len(label))
 
 
 def load_config(data):
@@ -60,7 +56,8 @@ def load_timer(id, data):
         id,
         data.get("type"),
         data.get("flavor"),
-        sorted_by_length(data.get("labels")),
+        data.get("labels"),
+        data.get("full_width_labels"),
         cctime.try_isoformat_to_millis(data, "timestamp") or 0
     )
 
@@ -71,8 +68,8 @@ def load_newsfeed(id, data):
         id,
         data.get("type"),
         data.get("flavor"),
-        sorted_by_length(data.get("labels")),
-        sorted_by_length(data.get("full_width_labels")),
+        data.get("labels"),
+        data.get("full_width_labels"),
         [load_item(item) for item in data.get("newsfeed", [])]
     )
 
@@ -129,8 +126,8 @@ def load_value(id, data):
         id,
         data.get("type"),
         data.get("flavor"),
-        sorted_by_length(data.get("labels")),
-        sorted_by_length(data.get("full_width_labels")),
+        data.get("labels"),
+        data.get("full_width_labels"),
         initial,
         cctime.try_isoformat_to_millis(data, "timestamp") or 0,
         data.get("growth") or "linear",
@@ -138,7 +135,7 @@ def load_value(id, data):
         decimals,
         shift,
         bias,
-        sorted_by_length(data.get("unit_labels")),
+        data.get("unit_labels"),
         int(data.get("count_up_duration", 0) * 1000)
     )
 
