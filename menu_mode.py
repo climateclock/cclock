@@ -185,14 +185,12 @@ class MenuMode:
     def draw_battery(self):
         bitmap = self.app.bitmap
         level = self.app.battery_sensor.level
-        low_cv = display.get_pi(0xff, 0, 0)
         if level is not None:
+            batt_pi = display.get_pi(0xff, 0, 0) if level < 10 else self.cursor_pi
             bitmap.fill(self.pi, 1, 23, 23, 31)
             bitmap.fill(self.pi, 22, 25, 24, 29)
             bitmap.fill(0, 2, 24, 22, 30)
-            bitmap.fill(
-                low_cv if level < 10 else self.cursor_pi,
-                2, 24, 2 + level//5, 30)
+            bitmap.fill(batt_pi, 2, 24, 2 + level//5, 30)
 
     def step(self):
         if cctime.monotonic_millis() > self.next_draw:

@@ -23,9 +23,18 @@ utils.log()
 import inputs
 up, down, enter, brightness, selector, battery_sensor = inputs.init()
 level = battery_sensor.level
-if level is not None and level < 5:
-    display.blank()
-    utils.shut_down(battery_sensor)
+if level is not None:
+    batt_pi = display.get_pi(0xff, 0, 0) if level < 10 else title_pi
+    bitmap.fill(pi, 1, 23, 23, 31)
+    bitmap.fill(pi, 22, 25, 24, 29)
+    bitmap.fill(0, 2, 24, 22, 30)
+    bitmap.fill(batt_pi, 2, 24, 2 + level//5, 30)
+    display.send()
+    if level < 8:
+        import time
+        time.sleep(1)
+        display.blank()
+        utils.shut_down(battery_sensor)
 utils.log('Initialized inputs')
 
 utils.log()
