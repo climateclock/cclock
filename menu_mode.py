@@ -81,7 +81,7 @@ class MenuMode:
             ]),
             ('Custom message', message, 'CUSTOM_MESSAGE_MODE', None, []),
             ('Display mode', display_mode, None, None, [
-                ('Dual (deadline and lifeline)', None, 'SET_DISPLAY_MODE', 'DUAL', []),
+                ('Dual (deadline with lifeline)', None, 'SET_DISPLAY_MODE', 'DUAL', []),
                 ('Single (deadline or lifeline)', None, 'SET_DISPLAY_MODE', 'SINGLE', []),
                 ('Back', None, 'BACK', None, [])
             ]),
