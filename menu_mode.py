@@ -53,7 +53,7 @@ class MenuMode:
         language = lambda: LANGS.get(prefs.get('lang', 'en'))
 
         now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
-        battery_level = lambda: str(app.battery_sensor.level) + '%'
+        battery_level = lambda: str(app.battery_sensor.level)
         updater = self.app.clock_mode.updater
         api_fetched = lambda: (updater.api_fetched and
             cctime.millis_to_isoformat(updater.api_fetched) or 'Not yet')
@@ -72,7 +72,6 @@ class MenuMode:
 
         # Each node has the form (title, value, command, arg, children).
         self.tree = ('Settings', None, None, None, [
-            ('Battery level', battery_level, None, None, []),
             ('Wi-Fi setup', None, None, None, [
                 (wifi_status, None, None, None, []),
                 ('Network', wifi_ssid, 'WIFI_SSID_MODE', None, []),
@@ -127,12 +126,11 @@ class MenuMode:
                 (f'Free disk', lambda: f'{fs.free()//1000} kB', None, None, []),
                 (f'Free memory', utils.free, None, None, []),
                 (f'Uptime', self.app.frame_counter.uptime, None, None, []),
+                (f'Battery level', battery_level, None, None, []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Back', None, 'CLOCK_MODE', None, [])
         ])
-        if app.battery_sensor.level is None:
-            self.tree[4][:1] = []  # omit the "Battery:" item
 
         self.crumbs = []
         self.node = self.tree
@@ -180,7 +178,21 @@ class MenuMode:
             if index == self.index:
                 small.draw('>', bitmap, 59, y, self.cursor_pi)
             y += 11
+
+        self.draw_battery()
         display.send()
+
+    def draw_battery(self):
+        bitmap = self.app.bitmap
+        level = self.app.battery_sensor.level
+        low_cv = display.get_pi(0xff, 0, 0)
+        if level is not None:
+            bitmap.fill(self.pi, 1, 23, 23, 31)
+            bitmap.fill(self.pi, 22, 25, 24, 29)
+            bitmap.fill(0, 2, 24, 22, 30)
+            bitmap.fill(
+                low_cv if level < 10 else self.cursor_pi,
+                2, 24, 2 + level//5, 30)
 
     def step(self):
         if cctime.monotonic_millis() > self.next_draw:
