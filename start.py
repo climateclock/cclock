@@ -30,7 +30,7 @@ if level is not None:
     bitmap.fill(0, 2, 24, 22, 30)
     bitmap.fill(batt_pi, 2, 24, 2 + level//5, 30)
     display.send()
-    if level < 8:
+    if level < 4:
         import time
         time.sleep(1)
         display.blank()

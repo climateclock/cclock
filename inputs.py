@@ -26,7 +26,7 @@ class BatterySensor:
                 self.analog.value + self.analog.value +
                 self.analog.value + self.analog.value  # take 4 samples
             ) / 16  # smooth it out
-            fraction = (self.value - 40000) / 8000  # roughly 40000 to 48000
+            fraction = (self.value - 40600) / 9000  # roughly 40600 to 49600
             return max(0, min(100, int(fraction * 100)))
 
 
