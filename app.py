@@ -70,8 +70,7 @@ class App:
             self.edit_mode.set_pref('Wi-Fi password', 'wifi_password')
             self.set_mode(self.edit_mode)
         if command == 'CUSTOM_MESSAGE_MODE':
-            self.edit_mode.set_pref(
-                'Custom message', 'custom_message', True)
+            self.edit_mode.set_pref('Custom message', 'custom_message')
             self.set_mode(self.edit_mode)
         if command == 'DUMP_MEMORY':
             utils.log('Memory layout', True)

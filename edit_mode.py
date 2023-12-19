@@ -63,10 +63,13 @@ class EditMode:
         self.menu_selected = False
         self.char_indexes = [0] * len(self.menu)
 
-    def set_pref(self, pref_title, pref_name, display_text=False):
+    def set_pref(self, pref_title, pref_name):
         self.pref_title = pref_title
         self.pref_name = pref_name
-        self.menu = DISPLAY_TEXT_MENU if display_text else ASCII_TEXT_MENU
+        if self.pref_name == 'custom_message':
+            self.menu = DISPLAY_TEXT_MENU
+        else:
+            self.menu = ASCII_TEXT_MENU
 
     def start(self):
         self.reader.reset()
@@ -183,9 +186,13 @@ class EditMode:
             self.app.receive('MENU_MODE')
         if command == 'ACCEPT':
             prefs.set(self.pref_name, self.text)
+            if self.pref_name[:4] == 'wifi':
+                self.app.net.join()
             if self.pref_name == 'custom_message' and self.text:
                 self.app.clock_mode.advance_module(id='custom_message')
-            self.app.receive('CLOCK_MODE')
+                self.app.receive('CLOCK_MODE')
+            else:
+                self.app.receive('MENU_MODE')
 
     def move_menu_cursor(self, delta):
         self.menu_index = max(0, min(len(self.menu) - 1, self.menu_index + delta))

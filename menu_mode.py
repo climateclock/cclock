@@ -41,11 +41,13 @@ class MenuMode:
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
 
         wifi_status = lambda: 'Status: ' + {
-            'JOINING': 'Searching',
+            'OFFLINE': 'Offline',
+            'JOINING': 'Searching' + '.'*((self.join_elapsed//750) % 4)
+                if self.join_elapsed < 30000 else 'Could not connect',
             'ONLINE': 'Online',
             'CONNECTED': 'Online'
-        }.get(self.app.net.state, 'Offline')
-        wifi_ssid = lambda: prefs.get('wifi_ssid')
+        }.get(self.app.net.state, '?')
+        wifi_ssid = lambda: prefs.get('wifi_ssid') or 'None'
         module_id = lambda: prefs.get('module_id') or 'Default'
         message = lambda: prefs.get('custom_message') or 'None'
         display_mode = lambda: (
@@ -139,6 +141,10 @@ class MenuMode:
     def start(self):
         self.reader.reset()
         self.dial_reader.reset()
+        if self.app.net.state not in ['ONLINE', 'CONNECTED']:
+            self.join_started = cctime.monotonic_millis()
+            self.join_elapsed = 0
+            self.app.net.join()
         self.draw()
 
     def proceed(self, node):
@@ -200,6 +206,10 @@ class MenuMode:
         # Input readers can switch modes, so they should be called last.
         self.reader.step(self.app)
         self.dial_reader.step(self.app)
+
+        # Continue to attempt Wi-Fi connection and give feedback.
+        self.join_elapsed = cctime.monotonic_millis() - self.join_started
+        self.app.net.step()
 
     def receive(self, command, arg=None):
         if command == 'SELECTOR':

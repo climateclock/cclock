@@ -38,19 +38,19 @@ class Network:
         #     CONNECTED (connected to an HTTP server)
         self.state = new_state
         self.state_started = cctime.monotonic_millis()
+        self.state_elapsed = 0
         utils.log(f'Network is now {self.state}.')
 
-    def state_elapsed(self):
-        return cctime.monotonic_millis() - self.state_started
-
     def step(self):
+        self.state_elapsed = cctime.monotonic_millis() - self.state_started
+
         if self.state == 'JOINING':
             if self.esp.status == 3:
                 self.set_state('ONLINE')
                 ntp_server = prefs.get('ntp_server')
                 cctime.ntp_sync(self.socklib, ntp_server)
 
-            elif self.state_elapsed() > 20000:
+            elif self.state_elapsed > 20000:
                 utils.log(f'Could not join Wi-Fi network after 20 s; retrying.')
                 self.esp.disconnect()
                 self.join()
@@ -67,14 +67,15 @@ class Network:
             self.close()
 
     def join(self):
-        self.set_state('JOINING')
         ssid = utils.to_bytes(prefs.get('wifi_ssid'))
         password = utils.to_bytes(prefs.get('wifi_password'))
         if ssid:
+            self.set_state('JOINING')
             utils.log(f'Joining Wi-Fi network {repr(ssid)}.')
             # NOTE: ssid and password must be bytes, not str!
             self.esp.wifi_set_passphrase(ssid, password)
         else:
+            self.set_state('OFFLINE')
             utils.log(f'Wi-Fi is disabled because SSID is blank.')
 
     def connect(self, host, port=None, ssl=True):
