@@ -72,13 +72,18 @@ your Wi-Fi network, then select "Password" and type in your Wi-Fi password.
 
 ### Factory reset
 
-To perform a factory reset on your clock, press the RESET button once and
-then immediately hold down the UP and DOWN buttons together.  Wait for the
-status light to pulse red 5 times (once per second, for 5 seconds) and then
-turn fuchsia ([F]uchsia indicates a [F]actory reset), and then release the
+To perform a factory reset on your clock, press the tiny RESET button on the
+board and then hold down either of the other two buttons.  Keep holding and
+wait for the status light to pulse red 5 times (once per second, for 5 seconds)
+and turn fuchsia ([F]uchsia indicates a [F]actory reset), and then release the
 buttons.  The light will briefly turn yellow while the factory reset is in
-progress, and then green to indicate success.  Your clock is now restored
-to its state immediately after initial deployment.
+progress, and then green to indicate success.  Your clock is now restored to
+its state immediately after initial deployment.
+
+If the board is installed inside an actual Action Clock case, you can also do
+this using just the external knobs, without opening the case.  Turn the power
+knob all the way down to power the clock off and back on, then press and hold
+the menu knob until the status light pulses red 5 times and turns fuchsia.
 
 ## Development
 
@@ -133,8 +138,12 @@ won't work a second time.  That's because the startup sequence sets the
 filesystem to be writable from CircuitPython, which makes it non-writable
 over the USB cable.
 
-To enable writing over USB, press the reset button once and then hold
-down either of the other two buttons until the status light turns red.
+To enable writing over USB, press the tiny RESET button on the board and then
+hold down either of the other two buttons until the status light turns red.
+If the board is inside an Action Clock, you can also do this using just the
+external knobs: turn the power knob all the way down to power the clock off
+and back on, then press and hold the menu knob until the light turns red.
+
 The red light indicates that the board is now writable, so you can
 run `tools/deploy` again to copy any of your local edits over to the
 board.  The status light can be red or blue; the mnemonic is:
