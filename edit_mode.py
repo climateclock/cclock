@@ -63,9 +63,10 @@ class EditMode:
         self.menu_selected = False
         self.char_indexes = [0] * len(self.menu)
 
-    def set_pref(self, pref_title, pref_name):
+    def set_pref(self, pref_title, pref_name, hidden=False):
         self.pref_title = pref_title
         self.pref_name = pref_name
+        self.hidden = hidden
         if self.pref_name == 'custom_message':
             self.menu = DISPLAY_TEXT_MENU
         else:
@@ -77,7 +78,7 @@ class EditMode:
         self.app.bitmap.fill(0)
 
         small.draw(self.pref_title, self.app.bitmap, 1, 0, self.pi)
-        self.text = prefs.get(self.pref_name)
+        self.text = '' if self.hidden else prefs.get(self.pref_name)
         self.draw_field()
         self.draw_menu()
 

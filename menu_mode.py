@@ -48,6 +48,7 @@ class MenuMode:
             'CONNECTED': 'Online'
         }.get(self.app.net.state, '?')
         wifi_ssid = lambda: prefs.get('wifi_ssid') or 'None'
+        wifi_password = lambda: len(prefs.get('wifi_password', ''))*'·' or 'None'
         module_id = lambda: prefs.get('module_id') or 'Default'
         message = lambda: prefs.get('custom_message') or 'None'
         display_mode = lambda: (
@@ -77,7 +78,7 @@ class MenuMode:
             ('Wi-Fi setup', None, None, None, [
                 (wifi_status, None, None, None, []),
                 ('Network', wifi_ssid, 'WIFI_SSID_MODE', None, []),
-                ('Password', None, 'WIFI_PASSWORD_MODE', None, []),
+                ('Password', wifi_password, 'WIFI_PASSWORD_MODE', None, []),
                 ('Back', None, 'BACK', None, [])
             ]),
             ('Custom message', message, 'CUSTOM_MESSAGE_MODE', None, []),
