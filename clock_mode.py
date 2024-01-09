@@ -44,31 +44,32 @@ class ClockMode:
         self.low_battery_cv = display.get_pi(0xff, 0, 0)
 
     def load_definition(self):
-        utils.log()
-        try:
-            self.load_path('data/clock.json')
-        except Exception as e:
-            print(f'Could not load /data/clock.json: {e}')
-            try:
-                self.load_path('clock.json')
-            except Exception as e:
-                print(f'Could not load /clock.json: {e}')
+        lang = prefs.get('lang', 'en')
+        if self.load_path(f'data/clock.{lang}.json'):
+            return
+        if self.load_path('data/clock.json'):
+            return
+        if self.load_path('clock.json'):
+            return
 
     def load_path(self, path):
-        with fs.open(path) as api_file:
-            defn = ccapi.load(api_file)
-            disp = defn.config.display
-            self.deadline_pi = display.get_pi(*disp.deadline.primary)
-            self.lifeline_pi = display.get_pi(*disp.lifeline.primary)
+        try:
+            with fs.open(path) as api_file:
+                defn = ccapi.load(api_file)
+                disp = defn.config.display
+                self.deadline_pi = display.get_pi(*disp.deadline.primary)
+                self.lifeline_pi = display.get_pi(*disp.lifeline.primary)
 
-            for m in defn.modules:
-                if m.flavor == 'deadline':
-                    self.deadline = m
+                for m in defn.modules:
+                    if m.flavor == 'deadline':
+                        self.deadline = m
 
-            self.modules = utils.Cycle(defn.modules + [self.custom_message])
-            self.advance_module(id=prefs.get('module_id'))
-
-        utils.log(f'Loaded {path}')
+                self.modules = utils.Cycle(defn.modules + [self.custom_message])
+                self.advance_module(id=prefs.get('module_id'))
+            utils.log(f'Loaded {path}')
+            return True
+        except Exception as e:
+            print(f'Could not load {path}: {e}')
 
     def advance_module(self, delta=0, id=None):
         if delta:
