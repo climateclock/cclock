@@ -21,6 +21,7 @@ class ClockMode:
         self.custom_message = ccapi.Newsfeed(
             'custom_message', 'newsfeed', 'lifeline', [], [], [])
 
+        self.langs = {}
         self.load_definition()
         self.updater = SoftwareUpdater(app, net, self)
         utils.log('Created SoftwareUpdater')
@@ -59,6 +60,7 @@ class ClockMode:
                 disp = defn.config.display
                 self.deadline_pi = display.get_pi(*disp.deadline.primary)
                 self.lifeline_pi = display.get_pi(*disp.lifeline.primary)
+                self.langs = defn.config.langs
 
                 for m in defn.modules:
                     if m.flavor == 'deadline':

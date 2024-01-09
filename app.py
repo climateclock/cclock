@@ -19,6 +19,7 @@ class App:
         self.locked = False
         self.lock_tick = 0
 
+        # app.clock_mode must exist before MenuMode can be constructed
         self.clock_mode = ClockMode(self, net, button_map, dial_map)
         utils.log('Created ClockMode')
         self.menu_mode = MenuMode(self, button_map, dial_map)
