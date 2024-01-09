@@ -140,7 +140,8 @@ class MenuMode:
 
         self.langs = self.app.clock_mode.langs
         self.lang_nodes[:] = [
-            (self.langs[lang], None, 'SET_LANG', lang, []) for lang in self.langs
+            (self.langs[lang], None, 'SET_LANG', lang, [])
+            for lang in self.langs
         ] + [('Back', None, 'BACK', None, [])]
         self.draw()
 
@@ -167,6 +168,8 @@ class MenuMode:
     def draw(self):
         title, value, command, arg, children = self.node
         title = self.format_title(title, not children and value)
+        if self.index >= len(children):  # in case the list shortened
+            self.top = self.index = 0
 
         bitmap = self.app.bitmap
         bitmap.fill(0)
