@@ -7,14 +7,6 @@ import os
 import prefs
 import utils
 
-LANGS = {
-    'en': 'English',
-    'es': 'Español',
-    'fr': 'Français',
-    'de': 'Deutsch',
-    'pt': 'Português'
-}
-
 class MenuMode:
     def __init__(self, app, button_map, dial_map):
         self.app = app
@@ -53,7 +45,8 @@ class MenuMode:
         message = lambda: prefs.get('custom_message') or 'None'
         display_mode = lambda: (
             'Dual' if prefs.get('display_mode') == 'DUAL' else 'Single')
-        language = lambda: LANGS.get(prefs.get('lang', 'en'))
+        language = lambda: self.langs.get(prefs.get('lang', 'en'))
+        self.lang_nodes = [('Back', None, 'BACK', None, [])]
 
         now = lambda: cctime.millis_to_isoformat(cctime.get_millis())
         battery_level = lambda: str(app.battery_sensor.level)
@@ -109,11 +102,7 @@ class MenuMode:
                     'SET_UPDATES_PAUSED', 24*3600*1000, []),
                 ('Back', None, 'BACK', None, [])
             ]),
-            ('Language', language, None, None, [
-                (LANGS[lang], None, 'SET_LANG', lang, []) for lang in LANGS
-            ] + [
-                ('Back', None, 'BACK', None, [])
-            ]),
+            ('Language', language, None, None, self.lang_nodes),
             ('System info', None, None, None, [
                 (f'Time', now, None, None, []),
                 (f'MAC ID', self.app.net.mac_address, None, None, []),
@@ -146,6 +135,11 @@ class MenuMode:
             self.join_started = cctime.monotonic_millis()
             self.join_elapsed = 0
             self.app.net.join()
+
+        self.langs = self.app.clock_mode.langs
+        self.lang_nodes[:] = [
+            (self.langs[lang], None, 'SET_LANG', lang, []) for lang in self.langs
+        ] + [('Back', None, 'BACK', None, [])]
         self.draw()
 
     def proceed(self, node):
@@ -263,6 +257,3 @@ class MenuMode:
         else:
             self.offset = max(0, self.offset + delta * 12)
         self.draw()
-
-
-
