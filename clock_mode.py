@@ -59,17 +59,18 @@ class ClockMode:
         try:
             with fs.open(path) as api_file:
                 defn = ccapi.load(api_file)
-                disp = defn.config.display
-                self.deadline_pi = display.get_pi(*disp.deadline.primary)
-                self.lifeline_pi = display.get_pi(*disp.lifeline.primary)
-                self.langs = defn.config.langs
+            disp = defn.config.display
+            self.deadline_pi = display.get_pi(*disp.deadline.primary)
+            self.lifeline_pi = display.get_pi(*disp.lifeline.primary)
+            self.langs = defn.config.langs
 
-                for m in defn.modules:
-                    if m.flavor == 'deadline':
-                        self.deadline = m
+            for m in defn.modules:
+                if m.flavor == 'deadline':
+                    self.deadline = m
 
-                self.modules = utils.Cycle(defn.modules + [self.custom_message])
-                self.advance_module(id=prefs.get('module_id'))
+            self.modules = utils.Cycle(defn.modules + [self.custom_message])
+            module_id = self.module and self.module.id or prefs.get('module_id')
+            self.advance_module(id=module_id)
             utils.log(f'Loaded {path}')
             return True
         except Exception as e:
