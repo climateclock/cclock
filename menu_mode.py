@@ -32,6 +32,8 @@ class MenuMode:
         })
         self.dial_reader = DialReader('SELECTOR', dial_map['SELECTOR'], 1)
 
+        self.join_started = 0
+        self.join_elapsed = 0
         wifi_status = lambda: 'Status: ' + {
             'OFFLINE': 'Offline',
             'JOINING': 'Searching' + '.'*((self.join_elapsed//750) % 4)
@@ -233,6 +235,7 @@ class MenuMode:
             command = 'BACK'
         if command == 'SET_LANG':
             prefs.set('lang', arg)
+            self.app.clock_mode.load_definition()
             command = 'BACK'
         if command == 'GO':
             title, value, command, arg, children = self.node
