@@ -59,42 +59,47 @@ class SoftwareUpdater:
             now = cctime.millis_to_isoformat(cctime.get_millis())
             afetch = cctime.millis_to_isoformat(self.api_fetched) or ''
             ifetch = cctime.millis_to_isoformat(self.index_fetched) or ''
-            self.fetcher.go(self.api_url +
+            self.lang = prefs.get('lang', 'en')
+            self.fetcher.go(
+                self.api_url.replace('.json', f'.{self.lang}.json') +
                 f'?p=ac&mac={self.net.mac_address}&up={fc.uptime()}' +
                 f'&mem={utils.min_mem}&disk={fs.free()}&fps={fc.fps:.1f}' +
                 f'&v={v}&vp={vp}&fv={fv}&t={now}&af={afetch}&if={ifetch}',
-                prefs.get('api_etag'))
+                prefs.get(f'api_etag_{self.lang}'))
             self.step = self.api_fetch_step
-            fs.destroy('data/clock.json.new')
+            fs.destroy(f'data/clock.{self.lang}.json.new')
 
     def api_fetch_step(self):
+        received_new_file = False
+        error = None
+        filename = f'data/clock.{self.lang}.json'
         try:
-            fs.append('data/clock.json.new', self.fetcher.read())
+            fs.append(filename + '.new', self.fetcher.read())
             return
-        except Exception as error:
+        except StopIteration as stop:
             self.net.close()
-            received_new_file = False
-            if isinstance(error, StopIteration):
-                if error.value == 304:
-                    error = None  # treat 304 Not Modified as success (no error)
-                else:
-                    try:
-                        with fs.open('data/clock.json.new') as api_file:
-                            json.load(api_file)
-                        received_new_file = True
-                        prefs.set('api_etag', error.value or '')
-                        error = None
-                    except Exception as e:
-                        error = e
-
-            if error:
-                utils.report_error(error, 'API fetch failed')
+            if stop.value == 304:  # 304 means Not Modified
+                utils.log(f'API file unchanged (status 304)')
             else:
-                utils.log(f'API file successfully fetched!')
-                self.api_fetched = cctime.get_millis()
+                try:
+                    with fs.open(filename + '.new') as api_file:
+                        json.load(api_file)
+                    utils.log(f'API file successfully fetched')
+                    received_new_file = True
+                    prefs.set(f'api_etag_{self.lang}', stop.value or '')
+                except Exception as e:
+                    error = e
+        except Exception as e:
+            self.net.close()
+            error = e
+
+        if error:
+            utils.report_error(error, 'API fetch failed')
+        else:
+            self.api_fetched = cctime.get_millis()
 
         if received_new_file:
-            fs.move('data/clock.json.new', 'data/clock.json')
+            fs.move(filename + '.new', filename)
             self.clock_mode.load_definition()
 
         self.fetcher.go(self.update_url)
