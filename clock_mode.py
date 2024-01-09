@@ -48,6 +48,8 @@ class ClockMode:
         lang = prefs.get('lang', 'en')
         if self.load_path(f'data/clock.{lang}.json'):
             return
+        if self.load_path(f'clock.{lang}.json'):
+            return
         if self.load_path('data/clock.json'):
             return
         if self.load_path('clock.json'):
@@ -71,7 +73,7 @@ class ClockMode:
             utils.log(f'Loaded {path}')
             return True
         except Exception as e:
-            print(f'Could not load {path}: {e}')
+            print(e)
 
     def advance_module(self, delta=0, id=None):
         if delta:
