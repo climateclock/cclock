@@ -10,10 +10,10 @@ from collections import namedtuple
 
 
 Config = namedtuple('Config', ('device_id', 'module_ids', 'display'))
-Display = namedtuple('Display', ('deadline', 'lifeline'))
+Display = namedtuple('Display', ('deadline', 'lifeline', 'timer'))
 Palette = namedtuple('Palette', ('primary',))
 Item = namedtuple('Item', ('pub_millis', 'headline', 'source'))
-Timer = namedtuple('Timer', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'ref_millis'))
+Timer = namedtuple('Timer', ('id', 'type', 'flavor', 'unit_labels', 'labels', 'full_width_labels', 'ref_millis'))
 Newsfeed = namedtuple('Newsfeed', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'items'))
 Value = namedtuple('Value', ('id', 'type', 'flavor', 'labels', 'full_width_labels', 'initial', 'ref_millis', 'growth', 'rate', 'decimals', 'shift', 'bias', 'unit_labels', 'count_up_millis'))
 Defn = namedtuple('Defn', ('config', 'module_dict', 'modules'))
@@ -33,6 +33,7 @@ def load_display(data):
     return Display(
         load_palette(data.get("deadline") or {}),
         load_palette(data.get("lifeline") or {}),
+        data.get('timer')
     )
 
 
@@ -50,12 +51,13 @@ def parse_css_color(color):
         return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
 
 
-def load_timer(id, data):
+def load_timer(id, data, timer_config):
     gc.collect()
     return Timer(
         id,
         data.get("type"),
         data.get("flavor"),
+        timer_config.get("unit_labels", {}),
         data.get("labels"),
         data.get("full_width_labels"),
         cctime.try_isoformat_to_millis(data, "timestamp") or 0
@@ -147,7 +149,7 @@ def load_defn(data):
     module_dict = {}
     for module_id, value in data.get("modules", {}).items():
         if value["type"] == "timer":
-            module = load_timer(module_id, value)
+            module = load_timer(module_id, value, config.display.timer)
         elif value["type"] == "newsfeed":
             module = load_newsfeed(module_id, value)
         elif value["type"] == "value":

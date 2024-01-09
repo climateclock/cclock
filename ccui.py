@@ -73,15 +73,11 @@ def render_module(
 
 def render_timer_module(bitmap, y, module, pi):
     yr, d, h, m, s = calc_countdown(module, cctime.get_millis())
-    years, days = {
-        'de': ('Jahre', 'Tage'),
-        'en': ('years', 'days'),
-        'es': ('años', 'dias'),
-        'fr': ('ans', 'jours'),
-        'pt': ('anos', 'dias')
-    }[prefs.get('lang', 'en')]
-
-    text = f'{yr} {years} {d} {days} {h:02d}:{m:02d}:{s:02d}'
+    key = 'year' if yr == 1 else 'years'
+    year_unit = (module.unit_labels.get(key) or [key])[0]
+    key = 'day' if d == 1 else 'days'
+    day_unit = (module.unit_labels.get(key) or [key])[0]
+    text = f'{yr} {year_unit} {d} {day_unit} {h:02d}:{m:02d}:{s:02d}'
     if prefs.get('deadline_force_caps'):
         text = text.upper()
     width = large.measure(text)
