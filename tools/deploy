@@ -175,7 +175,7 @@ if [[ $factory ]]; then
         cp cache/clock.json "$drive"/clock.json
 
     # Check for other languages and fetch them too.
-    langs=$(python -c 'import json, sys; print(" ".join(json.load(sys.stdin)["data"]["config"]["langs"]))' < "$drive"/clock.json)
+    langs=$(python3 -c 'import json, sys; print(" ".join(json.load(sys.stdin)["data"]["config"]["langs"]))' < "$drive"/clock.json)
     for lang in $langs; do
       echo "Installing factory copy of clock.$lang.json..."
       url=https://api.climateclock.world/v2/portable_m4/clock.$lang.json

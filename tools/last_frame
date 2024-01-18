@@ -6,7 +6,7 @@ function get_last_frame() {
     # Find the line preceding the last occurrence of [[FRAME]].
     grep -B 1 '^\[\[FRAME\]\]' screenlog.0 | tail -2 | head -1 | \
         # Convert the hex digits to bytes.
-        python -c 'import binascii, os, sys; os.fdopen(1, "wb").write(b"P6\n192 32\n255\n" + binascii.unhexlify(sys.stdin.read().strip()))' | \
+        python3 -c 'import binascii, os, sys; os.fdopen(1, "wb").write(b"P6\n192 32\n255\n" + binascii.unhexlify(sys.stdin.read().strip()))' | \
         # Convert the PNM file to a PNG.
         pnmtopng >/tmp/frame.new 2>/dev/null
 }
