@@ -87,13 +87,12 @@ def render_timer_module(bitmap, y, module, pi):
 
 def render_label(bitmap, y, labels, pi):
     for text in labels or []:
-        for font in [large, small]:
+        for font, dy in (large, 0), (small, 2):
             width = font.measure(text)
             if width < bitmap.width:
                 x = (DISPLAY_WIDTH - width)//2
-                font.draw(text, bitmap, x, y, pi)
+                font.draw(text, bitmap, x, y + dy, pi)
                 return
-        y += 5
 
 
 def render_value_module(
