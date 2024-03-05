@@ -51,7 +51,7 @@ def factory_reset():
 
     errors = 0
     for name in os.listdir():
-        if os.stat(name)[0] & 0x4000 and not name.startswith('v5.'):
+        if os.stat(name)[0] & 0x4000 and not name.startswith('v7.'):
             try:
                 destroy(name)
             except Exception as e:

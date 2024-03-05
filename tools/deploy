@@ -3,9 +3,9 @@
 # NOTE: Never move version tags (v0, v1, etc.) in the git repository.
 # Once a version has been released, it must never change.
 #
-# All releases after v5 are shipped as modifications on top of v5, so v5 must
+# All releases after v7 are shipped as modifications on top of v7, so v7 must
 # be stable or it will change (and likely break) all other versions.  In the
-# future we may ship releases as modifications on top of versions beyond v5.
+# future we may ship releases as modifications on top of versions beyond v7.
 
 cd $(dirname "$0")
 source functions.sh
@@ -20,7 +20,7 @@ else
 fi
 drive=${CCLOCK_TARGET_ROOT:-$drive}
 sim_root=${CCLOCK_SIMULATOR_ROOT:-/tmp/cclock}
-base=v5
+base=v7
 
 while [[ $1 = -* ]]; do
     [[ $1 = -d ]] && export CCLOCK_MEMORY_DEBUGGING=1

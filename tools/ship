@@ -45,7 +45,7 @@ function disappear() {
 if ! [[ $VERSION ]]; then
     echo
     echo 'What version do you want to ship?  You can enter a version number'
-    echo 'like "v5" or "v6", or just "." for the current working directory.'
+    echo 'like "v7" or "v8", or just "." for the current working directory.'
     echo
     echo -n 'Version to ship: '
     read VERSION
