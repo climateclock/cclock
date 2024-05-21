@@ -43,7 +43,7 @@ class MenuMode:
         }.get(self.app.net.state, '?')
         wifi_ssid = lambda: prefs.get('wifi_ssid') or 'None'
         wifi_password = lambda: len(prefs.get('wifi_password', ''))*'·' or 'None'
-        module_id = lambda: prefs.get('module_id') or 'Default'
+        module_id = lambda: prefs.get('module_id') or 'First lifeline'
         message = lambda: prefs.get('custom_message') or 'None'
         display_mode = lambda: (
             'Dual' if prefs.get('display_mode') == 'DUAL' else 'Single')
