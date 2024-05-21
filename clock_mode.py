@@ -83,10 +83,9 @@ class ClockMode:
         # Validate the inputs
         if not self.modules or len(self.modules.items) <= 2:
             return  # definition not yet loaded, or has no lifelines
-        if id and id not in [m.id for m in self.modules.items]:
-            id = None
 
         # Advance in the specified direction, skipping modules we can't display
+        original_id = self.modules.advance(0).id
         m = self.modules.advance(delta)
         while (
             m == self.deadline and prefs.get('display_mode') == 'DUAL' or
@@ -94,6 +93,8 @@ class ClockMode:
             id and m.id != id
         ):
             m = self.modules.advance(delta or 1)
+            if m.id == original_id:  # didn't find a displayable module
+                break
         self.module = m
 
         # Render static parts of the display
