@@ -129,12 +129,12 @@ class SoftwareUpdater:
             self.index_name = pack_index['name']
             self.index_updated = pack_index['updated']
             self.index_packs = pack_index['packs']
+            version = get_latest_enabled_version(self.index_packs)
         except Exception as e:
             utils.report_error(e, 'Unreadable index file')
             self.retry_after(FAILURE_DELAY)
             return
 
-        version = get_latest_enabled_version(self.index_packs)
         if version:
             num, url, dir_name = version
             print(f'Latest enabled version is {dir_name} at {url}')
