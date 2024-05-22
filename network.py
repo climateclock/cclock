@@ -24,7 +24,7 @@ class Network:
         self.socklib = socklib
         self.firmware_version = str(bytes(self.esp.firmware_version), 'ascii')
         self.mac_address = ':'.join(
-            reversed('%02x' % b for b in self.esp.MAC_address))
+            reversed(['%02x' % b for b in self.esp.MAC_address]))
         # Don't set esp._debug!  It causes UDP to stop working. :(
 
         self.socket = None
