@@ -1,0 +1,145 @@
+#!/bin/bash -e
+
+cd $(dirname "$0")
+source functions.sh
+cd ..
+
+VERSION=$1
+YELLOW=$'\e[33m'
+CYAN=$'\e[36m'
+GREEN=$'\e[32m'
+NORMAL=$'\e[0m'
+
+# Figure out where USB drives will appear.
+
+if [[ -d /Volumes ]]; then
+    mnt=/Volumes
+elif [[ -d /run/media/$USER ]]; then
+    mnt=/run/media/$USER
+else
+    mnt=/media/$USER
+fi
+
+function ready() {
+    echo -n "When you've done this, hit Enter to proceed: "
+    read
+    echo
+}
+
+function appear() {
+    while [[ ! -d "$mnt/$1" ]]; do
+        echo -n '.'
+        sleep 0.3
+    done
+    sleep 1
+}
+
+function disappear() {
+    while [[ -d "$mnt/$1" ]]; do
+        echo -n '.'
+        sleep 0.3
+    done
+    sleep 1
+}
+
+if ! [[ $VERSION ]]; then
+    echo
+    echo 'What version do you want to ship?  You can enter a version number'
+    echo 'like "v8" or "v9", or just "." for the current working directory.'
+    echo
+    echo -n 'Version to ship: '
+    read VERSION
+    echo
+fi
+
+[[ $VERSION ]] || exit 1
+if [[ $VERSION = . ]]; then
+    echo
+    echo "${GREEN}Shipping the working directory as v999.$NORMAL"
+elif ! [[ $VERSION = v* ]]; then
+    echo "Specify a version as 'v' followed by a number."
+    exit 1
+elif ! git rev-parse $VERSION 1>/dev/null 2>/dev/null; then
+    echo "There is no version tag named $VERSION."
+    exit 1
+else
+    echo
+    echo "${GREEN}Shipping $VERSION.$NORMAL"
+fi
+
+cat <<EOF
+
+This is the recommended procedure for shipping a new Action Clock.
+Please carry out exactly these steps in this order.  Let's begin!
+$YELLOW
+Step 1. Assemble your Action Clock (including the coin battery) and plug in
+        the charging cable.
+
+Step 2. Ensure your phone has 4G coverage and use it to create a Wi-Fi hotspot
+        named "climateclock" with password "climateclock".
+
+Step 3. Turn the power dial fully left until it clicks into the off position.
+$NORMAL
+EOF
+
+ready
+
+cat <<EOF
+$YELLOW
+Step 4. Connect a USB cable from the MatrixPortal M4 board to this computer.
+
+Step 5. Double-press the RESET button on the M4 board.  The LED on the board
+        should flash red and then stay green.
+$NORMAL
+EOF
+
+echo -n $CYAN"Waiting for reset..."
+appear MATRIXBOOT
+echo
+echo -n $GREEN"Erasing the filesystem on the M4 board..."
+cp erase.uf2 $mnt/MATRIXBOOT/
+sync
+disappear MATRIXBOOT
+echo " done."
+
+cat <<EOF
+$YELLOW
+Step 6. Double-press the RESET button on the M4 board again.  The LED should
+        flash red again and go back to green.
+$NORMAL
+EOF
+
+echo -n $CYAN"Waiting for reset..."
+appear MATRIXBOOT
+echo
+echo -n $GREEN"Installing the Action Clock firmware..."
+cp firmware.uf2 $mnt/MATRIXBOOT/
+sync
+echo " done."
+
+cat <<EOF
+$YELLOW
+Step 7. Turn the power dial on.
+$NORMAL
+EOF
+
+ready
+
+echo $GREEN"Installing the Action Clock software..."
+tools/deploy -f $VERSION
+
+cat <<EOF
+$YELLOW
+Step 8. When the deadline appears, it will be incorrect, counting down from
+        29 years.  Wait for the clock to connect to your phone's hotspot and
+        update to the correct time; this should take less than one minute.
+
+Step 9. Disconnect the USB cable from the computer.
+
+Step 10. After disconnecting the USB cable, turn the power dial all the way off.
+$NORMAL
+EOF
+
+ready
+
+echo $GREEN"Congratulations!  Your clock is ready to be shipped."
