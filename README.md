@@ -225,7 +225,7 @@ each directory has a name of the form `v<number>.<hash>`, which includes
 an MD5 hash of the contents of the directory.  In the above example, "v1"
 would be installed at `/v1.f4a09eb4651480f7a20a2849544f80e2`.
 
-A factory-installed Action Clock always has a "v5" directory; performing
+A factory-installed Action Clock always has a "v8" directory; performing
 a factory reset deletes all the other version directories as well as the
 `data` directory containing the user settings and any other downloaded
 data files.  When each version is released, its hash and thus its contents
@@ -235,16 +235,16 @@ are overlays on top of fixed known previous versions of the software.
 To publish a new software update, use `tools/release`.  To produce a
 complete pack, run it with a version name and a Git tag or commit hash:
 
-    tools/release v5 HEAD
+    tools/release v9 HEAD
 
-This creates a file with a name like `v5.d41d8cd98f00b204e9800998ecf8427e.pk`.
+This creates a file with a name like `v9.d41d8cd98f00b204e9800998ecf8427e.pk`.
 
 To produce a patch pack, also provide a second, previous version name
 and an older commit hash:
 
-    tools/release v5 HEAD v3 6d92602
+    tools/release v9 HEAD v8 6d92602
 
-The result will have a name like `v5-v3.d41d8cd98f00b204e9800998ecf8427e.pk`.
+The result will have a name like `v9-v8.d41d8cd98f00b204e9800998ecf8427e.pk`.
 
 If you use the `-u` option to specify the root URL where you plan to publish
 the pack file, a JSON entry will also be printed out.  You can paste this
