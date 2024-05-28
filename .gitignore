@@ -1,6 +1,7 @@
 Adafruit_CircuitPython_*/
 cache/
 env/
+logs/
 unused/
 
 .DS_Store
