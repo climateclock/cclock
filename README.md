@@ -165,6 +165,8 @@ device that newly appears when you plug in the USB cable.  For example:
 
 If you are on MacOS or Linux, the utility `tools/serial` will do this
 for you.  The session will be continuously logged to `screenlog.0`.
+If the serial console does not appear, download and install the driver
+for your operating system from https://ftdichip.com/drivers/vcp-drivers/.
 
 `print` statements in the code will print to this serial console.
 You can also press Ctrl-C in the console to stop the running program,
