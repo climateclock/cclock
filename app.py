@@ -10,7 +10,7 @@ import network
 from edit_mode import EditMode
 import storage
 import utils
-
+import microcontroller
 
 class App:
     def __init__(self, bitmap, net, power_sensor, button_map, dial_map):
@@ -50,8 +50,10 @@ class App:
         utils.log(f'Power level is {self.power_sensor.level}%; shutting down')
         storage.umount('/')
         display.blank()
-        while True:
+        while self.power_sensor.level < 5:
             display.send()
+        utils.log(f'Power has returned after shutdown; restarting')
+        microcontroller.reset()
 
     def receive(self, command, arg=None):
         print('[' + command + ('' if arg is None else ': ' + str(arg)) + ']')
