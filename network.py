@@ -121,7 +121,7 @@ class Network:
         return data
 
     def close(self):
-        if self.socket:
+        if self.socket is not None:
             try:
                 self.esp.socket_close(self.socket)
                 utils.log('Socket closed.')
